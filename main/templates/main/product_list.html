@@ -1,0 +1,47 @@
+{% extends 'main/base.html' %}
+{% block title %}
+    Main Page
+{% endblock title %}
+
+{% block content %}
+
+
+{% if user.is_authenticated %}
+    <p>Hi {{ user.email }}!</p>
+    <p><a href="{% url 'account_logout' %}">Log Out</a></p>
+{% else %}
+    <p>You are not logged in. But all functionality is ready.</p>
+    <a href="{% url 'account_login' %}">Log In</a>
+    <a href="{% url 'account_signup' %}">Sign Up</a>
+{% endif %}
+
+<div class="container">
+  <h1>Products {% if user.tenant is not None %}({{ user.tenant }}) {% endif %}
+  </h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>SKU</th>
+        <th>Name</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+{#          <td><a href="{{ product.get_absolute_url }}">{{ product.sku }}</a></td>#}
+          <td><a href="#">{{ product.sku }}</a></td>
+        <td>{{ product.name }}</td>
+        <td>${{ product.price }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4">No products found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+{% endblock content %}
