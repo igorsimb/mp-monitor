@@ -1,0 +1,16 @@
+{% extends 'main/base.html' %}
+{% block title %}
+    Main Page
+{% endblock title %}
+
+{% block content %}
+
+<h1>Scraping item</h1>
+    <ul>
+        <li>Name: {{ product.name }}</li>
+        <li>SKU: {{ product.sku }}</li>
+        <li>Price: {{ product.price }}</li>
+    </ul>
+
+
+{% endblock content %}

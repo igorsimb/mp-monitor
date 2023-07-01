@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import Group
+from django.db import models
 from django.urls import reverse
 from guardian.shortcuts import assign_perm
 
