@@ -4,16 +4,16 @@ from django.shortcuts import render
 from django.views.generic import ListView
 from guardian.mixins import PermissionListMixin
 
-from main.models import Product
+from main.models import Item
 
 user = get_user_model()
 
 
-class ProductListView(PermissionListMixin, ListView):
-    model = Product
-    context_object_name = "products"
-    permission_required = ["main.view_product"]
-    template_name = "main/product_list.html"
+class ItemListView(PermissionListMixin, ListView):
+    model = Item
+    context_object_name = "items"
+    permission_required = ["main.view_item"]
+    template_name = "main/item_list.html"
 
 
 def scrape_item(request, sku, **kwargs):
@@ -59,9 +59,9 @@ def scrape_item(request, sku, **kwargs):
     rating = float(item.get('rating', None))
     num_reviews = int(item.get('feedbacks', None))
 
-    # Populating the Product model with the scraped data
+    # Populating the Item model with the scraped data
     tenant = request.user.tenant
-    product, created = Product.objects.get_or_create(
+    item, created = Item.objects.get_or_create(
         tenant=tenant,
         name=name,
         sku=sku,
@@ -76,9 +76,9 @@ def scrape_item(request, sku, **kwargs):
 
     )
 
-    product.save()
+    item.save()
 
-    context = {"product": product}
+    context = {"item": item}
 
-    # TODO: replace with product_list redirect when product_detail is ready, ie: return redirect("product-list")
+    # TODO: replace with item_list redirect when item_detail is ready, ie: return redirect("item_list")
     return render(request, "main/scrape_item.html", context)

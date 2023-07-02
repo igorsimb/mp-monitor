@@ -15,7 +15,7 @@ class Tenant(models.Model):
         return self.name
 
 
-class Product(models.Model):
+class Item(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=255)
@@ -34,15 +34,15 @@ class Product(models.Model):
 
         constraints = [models.UniqueConstraint(fields=['tenant', 'sku'], name="unique_tenant_sku")]
         default_permissions = ("add", "change", "delete")
-        permissions = (("view_product", "Can view product"),)
+        permissions = (("view_item", "Can view item"),)
         
     def __str__(self):
         return f"{self.name} ({self.sku})"
 
     def get_absolute_url(self):
-        return reverse("product", kwargs={"slug": self.sku})
+        return reverse("item", kwargs={"slug": self.sku})
 
     def save(self, *args, **kwargs):
         group, created = Group.objects.get_or_create(name=self.tenant)
-        super(Product, self).save(*args, **kwargs)
-        assign_perm("view_product", group, self)
+        super(Item, self).save(*args, **kwargs)
+        assign_perm("view_item", group, self)

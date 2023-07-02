@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import ProductListView, scrape_item
+from .views import ItemListView, scrape_item
 
 urlpatterns = [
-    path('', ProductListView.as_view(), name='product-list'),
-    path('<str:sku>/', scrape_item, name='product'),
+    path('', ItemListView.as_view(), name='item_list'),
+    path('<str:sku>/', scrape_item, name='scraped_item'),
 ]

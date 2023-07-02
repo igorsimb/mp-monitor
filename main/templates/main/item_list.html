@@ -16,7 +16,7 @@
 {% endif %}
 
 <div class="container">
-  <h1>Products {% if user.tenant is not None %}({{ user.tenant }}) {% endif %}
+  <h1>Item {% if user.tenant is not None %}({{ user.tenant }}) {% endif %}
   </h1>
   <table class="table">
     <thead>
@@ -27,16 +27,16 @@
       </tr>
     </thead>
     <tbody>
-      {% for product in products %}
+      {% for item in items %}
       <tr>
-{#          <td><a href="{{ product.get_absolute_url }}">{{ product.sku }}</a></td>#}
-          <td><a href="#">{{ product.sku }}</a></td>
-        <td>{{ product.name }}</td>
-        <td>{{ product.price }}</td>
+{#          <td><a href="{{ item.get_absolute_url }}">{{ item.sku }}</a></td>#}
+          <td><a href="#">{{ item.sku }}</a></td>
+        <td>{{ item.name }}</td>
+        <td>{{ item.price }}</td>
       </tr>
       {% empty %}
       <tr>
-        <td colspan="4">No products found.</td>
+        <td colspan="4">No items found.</td>
       </tr>
       {% endfor %}
     </tbody>

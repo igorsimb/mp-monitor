@@ -147,8 +147,8 @@ INTERNAL_IPS = [
 
 # django-allauth config
 SITE_ID = 1
-LOGIN_REDIRECT_URL = 'product-list'
-ACCOUNT_LOGOUT_REDIRECT = 'product-list'
+LOGIN_REDIRECT_URL = 'item_list'
+ACCOUNT_LOGOUT_REDIRECT = 'item_list'
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',

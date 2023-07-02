@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from main.models import Tenant, Product
+from main.models import Tenant, Item
 
-class ProductAdmin(admin.ModelAdmin):
+class ItemAdmin(admin.ModelAdmin):
     list_display = ("sku", "name", "price")
 
 admin.site.register(Tenant)
-admin.site.register(Product, ProductAdmin)
+admin.site.register(Item, ItemAdmin)

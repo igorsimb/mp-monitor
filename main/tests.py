@@ -14,7 +14,7 @@ class IndexPageTests(SimpleTestCase):
         self.assertEqual(self.response.status_code, 200)
 
     def test_index_template(self):
-        self.assertTemplateUsed(self.response, "main/product_list.html")
+        self.assertTemplateUsed(self.response, "main/item_list.html")
 
     def test_index_page_contains_correct_html(self):
         self.assertContains(self.response, 'Main Page')
