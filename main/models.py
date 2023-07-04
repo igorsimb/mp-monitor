@@ -1,6 +1,7 @@
 from django.contrib.auth.models import Group
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from guardian.shortcuts import assign_perm
 
 
@@ -20,7 +21,6 @@ class Item(models.Model):
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    price_without_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.URLField(null=True, blank=True)
     category = models.CharField(max_length=255, null=True, blank=True)
     brand = models.CharField(max_length=255, null=True, blank=True)
@@ -40,9 +40,25 @@ class Item(models.Model):
         return f"{self.name} ({self.sku})"
 
     def get_absolute_url(self):
-        return reverse("item", kwargs={"slug": self.sku})
+        return reverse("item_detail", kwargs={"slug": self.sku})
 
     def save(self, *args, **kwargs):
         group, created = Group.objects.get_or_create(name=self.tenant)
         super(Item, self).save(*args, **kwargs)
+        Price.objects.create(item=self, value=self.price, date_added=timezone.now())
         assign_perm("view_item", group, self)
+
+
+class Price(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="prices")
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date_added"]
+        default_permissions = ("add", "change", "delete")
+        permissions = (("view_item", "Can view item"),)
+        
+    def __str__(self):
+        return f"{self.item.name}'s price"
+

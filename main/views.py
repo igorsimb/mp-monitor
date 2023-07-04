@@ -1,10 +1,10 @@
 import httpx
 from django.contrib.auth import get_user_model
-from django.shortcuts import render
-from django.views.generic import ListView
-from guardian.mixins import PermissionListMixin
+from django.shortcuts import render, redirect
+from django.views.generic import ListView, DetailView
+from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
-from main.models import Item
+from main.models import Item, Price
 
 user = get_user_model()
 
@@ -12,8 +12,40 @@ user = get_user_model()
 class ItemListView(PermissionListMixin, ListView):
     model = Item
     context_object_name = "items"
-    permission_required = ["main.view_item"]
+    permission_required = ["view_item"]
     template_name = "main/item_list.html"
+
+
+class ItemDetailView(PermissionRequiredMixin, DetailView):
+    model = Item
+    permission_required = ["view_item"]
+    template_name = "main/item_detail.html"
+    context_object_name = "item"
+    slug_field = "sku"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        prices = Price.objects.filter(item=self.object)
+        context["prices"] = prices
+
+        # Add bootstrap table classes based on price comparison
+        # https://getbootstrap.com/docs/5.3/content/tables/#variants
+        for i in range(len(prices)):
+            try:
+                if prices[i].value < prices[i + 1].value:
+                    prices[i].table_class = 'table-danger'
+                    prices[i].trend = '↓'
+                elif prices[i].value > prices[i + 1].value:
+                    prices[i].table_class = 'table-success'
+                    prices[i].trend = '↑'
+                else:
+                    prices[i].table_class = 'table-warning'
+                    prices[i].trend = '='
+            # the original price is the last price in the list, so no comparison is possible
+            except IndexError:
+                prices[i].table_class = ''
+
+        return context
 
 
 def scrape_item(request, sku, **kwargs):
@@ -39,17 +71,19 @@ def scrape_item(request, sku, **kwargs):
         data = response.json()
 
     item = data.get('data', {}).get("products", None)
+    print(f"IGOR0 {item=}")
     # item is a list, not a dictionary
     # To avoid error "'list' object has no attribute 'get'", we access the first item in the list
     if item:
         item = item[0]
 
+    print(f"IGOR1 {item=}")
+
     # Extracting the scraped data
     name = item.get('name', None)
+    sku = item.get('id', None)
     price = float(item.get('salePriceU', None)) / 100 \
                 if item.get('salePriceU', None) is not None else None
-    price_without_discount = float(item.get('PriceU', None)) / 100 \
-        if item.get('PriceU', None) is not None else None
     # TODO: image needs to go from elsewhere
     image = item.get('image', None)
     # TODO: category needs to go from eslewhere (right now it's = brand)
@@ -61,24 +95,29 @@ def scrape_item(request, sku, **kwargs):
 
     # Populating the Item model with the scraped data
     tenant = request.user.tenant
-    item, created = Item.objects.get_or_create(
-        tenant=tenant,
-        name=name,
-        sku=sku,
-        price=price,
-        price_without_discount=price_without_discount,
-        image=image,
-        category=category,
-        brand=brand,
-        seller_name=seller_name,
-        rating=rating,
-        num_reviews=num_reviews,
+    updated_values = {
+        'name': name,
+        'price': price,
+        'image': image,
+        'category': category,
+        'brand': brand,
+        'seller_name': seller_name,
+        'rating': rating,
+        'num_reviews': num_reviews,
+    }
 
+    # update_or_create looks at tenant and sku, and if exist in db, uses defaults to update values
+    # source: https://thetldr.tech/when-to-use-update_or_create-in-django/
+    item, created = Item.objects.update_or_create(
+        tenant=tenant,
+        sku=sku,
+        defaults=updated_values
     )
 
     item.save()
+    return redirect("item_list")
 
-    context = {"item": item}
 
-    # TODO: replace with item_list redirect when item_detail is ready, ie: return redirect("item_list")
-    return render(request, "main/scrape_item.html", context)
+# TODO: think how to scrape category
+# TODO: think how to scrape image
+# TODO: remove seller_name since it's the same as brand?
