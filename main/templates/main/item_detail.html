@@ -5,6 +5,9 @@
 {% block content %}
 
     <div>User: {{ user }}</div>
+    <div>Permissions: {% get_obj_perms user for item as "perms" %}
+        {% for perm in perms %}{{ perm }}, {% endfor %}
+    </div>
 
     <a href="{% url 'item_list' %}"><-- Back to Items</a>
     <div class="container">

@@ -1,4 +1,5 @@
 {% extends 'main/base.html' %}
+
 {% block title %}
     Main Page
 {% endblock title %}
@@ -15,7 +16,17 @@
     <a href="{% url 'account_signup' %}">Sign Up</a>
 {% endif %}
 
+
+
 <div class="container">
+    <form method="POST" action="{% url 'scraped_item' sku=form.sku.value %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Scrape Item</button>
+    </form>
+
+
+
   <h1>Item {% if user.tenant is not None %}({{ user.tenant }}) {% endif %}
   </h1>
   <table class="table">
