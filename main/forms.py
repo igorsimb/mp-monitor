@@ -5,4 +5,6 @@ def validate_sku_format(value):
         raise forms.ValidationError("Неверный формат SKU.")
 
 class ScrapeForm(forms.Form):
-    sku = forms.CharField(label="SKU", max_length=9, validators=[validate_sku_format])
+    skus = forms.CharField(label="SKUs", widget=forms.Textarea,
+                           help_text="Введите один или несколько артикулов через запятую, пробел или с новой строки."
+                           )

@@ -1,12 +1,12 @@
-import httpx
+import re
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
-from guardian.decorators import permission_required_or_403
 
-from main.forms import ScrapeForm
-from main.models import Item, Price
+from .forms import ScrapeForm
+from .models import Item, Price
+from .scrape import get_scraped_data
 
 user = get_user_model()
 
@@ -57,83 +57,36 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
 
         return context
 
-# @permission_required_or_403('view_item')
-def scrape_item(request, **kwargs):
+
+def scrape_items(request, skus):
     if request.method == "POST":
         form = ScrapeForm(request.POST)
         if form.is_valid():
-            sku = form.cleaned_data["sku"]
+            skus = form.cleaned_data["skus"]
 
-            # Scraping the item and extracting relevant information
-            url = f'https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={sku}'
+            items_data = []
+            # the regex accepts the following formats for skus:
+            # - separated by comma with our without space in-between
+            # - separated by space
+            # - separated by new line
+            # - combination of the above
+            # e.g. 141540568, 13742696,20904017 3048451
+            for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
+                item_data = get_scraped_data(sku)
+                items_data.append(item_data)
 
-            headers = {
-                "Accept": "*/*",
-                "Accept-Language": "en-US,en;q=0.9,ms;q=0.8",
-                "Connection": "keep-alive",
-                "Origin": "https://www.wildberries.ru",
-                "Sec-Fetch-Dest": "empty",
-                "Sec-Fetch-Mode": "cors",
-                "Sec-Fetch-Site": "cross-site",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/000000000 Safari/537.36",
-                "sec-ch-ua": '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24',
-                "sec-ch-ua-mobile": "?0",
-                "sec-ch-ua-platform": "Windows",
-            }
-
-            with httpx.Client() as client:
-                response = client.get(url, headers=headers)
-                data = response.json()
-
-            item = data.get('data', {}).get("products", None)
-            # item is a list, not a dictionary
-            # To avoid error "'list' object has no attribute 'get'", we access the first item in the list
-            if item:
-                item = item[0]
-            # else:
-            #     return redirect("item_list")
-                # return render(request, 'main/item_list.html', {'error': "ERROROROROROO"})
-
-
-            # Extracting the scraped data
-            name = item.get('name', None)
-            sku = item.get('id', None)
-            price = float(item.get('salePriceU', None)) / 100 \
-                        if item.get('salePriceU', None) is not None else None
-            # TODO: image needs to go from elsewhere
-            image = item.get('image', None)
-            # TODO: category needs to go from eslewhere (right now it's = brand)
-            category = item.get('category', None)
-            brand = item.get('brand', None)
-            seller_name = item.get('brand', None)
-            rating = float(item.get('rating', None))
-            num_reviews = int(item.get('feedbacks', None))
-
-            # Populating the Item model with the scraped data
-            tenant = request.user.tenant
-            updated_values = {
-                'name': name,
-                'price': price,
-                'image': image,
-                'category': category,
-                'brand': brand,
-                'seller_name': seller_name,
-                'rating': rating,
-                'num_reviews': num_reviews,
-            }
-
-            # update_or_create looks at tenant and sku, and if exist in db, uses defaults to update values
-            # source: https://thetldr.tech/when-to-use-update_or_create-in-django/
-            item, created = Item.objects.update_or_create(
-                tenant=tenant,
-                sku=sku,
-                defaults=updated_values
-            )
+            for item_data in items_data:
+                item, created = Item.objects.update_or_create(
+                    tenant=request.user.tenant,
+                    sku=item_data["sku"],
+                    defaults=item_data,
+                )
 
             return redirect("item_list")
     else:
         form = ScrapeForm()
-    return render(request, 'main/item_list.html', {'form': form})
+    return render(request, "main/item_list.html", {"form": form})
+
 
 # TODO: think how to scrape category
 # TODO: think how to scrape image

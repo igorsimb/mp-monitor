@@ -19,7 +19,7 @@
 
 
 <div class="container">
-    <form method="POST" action="{% url 'scraped_item' sku=form.sku.value %}">
+    <form method="POST" action="{% url 'scraped_item' skus=form.skus.value %}">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Scrape Item</button>
