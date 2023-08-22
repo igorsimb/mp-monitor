@@ -23,15 +23,15 @@ def debug_task(self):
     print(f'Request: {self.request!r}')
 
 
-
 # celery beat tasks
 
-app.conf.beat_schedule ={
-'say-hello-every-10-seconds':{
-'task': 'main.tasks.print_hello',
-        'schedule': 10.0,
-},
-}
+
+# app.conf.beat_schedule = {
+#     'print-task-every-interval': {
+#         'task': 'main.tasks.print_task',
+#         'schedule': 10.0,  # Default schedule, will be overridden
+#     },
+# }
 
 # use commands:
 # one tab:  celery -A mp_monitor worker -l info --pool=eventlet

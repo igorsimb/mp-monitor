@@ -62,3 +62,20 @@ class Price(models.Model):
     def __str__(self):
         return f"{self.item.name}'s price"
 
+class Printer(models.Model):
+    name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+
+# 2 Models: Product and Parcer.
+# Product would have a parcer = models.ForeignKey(Parcer, on_delete=models.SET_NULL); is_enabled =
+# models.BooleanField(default=True)
+# Parcer would have interval = models.IntegerField()
+# So we would start a parser with an interval and pick what products to do it for.
+
+# TODO:
+# 1. Use enums for choices for seconds, minutes, hours
+# 2. Use Custom models manager for queryset of enabled products

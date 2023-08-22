@@ -1,0 +1,47 @@
+{% extends 'main/base.html' %}
+
+{% block title %}
+    Main Page
+{% endblock title %}
+
+{% block content %}
+
+    <h1>Print Task</h1>
+
+    <form method="POST" action="{% url 'print_task' %}">
+        {% csrf_token %}
+        {{ task_form.as_p }}
+        <button class="btn btn-outline-success" type="submit">Start Task</button>
+        <a href="{% url 'destroy_task' %}" class="btn btn-outline-danger">Delete Task</a>
+    </form>
+
+    <div class="mt-2">
+    {% if task %}
+       Task running: {{ task }}
+    {% else %}
+        No tasks running
+    {% endif %}
+    </div>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>id</th>
+            <th>created</th>
+        </tr>
+        </thead>
+        <tbody>
+    {% for printer in printers %}
+        <tr>
+            <td>{{ printer.id }}</td>
+            <td>{{ printer.created_at }}</td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="4">No items found.</td>
+        </tr>
+    {% endfor %}
+     </tbody>
+    </table>
+
+{% endblock content %}
