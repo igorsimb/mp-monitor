@@ -7,6 +7,10 @@ from guardian.shortcuts import assign_perm
 
 
 class Tenant(models.Model):
+    """
+    Stores a single tenant entry.
+    """
+
     name = models.CharField(max_length=255, unique=True)
 
     class Meta:
@@ -18,6 +22,10 @@ class Tenant(models.Model):
 
 
 class Item(models.Model):
+    """
+    Stores a single item entry, related to :model:`main.Tenant`.
+    """
+
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=255)

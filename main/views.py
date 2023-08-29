@@ -2,16 +2,14 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.views.generic import ListView, DetailView
-from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
-
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 from .forms import ScrapeForm, ScrapeIntervalForm
 from .models import Item, Price
 from .utils import get_scraped_data
-
-from django.utils import timezone
 
 user = get_user_model()
 
@@ -148,7 +146,7 @@ def destroy_scrape_interval_task(request):
     return redirect("item_list")
 
 
-# TODO: create django admin documentation
+# TODO: Django admin documentation generator https://docs.djangoproject.com/en/4.2/ref/contrib/admin/admindocs/
 # TODO: set up logging
 # TODO: tests
 # TODO: dockerize everything!
