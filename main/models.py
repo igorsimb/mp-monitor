@@ -2,6 +2,7 @@ from django.contrib.auth.models import Group
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+from django_celery_beat.models import IntervalSchedule
 from guardian.shortcuts import assign_perm
 
 

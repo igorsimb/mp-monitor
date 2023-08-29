@@ -4,7 +4,7 @@ from main.models import Tenant, Item, Price, Printer
 
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "price")
+    list_display = ("sku", "name", "price", "tenant")
 
 class PriceAdmin(admin.ModelAdmin):
     list_display = ("get_item_sku", "get_item_name", "value", "date_added")

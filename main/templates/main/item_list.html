@@ -60,7 +60,7 @@
             <tr>
                 <td><a href="{{ item.get_absolute_url }}">{{ item.sku }}</a></td>
                 {#          <td><a href="#">{{ item.sku }}</a></td>#}
-                <td>{{ item.name }} ({{ item.prices.count }})</td>
+                <td>({{ item.tenant.name }}) {{ item.name }} ({{ item.prices.count }})</td>
                 <td>{{ item.price }}</td>
             </tr>
         {% empty %}

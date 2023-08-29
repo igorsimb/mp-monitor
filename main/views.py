@@ -15,6 +15,8 @@ from .models import Item, Price, Printer
 from .scrape import get_scraped_data
 from .tasks import print_task
 
+from django.utils import timezone
+
 user = get_user_model()
 
 
@@ -179,7 +181,10 @@ def scrape_interval_task(request):
     """
     # task_date = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
     # # task = 'hello'
-    printers =  Printer.objects.all()
+    # items = Item.objects.filter(tenant=request.user.tenant)
+    # items_skus = [item.sku for item in items]
+    # print(f"{items_skus=}")
+
     if request.method == "POST":
         scrape_interval_form = ScrapeIntervalForm(request.POST)
         if scrape_interval_form.is_valid():
@@ -190,46 +195,24 @@ def scrape_interval_task(request):
             period = IntervalSchedule.SECONDS,
             )
 
-            # TypeError: scrape_interval_task() missing 1 required positional argument: 'request'
             scrape_interval_task = PeriodicTask.objects.create(
                 interval=schedule,
                 name=f'scrape_interval_task_{request.user}',
                 task='main.tasks.scrape_interval_task',
+                start_time=timezone.now(), # trigger once right away and then keep the interval
                 args=[request.user.tenant.id],
-                # kwargs={'request': request},
-                # expires=datetime.now() + timedelta(seconds=30)
             )
-            # task.save()
 
             # store 'scrape_interval_task' in session to display as context in print_task.html
             request.session['scrape_interval_task'] = f'{scrape_interval_task.name} - {scrape_interval_task.interval}'
 
-            # To stop task
-            # periodic_task = PeriodicTask.objects.get(name='task_name')
-            # periodic_task.enabled = False
-            # periodic_task.save()
-
-
-                # print_task.apply_async(countdown=interval)
-
-            # task = current_app.send_task('main.tasks.print_task')
-            # print_task.apply_async(countdown=interval, repeat=True)
-            # #
-
             return redirect("item_list")
 
-            # context = {
-            #     'task_form': task_form,
-            #     'printers': printers,
-            #     'task': task,
-            # }
-            # return render(request, "main/print_task.html", context)
     else:
         scrape_interval_form = ScrapeIntervalForm()
 
     context = {
         'scrape_interval_form': scrape_interval_form,
-        'printers': printers,
         'scrape_interval_task':  request.session.get('scrape_interval_task'),
     }
     return render(request, "main/item_list.html", context)
