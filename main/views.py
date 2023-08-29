@@ -1,12 +1,17 @@
 import re
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
-from .forms import ScrapeForm
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
+
+from .forms import ScrapeForm, ScrapeIntervalForm
 from .models import Item, Price
-from .scrape import get_scraped_data
+from .utils import get_scraped_data
+
+from django.utils import timezone
 
 user = get_user_model()
 
@@ -20,9 +25,12 @@ class ItemListView(PermissionListMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form = ScrapeForm()
+        scrape_interval_form = ScrapeIntervalForm()
         sku = None
         context["sku"] = sku
         context["form"] = form
+        context["scrape_interval_form"] = scrape_interval_form
+        context["scrape_interval_task"] = self.request.session.get('scrape_interval_task')
         return context
 
 
@@ -51,6 +59,7 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
                 else:
                     prices[i].table_class = 'table-warning'
                     prices[i].trend = '='
+
             # the original price is the last price in the list, so no comparison is possible
             except IndexError:
                 prices[i].table_class = ''
@@ -88,10 +97,52 @@ def scrape_items(request, skus):
     return render(request, "main/item_list.html", {"form": form})
 
 
-# TODO: think how to scrape category
-# TODO: think how to scrape image
-# TODO: remove seller_name since it's the same as brand?
-# TODO: add scrape_item to ListView's post method, or create a separate ItemCreateView:
+def create_scrape_interval_task(request):
+    """
+    Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
+    The task itself prints all items belonging to this tenant every {{ interval }} seconds.
+    """
 
-# CreateView?
-# https://github.com/django-guardian/django-guardian/blob/55beb9893310b243cbd6f578f9665c3e7c76bf96/example_project/articles/views.py#L19C1-L30C20
+    if request.method == "POST":
+        scrape_interval_form = ScrapeIntervalForm(request.POST)
+        if scrape_interval_form.is_valid():
+            interval = scrape_interval_form.cleaned_data["interval"]
+
+            schedule, created = IntervalSchedule.objects.get_or_create(
+                every=interval,
+                period=IntervalSchedule.SECONDS,
+            )
+
+            scrape_interval_task = PeriodicTask.objects.create(
+                interval=schedule,
+                name=f'scrape_interval_task_{request.user}',
+                task='main.tasks.scrape_interval_task',
+                start_time=timezone.now(),  # trigger once right away and then keep the interval
+                args=[request.user.tenant.id],
+            )
+
+            # store 'scrape_interval_task' in session to display as context in item_list.html
+            request.session['scrape_interval_task'] = f'{scrape_interval_task.name} - {scrape_interval_task.interval}'
+
+            return redirect("item_list")
+
+    else:
+        scrape_interval_form = ScrapeIntervalForm()
+
+    context = {
+        'scrape_interval_form': scrape_interval_form,
+        'scrape_interval_task': request.session.get('scrape_interval_task'),
+    }
+    return render(request, "main/item_list.html", context)
+
+
+def destroy_scrape_interval_task(request):
+    periodic_task = PeriodicTask.objects.get(name=f'scrape_interval_task_{request.user}')
+    periodic_task.delete()
+    print(f"{periodic_task} has been deleted!")
+
+    # delete 'scrape_interval_task' from session
+    if 'scrape_interval_task' in request.session:
+        del request.session['scrape_interval_task']
+
+    return redirect("item_list")
