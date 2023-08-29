@@ -30,7 +30,7 @@ class ItemListView(PermissionListMixin, ListView):
         context["sku"] = sku
         context["form"] = form
         context["scrape_interval_form"] = scrape_interval_form
-        context["scrape_interval_task"] = self.request.session.get('scrape_interval_task')
+        context["scrape_interval_task"] = self.request.session.get("scrape_interval_task")
         return context
 
 
@@ -51,18 +51,18 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         for i in range(len(prices)):
             try:
                 if prices[i].value < prices[i + 1].value:
-                    prices[i].table_class = 'table-danger'
-                    prices[i].trend = '↓'
+                    prices[i].table_class = "table-danger"
+                    prices[i].trend = "↓"
                 elif prices[i].value > prices[i + 1].value:
-                    prices[i].table_class = 'table-success'
-                    prices[i].trend = '↑'
+                    prices[i].table_class = "table-success"
+                    prices[i].trend = "↑"
                 else:
-                    prices[i].table_class = 'table-warning'
-                    prices[i].trend = '='
+                    prices[i].table_class = "table-warning"
+                    prices[i].trend = "="
 
             # the original price is the last price in the list, so no comparison is possible
             except IndexError:
-                prices[i].table_class = ''
+                prices[i].table_class = ""
 
         return context
 
@@ -115,14 +115,14 @@ def create_scrape_interval_task(request):
 
             scrape_interval_task = PeriodicTask.objects.create(
                 interval=schedule,
-                name=f'scrape_interval_task_{request.user}',
-                task='main.tasks.scrape_interval_task',
+                name=f"scrape_interval_task_{request.user}",
+                task="main.tasks.scrape_interval_task",
                 start_time=timezone.now(),  # trigger once right away and then keep the interval
                 args=[request.user.tenant.id],
             )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
-            request.session['scrape_interval_task'] = f'{scrape_interval_task.name} - {scrape_interval_task.interval}'
+            request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
 
             return redirect("item_list")
 
@@ -130,19 +130,25 @@ def create_scrape_interval_task(request):
         scrape_interval_form = ScrapeIntervalForm()
 
     context = {
-        'scrape_interval_form': scrape_interval_form,
-        'scrape_interval_task': request.session.get('scrape_interval_task'),
+        "scrape_interval_form": scrape_interval_form,
+        "scrape_interval_task": request.session.get("scrape_interval_task"),
     }
     return render(request, "main/item_list.html", context)
 
 
 def destroy_scrape_interval_task(request):
-    periodic_task = PeriodicTask.objects.get(name=f'scrape_interval_task_{request.user}')
+    periodic_task = PeriodicTask.objects.get(name=f"scrape_interval_task_{request.user}")
     periodic_task.delete()
     print(f"{periodic_task} has been deleted!")
 
     # delete 'scrape_interval_task' from session
-    if 'scrape_interval_task' in request.session:
-        del request.session['scrape_interval_task']
+    if "scrape_interval_task" in request.session:
+        del request.session["scrape_interval_task"]
 
     return redirect("item_list")
+
+
+# TODO: create django admin documentation
+# TODO: set up logging
+# TODO: tests
+# TODO: dockerize everything!

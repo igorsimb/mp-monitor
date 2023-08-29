@@ -1,5 +1,6 @@
 import httpx
 
+
 def get_scraped_data(sku):
     url = f"https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={sku}"
 

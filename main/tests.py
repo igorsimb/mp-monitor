@@ -5,7 +5,6 @@ from .views import IndexView
 
 
 class IndexPageTests(SimpleTestCase):
-
     def setUp(self):
         url = reverse("index")
         self.response = self.client.get(url)
@@ -17,7 +16,7 @@ class IndexPageTests(SimpleTestCase):
         self.assertTemplateUsed(self.response, "main/item_list.html")
 
     def test_index_page_contains_correct_html(self):
-        self.assertContains(self.response, 'Main Page')
+        self.assertContains(self.response, "Main Page")
 
     def test_index_page_does_not_contain_incorrect_html(self):
         self.assertNotContains(self.response, "Hi! I should not be on the page.")

@@ -33,10 +33,10 @@ class Item(models.Model):
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
 
-        constraints = [models.UniqueConstraint(fields=['tenant', 'sku'], name="unique_tenant_sku")]
+        constraints = [models.UniqueConstraint(fields=["tenant", "sku"], name="unique_tenant_sku")]
         default_permissions = ("add", "change", "delete")
         permissions = (("view_item", "Can view item"),)
-        
+
     def __str__(self):
         return f"{self.name} ({self.sku})"
 
@@ -59,9 +59,10 @@ class Price(models.Model):
         ordering = ["-date_added"]
         default_permissions = ("add", "change", "delete")
         permissions = (("view_item", "Can view item"),)
-        
+
     def __str__(self):
         return f"{self.item.name}'s price"
+
 
 class Printer(models.Model):
     name = models.CharField(max_length=255)

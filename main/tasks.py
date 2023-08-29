@@ -5,7 +5,6 @@ from .utils import get_scraped_data
 
 @shared_task(bind=True)
 def scrape_interval_task(self, tenant):
-
     items = Item.objects.filter(tenant=tenant)
     items_skus = [item.sku for item in items]
     items_data = []
