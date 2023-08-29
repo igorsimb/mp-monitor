@@ -1,7 +1,6 @@
 import os
 
 from celery import Celery
-from celery.schedules import crontab
 
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mp_monitor.settings')
@@ -21,18 +20,3 @@ app.autodiscover_tasks()
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     print(f'Request: {self.request!r}')
-
-
-# celery beat tasks
-
-
-# app.conf.beat_schedule = {
-#     'print-task-every-interval': {
-#         'task': 'main.tasks.print_task',
-#         'schedule': 10.0,  # Default schedule, will be overridden
-#     },
-# }
-
-# use commands:
-# one tab:  celery -A mp_monitor worker -l info --pool=eventlet
-# another tab: celery -A mp_monitor beat -l info

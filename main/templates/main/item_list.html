@@ -28,7 +28,7 @@
     <hr>
 
     <h2 class="mt-3">Scrape Interval </h2>
-    <form method="POST" action="{% url 'scrape_interval' %}">
+    <form method="POST" action="{% url 'create_scrape_interval' %}">
         {% csrf_token %}
         {{ scrape_interval_form.as_p }}
         <button class="btn btn-outline-success" type="submit">Create Interval</button>
@@ -59,7 +59,6 @@
         {% for item in items %}
             <tr>
                 <td><a href="{{ item.get_absolute_url }}">{{ item.sku }}</a></td>
-                {#          <td><a href="#">{{ item.sku }}</a></td>#}
                 <td>({{ item.tenant.name }}) {{ item.name }} ({{ item.prices.count }})</td>
                 <td>{{ item.price }}</td>
             </tr>
@@ -71,8 +70,5 @@
         </tbody>
     </table>
 </div>
-
-<h2><a href="{% url 'print_task' %}">Print Task</a></h2>
-
 
 {% endblock content %}
