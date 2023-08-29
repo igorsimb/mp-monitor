@@ -8,11 +8,6 @@ from main.models import Tenant
 
 
 class CustomUser(AbstractUser):
-    """
-    Stores a single custom user object, related to :model:`main.Tenant` and
-    :model:`auth.User`.
-    """
-
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Организация")
 
 
