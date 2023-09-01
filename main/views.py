@@ -1,3 +1,4 @@
+import logging
 import re
 
 from django.contrib.auth import get_user_model
@@ -12,6 +13,7 @@ from .models import Item, Price
 from .utils import get_scraped_data
 
 user = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class ItemListView(PermissionListMixin, ListView):
@@ -30,6 +32,10 @@ class ItemListView(PermissionListMixin, ListView):
         context["scrape_interval_form"] = scrape_interval_form
         context["scrape_interval_task"] = self.request.session.get("scrape_interval_task")
         return context
+
+    def get(self, request, *args, **kwargs):
+        logger.info("Going to Item List page")
+        return super().get(request, *args, **kwargs)
 
 
 class ItemDetailView(PermissionRequiredMixin, DetailView):
@@ -63,6 +69,10 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
                 prices[i].table_class = ""
 
         return context
+
+    def get(self, request, *args, **kwargs):
+        logger.info("Going to Details Page for item SKU '%s' (%s)", self.get_object().sku, self.get_object().name)
+        return super().get(request, *args, **kwargs)
 
 
 def scrape_items(request, skus):
@@ -146,7 +156,6 @@ def destroy_scrape_interval_task(request):
     return redirect("item_list")
 
 
-# TODO: Django admin documentation generator https://docs.djangoproject.com/en/4.2/ref/contrib/admin/admindocs/
 # TODO: set up logging
 # TODO: tests
 # TODO: dockerize everything!
