@@ -45,9 +45,10 @@ class Item(models.Model):
 
     def save(self, *args, **kwargs):
         group, created = Group.objects.get_or_create(name=self.tenant)
-        super(Item, self).save(*args, **kwargs)
+        if not group.permissions.filter(codename="view_item").exists():
+            assign_perm("view_item", group, self)
+        super().save(*args, **kwargs)
         Price.objects.create(item=self, value=self.price, date_added=timezone.now())
-        assign_perm("view_item", group, self)
 
 
 class Price(models.Model):
