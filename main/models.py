@@ -28,6 +28,7 @@ class Item(models.Model):
     seller_name = models.CharField(max_length=255, null=True, blank=True)
     rating = models.FloatField(null=True, blank=True)
     num_reviews = models.IntegerField(null=True, blank=True)
+    parser_active = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Товар"
