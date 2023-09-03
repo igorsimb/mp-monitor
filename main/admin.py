@@ -4,7 +4,8 @@ from main.models import Tenant, Item, Price, Printer
 
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "price", "tenant")
+    list_display = ("sku", "name", "price", "tenant", "parser_active")
+    list_editable = ("parser_active",)
 
 
 class PriceAdmin(admin.ModelAdmin):

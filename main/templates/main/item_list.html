@@ -47,9 +47,10 @@
 
         <h1>Item {% if user.tenant is not None %}({{ user.tenant }}) {% endif %}
         </h1>
-        <table class="table">
+        <table class="table table-striped table-hover table-bordered">
             <thead>
             <tr>
+                <th>Enabled</th>
                 <th>SKU</th>
                 <th>Name</th>
                 <th>Price</th>
@@ -58,6 +59,31 @@
             <tbody>
             {% for item in items %}
                 <tr>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            {% if item.parser_active %}
+                                <div class="form-check">
+                                    <input
+                                            class="form-check-input mt-0"
+                                            type="checkbox"
+                                            checked="checked"
+                                            value="{{ item.id }}"
+                                            name="selected_items"
+                                    >
+                                </div>
+
+                            {% else %}
+                                <div class="form-check text-center">
+                                    <input
+                                            class="form-check-input mt-0"
+                                            type="checkbox"
+                                            value="{{ item.id }}"
+                                            name="selected_items"
+                                    >
+                                </div>
+                            {% endif %}
+                        </div>
+                    </td>
                     <td><a href="{{ item.get_absolute_url }}">{{ item.sku }}</a></td>
                     <td>({{ item.tenant.name }}) {{ item.name }} ({{ item.prices.count }})</td>
                     <td>{{ item.price }}</td>

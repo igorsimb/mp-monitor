@@ -1,12 +1,13 @@
 from celery import shared_task
+
 from .models import Item
 from .utils import get_scraped_data
 
 
 @shared_task(bind=True)
-def scrape_interval_task(self, tenant):
-    items = Item.objects.filter(tenant=tenant)
-    items_skus = [item.sku for item in items]
+def scrape_interval_task(self, tenant, items_to_parse):
+    # items = Item.objects.filter(tenant=tenant)
+    items_skus = [item.sku for item in items_to_parse]
     items_data = []
 
     for sku in items_skus:
@@ -19,3 +20,6 @@ def scrape_interval_task(self, tenant):
             sku=item_data["sku"],
             defaults=item_data,
         )
+
+    for item in items_to_parse:
+        item.update(parser_active=True)

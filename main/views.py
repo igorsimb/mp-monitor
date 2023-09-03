@@ -2,6 +2,7 @@ import logging
 import re
 
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.views.generic import ListView, DetailView
@@ -113,9 +114,14 @@ def create_scrape_interval_task(request):
 
     if request.method == "POST":
         scrape_interval_form = ScrapeIntervalForm(request.POST)
-        if scrape_interval_form.is_valid():
-            interval = scrape_interval_form.cleaned_data["interval"]
 
+        interval = scrape_interval_form.cleaned_data["interval"]
+        selected_item_ids = request.POST.getlist("selected_items")
+        print(f"{selected_item_ids=}")
+        items_to_parse = Item.objects.filter(Q(tenant=request.user.tenant.id) & Q(id__in=selected_item_ids))
+        print(f"{items_to_parse=}")
+
+        if scrape_interval_form.is_valid():
             schedule, created = IntervalSchedule.objects.get_or_create(
                 every=interval,
                 period=IntervalSchedule.SECONDS,
@@ -126,7 +132,8 @@ def create_scrape_interval_task(request):
                 name=f"scrape_interval_task_{request.user}",
                 task="main.tasks.scrape_interval_task",
                 start_time=timezone.now(),  # trigger once right away and then keep the interval
-                args=[request.user.tenant.id],
+                # args=[request.user.tenant.id],
+                args=[request.user.tenant.id, items_to_parse],
             )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
@@ -156,6 +163,6 @@ def destroy_scrape_interval_task(request):
     return redirect("item_list")
 
 
-# TODO: set up logging
+# TODO: checkboxes for each item + checkbox to "choose all"
 # TODO: tests
 # TODO: dockerize everything!
