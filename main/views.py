@@ -2,7 +2,6 @@ import logging
 import re
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.views.generic import ListView, DetailView
@@ -11,7 +10,7 @@ from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 from .forms import ScrapeForm, ScrapeIntervalForm
 from .models import Item, Price
-from .utils import get_scraped_data
+from .utils import scrape_item, uncheck_all_boxes
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -68,6 +67,8 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
             # the original price is the last price in the list, so no comparison is possible
             except IndexError:
                 prices[i].table_class = ""
+            except TypeError:
+                logger.warning("Can't compare price to NoneType")
 
         return context
 
@@ -90,7 +91,7 @@ def scrape_items(request, skus):
             # - combination of the above
             # e.g. 141540568, 13742696,20904017 3048451
             for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
-                item_data = get_scraped_data(sku)
+                item_data = scrape_item(sku)
                 items_data.append(item_data)
 
             for item_data in items_data:
@@ -115,26 +116,43 @@ def create_scrape_interval_task(request):
     if request.method == "POST":
         scrape_interval_form = ScrapeIntervalForm(request.POST)
 
-        interval = scrape_interval_form.cleaned_data["interval"]
-        selected_item_ids = request.POST.getlist("selected_items")
-        print(f"{selected_item_ids=}")
-        items_to_parse = Item.objects.filter(Q(tenant=request.user.tenant.id) & Q(id__in=selected_item_ids))
-        print(f"{items_to_parse=}")
-
         if scrape_interval_form.is_valid():
+            logger.info("Starting the task")
+            selected_item_ids = request.POST.getlist("selected_items")
+
+            uncheck_all_boxes(request)
+
+            # Update the database for checked boxes
+            for item_id in selected_item_ids:
+                Item.objects.filter(id=int(item_id)).update(parser_active=True)
+
+            # Convert the list of stringified numbers to a list of integers to avoid the following error:
+            # json.decoder.JSONDecodeError: Expecting value: line 1 column 6 (char 5)
+            selected_item_ids = [int(item) for item in selected_item_ids]
+            print(f"{selected_item_ids=}")
+
+            interval = scrape_interval_form.cleaned_data["interval"]
+            print(f"{interval=}")
+            print(f'"{request.user.tenant.id=}"')
             schedule, created = IntervalSchedule.objects.get_or_create(
                 every=interval,
                 period=IntervalSchedule.SECONDS,
             )
+
+            kwargs_str = {"tenant_id": "1", "selected_item_ids_json": " + json.dumps(str(selected_item_ids)) + "}
+            print(f"{kwargs_str=}")
 
             scrape_interval_task = PeriodicTask.objects.create(
                 interval=schedule,
                 name=f"scrape_interval_task_{request.user}",
                 task="main.tasks.scrape_interval_task",
                 start_time=timezone.now(),  # trigger once right away and then keep the interval
-                # args=[request.user.tenant.id],
-                args=[request.user.tenant.id, items_to_parse],
+                args=[request.user.tenant.id, selected_item_ids],
             )
+
+            print(f"{scrape_interval_task.name=}")
+            print(f"{scrape_interval_task.args=}")
+            print(f"{scrape_interval_task.kwargs=}")
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
             request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
@@ -152,6 +170,8 @@ def create_scrape_interval_task(request):
 
 
 def destroy_scrape_interval_task(request):
+    uncheck_all_boxes(request)
+
     periodic_task = PeriodicTask.objects.get(name=f"scrape_interval_task_{request.user}")
     periodic_task.delete()
     print(f"{periodic_task} has been deleted!")
@@ -161,8 +181,3 @@ def destroy_scrape_interval_task(request):
         del request.session["scrape_interval_task"]
 
     return redirect("item_list")
-
-
-# TODO: checkboxes for each item + checkbox to "choose all"
-# TODO: tests
-# TODO: dockerize everything!

@@ -1,7 +1,13 @@
+import logging
+
 import httpx
 
+from main.models import Item
 
-def get_scraped_data(sku):
+logger = logging.getLogger(__name__)
+
+
+def scrape_item(sku):
     url = f"https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={sku}"
 
     response = httpx.get(url)
@@ -19,6 +25,9 @@ def get_scraped_data(sku):
     rating = float(item.get("rating"))
     num_reviews = int(item.get("feedbacks"))
 
+    if price is None:
+        logger.error(f"Could not find salePriceU for sku {sku}")
+
     return {
         "name": name,
         "sku": sku,
@@ -30,3 +39,7 @@ def get_scraped_data(sku):
         "rating": rating,
         "num_reviews": num_reviews,
     }
+
+
+def uncheck_all_boxes(request):
+    Item.objects.filter(tenant=request.user.tenant.id).update(parser_active=False)

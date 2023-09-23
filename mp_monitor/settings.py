@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "allauth",
     "allauth.account",
-    # "widget_tweaks",
+    "widget_tweaks",
     "guardian",
     "django_celery_beat",
     # Local
@@ -162,72 +162,75 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 
 # Generate log file paths based on year and month
-# def log_file_path(instance, filename):
-#     today = timezone.now()
-#     log_dir = os.path.join("logs", str(today.year), today.strftime("%B"))
-#     os.makedirs(log_dir, exist_ok=True)  # Create the directory if it doesn't exist
-#     return os.path.join("logs", str(today.year), today.strftime("%B"), filename)
+def log_file_path(instance, filename):
+    today = timezone.now()
+    log_dir = os.path.join("logs", str(today.year), today.strftime("%B"))
+    os.makedirs(log_dir, exist_ok=True)  # Create the directory if it doesn't exist
+    return os.path.join("logs", str(today.year), today.strftime("%B"), filename)
 
 
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#     "filters": {
-#         "require_debug_false": {
-#             "()": "django.utils.log.RequireDebugFalse",
-#         },
-#         "require_debug_true": {
-#             "()": "django.utils.log.RequireDebugTrue",
-#         },
-#     },
-#     "formatters": {
-#         "verbose": {"format": "[%(levelname)s] %(asctime)s - %(name)s:%(lineno)s - %(message)s"},
-#     },
-#     "handlers": {
-#         "debug_log": {
-#             "level": "DEBUG",
-#             "class": "logging.handlers.RotatingFileHandler",
-#             "filename": log_file_path(None, "debug.log"),
-#             "maxBytes": 1024 * 1024 * 5,  # 5MB
-#             "backupCount": 5,
-#             "formatter": "verbose",  # Use the custom formatter, see above
-#             "encoding": "utf-8",
-#         },
-#         "error_log": {
-#             "level": "ERROR",
-#             "class": "logging.handlers.RotatingFileHandler",
-#             "filename": log_file_path(None, "error.log"),
-#             "maxBytes": 1024 * 1024 * 5,  # 5MB
-#             "backupCount": 5,
-#             "formatter": "verbose",
-#             "encoding": "utf-8",
-#         },
-#         "info_log": {
-#             "level": "INFO",
-#             "class": "logging.handlers.RotatingFileHandler",
-#             "filename": log_file_path(None, "info.log"),
-#             "maxBytes": 1024 * 1024 * 5,  # 5MB
-#             "backupCount": 5,
-#             "formatter": "verbose",
-#             "encoding": "utf-8",
-#         },
-#         "console": {
-#             "level": "INFO",
-#             "filters": ["require_debug_true"],
-#             "class": "logging.StreamHandler",
-#             "formatter": "verbose",
-#         },
-#     },
-#     "loggers": {
-#         "": {
-#             "handlers": ["info_log", "console"],
-#             "level": "INFO",
-#             "propagate": True,
-#         },
-#         "django": {
-#             "handlers": ["error_log"],
-#             "level": "DEBUG",
-#             "propagate": True,
-#         },
-#     },
-# }
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+    },
+    "formatters": {
+        "verbose": {
+            "format": "[%(levelname)s] %(asctime)s - %(name)s:%(lineno)s - %(message)s",
+        },
+    },
+    "handlers": {
+        "debug_log": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": log_file_path(None, "debug.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5MB
+            "backupCount": 5,
+            "formatter": "verbose",  # Use the custom formatter, see above
+            "encoding": "utf-8",
+        },
+        "error_log": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": log_file_path(None, "error.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5MB
+            "backupCount": 5,
+            "formatter": "verbose",
+            "encoding": "utf-8",
+        },
+        "info_log": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": log_file_path(None, "info.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5MB
+            "backupCount": 5,
+            "formatter": "verbose",
+            "encoding": "utf-8",
+        },
+        "console": {
+            "level": "INFO",
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "": {
+            # "handlers": ["info_log", "console"],
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        # "django": {
+        #     "handlers": ["error_log"],
+        #     "level": "DEBUG",
+        #     "propagate": True,
+        # },
+    },
+}
