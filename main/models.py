@@ -21,7 +21,7 @@ class Item(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=255)
-    price = models.DecimalField(max_digits=10, decimal_places=0)
+    price = models.DecimalField(max_digits=10, decimal_places=0, null=True)
     image = models.URLField(null=True, blank=True)
     category = models.CharField(max_length=255, null=True, blank=True)
     brand = models.CharField(max_length=255, null=True, blank=True)
@@ -54,7 +54,7 @@ class Item(models.Model):
 
 class Price(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="prices")
-    value = models.DecimalField(max_digits=10, decimal_places=0)
+    value = models.DecimalField(max_digits=10, decimal_places=0, null=True)
     date_added = models.DateTimeField(auto_now_add=True)
 
     class Meta:
