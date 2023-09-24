@@ -1,12 +1,12 @@
-from django.test import SimpleTestCase
+from django.test import TransactionTestCase
 from django.urls import reverse, resolve
 
-from .views import IndexView
+from main.views import ItemListView
 
 
-class IndexPageTests(SimpleTestCase):
+class IndexPageTests(TransactionTestCase):
     def setUp(self):
-        url = reverse("index")
+        url = reverse("item_list")
         self.response = self.client.get(url)
 
     def test_url_exists_at_correct_location(self):
@@ -23,4 +23,4 @@ class IndexPageTests(SimpleTestCase):
 
     def test_index_page_url_resolves_index_view(self):
         view = resolve("/")
-        self.assertEqual(view.func.__name__, IndexView.as_view().__name__)
+        self.assertEqual(view.func.__name__, ItemListView.as_view().__name__)
