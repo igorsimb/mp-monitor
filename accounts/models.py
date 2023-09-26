@@ -10,6 +10,11 @@ from main.models import Tenant
 class CustomUser(AbstractUser):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Организация")
 
+    def save(self, *args, **kwargs):
+        if not self.tenant:
+            self.tenant = Tenant.objects.create(name=self.username)
+        super().save(*args, **kwargs)
+
 
 # Add user to the Tenant group upon creation
 @receiver(post_save, sender=CustomUser)
