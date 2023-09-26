@@ -132,12 +132,15 @@ INTERNAL_IPS = [
 SITE_ID = 1
 LOGIN_REDIRECT_URL = "item_list"
 ACCOUNT_LOGOUT_REDIRECT = "item_list"
+# point to a custom sign up form
+# ACCOUNT_FORMS = {'signup': 'accounts.forms.CustomUserCreationForm'}
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
     "guardian.backends.ObjectPermissionBackend",
 )
-EMAIL_BACKEND = "django.main.mail.backends.console.EmailBackend"
+# EMAIL_BACKEND = "django.main.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ACCOUNT_SESSION_REMEMBER = None  # True/False/None; None = ask user
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
