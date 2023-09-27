@@ -12,7 +12,7 @@ class CustomUser(AbstractUser):
 
     def save(self, *args, **kwargs):
         if not self.tenant:
-            self.tenant = Tenant.objects.create(name=self.username)
+            self.tenant = Tenant.objects.create(name=self.email)
         super().save(*args, **kwargs)
 
 

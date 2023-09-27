@@ -22,9 +22,10 @@ class TestCustomUserModel:
         assert user.password == "testpassword"
         assert user.username == "testuser"
 
-    def test_tenant_is_created_automatically(self):
-        user = User.objects.create(username="testuser2", password="testpassword")
-        assert user.tenant.name == "testuser2"
+    def test_tenant_is_created_automatically_from_email(self):
+        user = User.objects.create(email="testuser2@test.com", username="testuser2", password="testpassword")
+        logger.info("user.tenant.name = %s", user.tenant.name)
+        assert user.tenant.name == "testuser2@test.com", f"{user.tenant.name=}"
 
     def test_user_creation_with_existing_tenant(self):
         existing_tenant = Tenant.objects.create(name="existing_tenant")
@@ -35,7 +36,7 @@ class TestCustomUserModel:
 @pytest.fixture
 def setup_signal_test():
     tenant = Tenant.objects.create(name="test_tenant")
-    user = User.objects.create(username="testuser", tenant=tenant)
+    user = User.objects.create(email="testuser@test.com", username="testuser", tenant=tenant)
 
     logger.debug("Creating a signal to connect the function to post_save")
     signal = Signal()
