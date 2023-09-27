@@ -82,6 +82,7 @@ def scrape_items(request, skus):
         form = ScrapeForm(request.POST)
         if form.is_valid():
             skus = form.cleaned_data["skus"]
+            logger.info("Going to scrape items: %s", skus)
 
             items_data = []
             # the regex accepts the following formats for skus:
@@ -91,9 +92,11 @@ def scrape_items(request, skus):
             # - combination of the above
             # e.g. 141540568, 13742696,20904017 3048451
             for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
+                logger.info("Scraping item: %s", sku)
                 item_data = scrape_item(sku)
                 items_data.append(item_data)
 
+            logger.info("Checking for items_data: %s", items_data)
             for item_data in items_data:
                 item, created = Item.objects.update_or_create(
                     tenant=request.user.tenant,

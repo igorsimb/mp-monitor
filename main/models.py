@@ -1,9 +1,15 @@
+import logging
+
 from django.contrib.auth.models import Group
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule
 from guardian.shortcuts import assign_perm
+
+logger = logging.getLogger(__name__)
 
 
 class Tenant(models.Model):
@@ -45,11 +51,19 @@ class Item(models.Model):
         return reverse("item_detail", kwargs={"slug": self.sku})
 
     def save(self, *args, **kwargs):
-        group, created = Group.objects.get_or_create(name=self.tenant)
-        if not group.permissions.filter(codename="view_item").exists():
-            assign_perm("view_item", group, self)
         super().save(*args, **kwargs)
         Price.objects.create(item=self, value=self.price, date_added=timezone.now())
+
+
+# Having post_save signal solves "Object needs to be persisted first" if adding perms on save, resulting in failure to
+# add a scraped item to db. This is because Django adds ManyToMany related fields after saving.
+# Source: https://stackoverflow.com/a/23772575
+@receiver(post_save, sender=Item)
+def add_perms_to_group(sender, instance, created, **kwargs):
+    group, created = Group.objects.get_or_create(name=instance.tenant)
+    if not group.permissions.filter(codename="view_item").exists():
+        logger.info("Adding 'view_item' permission for item '%s' to group '%s'", instance.name, group.name)
+        assign_perm("view_item", group, instance)
 
 
 class Price(models.Model):
