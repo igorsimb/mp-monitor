@@ -1,9 +1,15 @@
 import logging
 
+import pytest
 from django.urls import reverse, resolve
 
-from main.views import ItemListView, ItemDetailView, scrape_items, create_scrape_interval_task, \
-    destroy_scrape_interval_task
+from main.views import (
+    ItemListView,
+    ItemDetailView,
+    scrape_items,
+    create_scrape_interval_task,
+    destroy_scrape_interval_task,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +42,11 @@ class TestMainUrls:
         logger.info("Resolving URL: %s to view function: %s", url, destroy_scrape_interval_task)
         assert resolve(url).func == destroy_scrape_interval_task
 
-    def test_resolve_incorrect_url(self):
+    @pytest.mark.parametrize(
+        "expected_view",
+        [ItemListView, ItemDetailView, scrape_items, create_scrape_interval_task],
+    )
+    def test_incorrect_url_does_not_resolve(self, expected_view):
         url = reverse("destroy_scrape_interval")
         logger.info("Resolving incorrect URL: %s to view function: %s", url, create_scrape_interval_task)
-        assert resolve(url).func != create_scrape_interval_task, "URL resolved when it should not have!"
+        assert resolve(url).func != expected_view, f"URL {url} resolved to {expected_view} when it should not have!"
