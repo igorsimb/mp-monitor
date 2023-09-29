@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm, get_perms
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,9 @@ def add_perms_to_group(sender, instance, created, **kwargs):
     if not group.permissions.filter(codename="view_item").exists():
         logger.info("Adding 'view_item' permission for item '%s' to group '%s'", instance.name, group.name)
         assign_perm("view_item", group, instance)
+        # get_perms: https://django-guardian.readthedocs.io/en/stable/userguide/check.html#get-perms
+        if "view_item" not in get_perms(group, instance):
+            logger.error("Failed to add 'view_item' permission for item '%s' to group '%s'", instance.name, group.name)
 
 
 class Price(models.Model):
