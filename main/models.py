@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.models import Group
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -27,7 +28,9 @@ class Item(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=255)
-    price = models.DecimalField(max_digits=10, decimal_places=0, null=True)
+    price = models.DecimalField(
+        max_digits=10, decimal_places=0, null=True, validators=[MinValueValidator(float("0.00"))]
+    )
     image = models.URLField(null=True, blank=True)
     category = models.CharField(max_length=255, null=True, blank=True)
     brand = models.CharField(max_length=255, null=True, blank=True)
@@ -40,7 +43,8 @@ class Item(models.Model):
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
 
-        constraints = [models.UniqueConstraint(fields=["tenant", "sku"], name="unique_tenant_sku")]
+        constraints = [models.UniqueConstraint(fields=["tenant", "sku"], name="unique_tenant_sku"),
+                       models.CheckConstraint(check=models.Q(price__gte=float("0.00")), name="no_negative_price"),]
         default_permissions = ("add", "change", "delete")
         permissions = (("view_item", "Can view item"),)
 
@@ -71,13 +75,24 @@ def add_perms_to_group(sender, instance, created, **kwargs):
 
 class Price(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="prices")
-    value = models.DecimalField(max_digits=10, decimal_places=0, null=True)
+    value = models.DecimalField(
+        max_digits=10, decimal_places=0, null=True, validators=[MinValueValidator(float("0.00"))]
+    )
     date_added = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        verbose_name = "Цена"
+        verbose_name_plural = "Цены"
         ordering = ["-date_added"]
         default_permissions = ("add", "change", "delete")
         permissions = (("view_item", "Can view item"),)
+
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(value__gte=0),
+                name="no_negative_price_value",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.item.name}'s price"

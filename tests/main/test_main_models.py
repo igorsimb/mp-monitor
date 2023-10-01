@@ -6,15 +6,14 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.urls import reverse
+from django.utils import timezone
 from guardian.shortcuts import assign_perm, get_perms
 
 from main.models import Tenant, Item, Price
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [
-    pytest.mark.django_db
-]
+pytestmark = [pytest.mark.django_db]
 
 User = get_user_model()
 
@@ -152,11 +151,11 @@ class TestAddPermsToGroupSignal:
             price=100,
         )
         logger.info("Checking if the 'view_item' permission is assigned to the group '%s'", item_group.name)
-        assert "view_item" in get_perms(item_group, item), \
-            f"Expected 'view_item' permission to be assigned to the group '{item_group.name}' but it wasn't"
+        assert "view_item" in get_perms(
+            item_group, item
+        ), f"Expected 'view_item' permission to be assigned to the group '{item_group.name}' but it wasn't"
 
     def test_manual_add_perm_does_not_create_duplicate_perm(self, item_group, tenant):
-
         item = Item.objects.create(
             tenant=tenant,
             name="Sample Item",
@@ -168,5 +167,52 @@ class TestAddPermsToGroupSignal:
         assign_perm("main.view_item", item_group, item)
 
         logger.info("Checking that the signal does not add a duplicate permission to group")
-        assert len(get_perms(item_group, item)) == 1, \
-            f"Group '{item_group}' should have only 1 permission, but it has {len(get_perms(item_group, item))}"
+        assert (
+            len(get_perms(item_group, item)) == 1
+        ), f"Group '{item_group}' should have only 1 permission, but it has {len(get_perms(item_group, item))}"
+
+
+class TestPriceModel:
+    @pytest.fixture
+    def tenant(self):
+        return Tenant.objects.create(name="Test Organization")
+
+    @pytest.fixture
+    def item(self, tenant):
+        return Item.objects.create(
+            tenant=tenant,
+            name="Test Item",
+            sku="SKU123",
+            price=100,
+        )
+
+    def test_create_price(self, item):
+        price = Price.objects.create(item=item, value=99)
+        logger.info("Checking if the Price instance was created successfully...")
+        assert price.id is not None
+
+    def test_create_new_price_with_valid_parameters(self, item, tenant):
+        price = Price.objects.create(item=item, value=10, date_added=timezone.now())
+        assert price.value == 10
+
+    def test_retrieve_price_date_added(self, item, tenant):
+        current_time = timezone.now()
+        price = Price.objects.create(item=item, value=10, date_added=current_time)
+
+        # Truncate both datetime values to the minute, no need for (milli)seconds
+        price_date_added_minutes = price.date_added.replace(microsecond=0)
+        current_time_minutes = current_time.replace(microsecond=0)
+
+        assert price_date_added_minutes == current_time_minutes
+
+    def test_create_new_price_with_null_value(self, item, tenant):
+        price = Price.objects.create(item=item, value=None, date_added=timezone.now())
+
+        assert price.value is None
+
+    def test_create_new_price_with_negative_value(self, item, tenant):
+        with pytest.raises(IntegrityError):
+            logger.info("Checking that a new Price object with a negative value cannot be saved due to "
+                        "no_negative_price_value CHECK constraint...")
+            Price.objects.create(item=item, value=-100, date_added=timezone.now())
+
