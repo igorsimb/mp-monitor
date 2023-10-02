@@ -11,7 +11,7 @@ user = get_user_model()
 
 
 @shared_task(bind=True)
-def scrape_interval_task(self, tenant_id, selected_item_ids):
+def scrape_interval_task(self, tenant_id: int, selected_item_ids: list[int]) -> None:
     items = Item.objects.filter(id__in=selected_item_ids)
     tenant = Tenant.objects.get(id=tenant_id)
     items_skus = [item.sku for item in items]

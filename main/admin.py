@@ -4,8 +4,8 @@ from main.models import Tenant, Item, Price, Printer
 
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "price", "tenant", "parser_active")
-    list_editable = ("parser_active",)
+    list_display = ("sku", "name", "price", "tenant", "is_parser_active")
+    list_editable = ("is_parser_active",)
 
 
 class PriceAdmin(admin.ModelAdmin):
@@ -14,11 +14,11 @@ class PriceAdmin(admin.ModelAdmin):
     search_fields = ("item__name", "item__sku")
 
     @admin.display(description="SKU")  # same as get_item_sku.short_description = "SKU"
-    def get_item_sku(self, obj):
+    def get_item_sku(self, obj) -> str:
         return obj.item.sku
 
     @admin.display(description="Товар")
-    def get_item_name(self, obj):
+    def get_item_name(self, obj) -> str:
         return obj.item.name
 
 

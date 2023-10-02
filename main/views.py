@@ -2,6 +2,7 @@ import logging
 import re
 
 from django.contrib.auth import get_user_model
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.views.generic import ListView, DetailView
@@ -77,7 +78,7 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         return super().get(request, *args, **kwargs)
 
 
-def scrape_items(request, skus):
+def scrape_items(request, skus: str) -> HttpResponse | HttpResponseRedirect:
     if request.method == "POST":
         form = ScrapeForm(request.POST)
         if form.is_valid():
@@ -127,7 +128,7 @@ def create_scrape_interval_task(request):
 
             # Update the database for checked boxes
             for item_id in selected_item_ids:
-                Item.objects.filter(id=int(item_id)).update(parser_active=True)
+                Item.objects.filter(id=int(item_id)).update(is_parser_active=True)
 
             # Convert the list of stringified numbers to a list of integers to avoid the following error:
             # json.decoder.JSONDecodeError: Expecting value: line 1 column 6 (char 5)
@@ -172,7 +173,7 @@ def create_scrape_interval_task(request):
     return render(request, "main/item_list.html", context)
 
 
-def destroy_scrape_interval_task(request):
+def destroy_scrape_interval_task(request) -> HttpResponseRedirect:
     uncheck_all_boxes(request)
 
     periodic_task = PeriodicTask.objects.get(name=f"scrape_interval_task_{request.user}")

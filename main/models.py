@@ -20,7 +20,7 @@ class Tenant(models.Model):
         verbose_name = "Организация"
         verbose_name_plural = "Организации"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -37,24 +37,26 @@ class Item(models.Model):
     seller_name = models.CharField(max_length=255, null=True, blank=True)
     rating = models.FloatField(null=True, blank=True)
     num_reviews = models.IntegerField(null=True, blank=True)
-    parser_active = models.BooleanField(default=False)
+    is_parser_active = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
 
-        constraints = [models.UniqueConstraint(fields=["tenant", "sku"], name="unique_tenant_sku"),
-                       models.CheckConstraint(check=models.Q(price__gte=float("0.00")), name="no_negative_price"),]
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "sku"], name="unique_tenant_sku"),
+            models.CheckConstraint(check=models.Q(price__gte=float("0.00")), name="no_negative_price"),
+        ]
         default_permissions = ("add", "change", "delete")
         permissions = (("view_item", "Can view item"),)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name} ({self.sku})"
 
-    def get_absolute_url(self):
+    def get_absolute_url(self) -> str:
         return reverse("item_detail", kwargs={"slug": self.sku})
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):  # type: ignore
         super().save(*args, **kwargs)
         Price.objects.create(item=self, value=self.price, date_added=timezone.now())
 
@@ -63,7 +65,7 @@ class Item(models.Model):
 # add a scraped item to db. This is because Django adds ManyToMany related fields after saving.
 # Source: https://stackoverflow.com/a/23772575
 @receiver(post_save, sender=Item)
-def add_perms_to_group(sender, instance, created, **kwargs):
+def add_perms_to_group(sender, instance, created, **kwargs) -> None:  # type: ignore
     group, created = Group.objects.get_or_create(name=instance.tenant)
     if not group.permissions.filter(codename="view_item").exists():
         logger.info("Adding 'view_item' permission for item '%s' to group '%s'", instance.name, group.name)
@@ -94,7 +96,7 @@ class Price(models.Model):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.item.name}'s price"
 
 
