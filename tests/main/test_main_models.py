@@ -81,7 +81,7 @@ class TestItemModel:
             seller_name="Sample Seller",
             rating=4.5,
             num_reviews=50,
-            parser_active=True,
+            is_parser_active=True,
         )
         assert item.pk is not None
 
@@ -212,7 +212,8 @@ class TestPriceModel:
 
     def test_create_new_price_with_negative_value(self, item, tenant):
         with pytest.raises(IntegrityError):
-            logger.info("Checking that a new Price object with a negative value cannot be saved due to "
-                        "no_negative_price_value CHECK constraint...")
+            logger.info(
+                "Checking that a new Price object with a negative value cannot be saved due to "
+                "no_negative_price_value CHECK constraint..."
+            )
             Price.objects.create(item=item, value=-100, date_added=timezone.now())
-

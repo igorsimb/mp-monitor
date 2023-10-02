@@ -30,7 +30,7 @@ class TestUncheckAllBoxes:
 
         logger.info("Creating %s items for tenant '%s'", number_of_items, tenant)
         items = [
-            Item.objects.create(tenant=tenant, name=f"Item {i}", sku=f"1234{i}", parser_active=True)
+            Item.objects.create(tenant=tenant, name=f"Item {i}", sku=f"1234{i}", is_parser_active=True)
             for i in range(1, number_of_items + 1)
         ]
 
@@ -38,11 +38,11 @@ class TestUncheckAllBoxes:
         logger.info("Calling uncheck_all_boxes() for tenant '%s'", tenant)
         uncheck_all_boxes(request)
 
-        logger.info("Checking that all items for tenant '%s' are updated with parser_active=False", tenant)
+        logger.info("Checking that all items for tenant '%s' are updated with is_parser_active=False", tenant)
         for item in items:
             item.refresh_from_db()
-            logger.debug("'%s' parser_active=%s", item.name, item.parser_active)
-            assert not item.parser_active
+            logger.debug("'%s' is_parser_active=%s", item.name, item.is_parser_active)
+            assert not item.is_parser_active
 
     def test_no_items_exist(self, request, user, tenant):
         """
@@ -69,20 +69,20 @@ class TestUncheckAllBoxes:
         logger.debug("Tenant '%s' created", tenant2)
 
         logger.info("Creating items for both tenants")
-        item1 = Item.objects.create(tenant=tenant1, name="Item 1", sku="12345", parser_active=True)
+        item1 = Item.objects.create(tenant=tenant1, name="Item 1", sku="12345", is_parser_active=True)
         logger.debug("Item '%s' created", item1)
-        item2 = Item.objects.create(tenant=tenant2, name="Item 2", sku="67899", parser_active=True)
+        item2 = Item.objects.create(tenant=tenant2, name="Item 2", sku="67899", is_parser_active=True)
         logger.debug("Item '%s' created", item2)
 
         logger.info("Calling uncheck_all_boxes() for tenant '%s'", tenant1)
         request.user = user1
         uncheck_all_boxes(request)
 
-        logger.info("Checking that only item1 for tenant '%s' is updated with parser_active=False", tenant1)
+        logger.info("Checking that only item1 for tenant '%s' is updated with is_parser_active=False", tenant1)
         item1.refresh_from_db()
         item2.refresh_from_db()
-        assert not item1.parser_active, f"Item1 parser_active should be False but it is {item1.parser_active}"
-        assert item2.parser_active, f"Item2 parser_active should be True but it is {item2.parser_active}"
+        assert not item1.is_parser_active, f"Item1 is_parser_active should be False but it is {item1.is_parser_active}"
+        assert item2.is_parser_active, f"Item2 is_parser_active should be True but it is {item2.is_parser_active}"
 
     def test_no_items_updated_if_user_not_authenticated(self, request):
         with pytest.raises(AttributeError):
@@ -90,23 +90,23 @@ class TestUncheckAllBoxes:
             uncheck_all_boxes(request)
 
         logger.info("Checking that no items are updated")
-        assert Item.objects.filter(parser_active=True).count() == 0
+        assert Item.objects.filter(is_parser_active=True).count() == 0
 
     def test_uncheck_all_boxes_already_inactive(self, request, user, tenant):
         """
-        Test if the function handles items with parser_active=False gracefully
+        Test if the function handles items with is_parser_active=False gracefully
         """
-        Item.objects.create(name="InactiveItem1", tenant=tenant, sku="12345", parser_active=False)
-        Item.objects.create(name="InactiveItem2", tenant=tenant, sku="67899", parser_active=False)
+        Item.objects.create(name="InactiveItem1", tenant=tenant, sku="12345", is_parser_active=False)
+        Item.objects.create(name="InactiveItem2", tenant=tenant, sku="67899", is_parser_active=False)
 
         request.user = user
         uncheck_all_boxes(request)
 
-        inactive_items = Item.objects.filter(tenant=tenant, parser_active=False)
+        inactive_items = Item.objects.filter(tenant=tenant, is_parser_active=False)
         for item in inactive_items:
             assert (
-                not item.parser_active
-            ), f"Item {item.name} parser_active should be False but it is {item.parser_active}"
+                not item.is_parser_active
+            ), f"Item {item.name} is_parser_active should be False but it is {item.is_parser_active}"
 
 
 class TestScrapeItem:
@@ -159,11 +159,14 @@ class TestScrapeItem:
         }
 
     def test_retry_request_on_http_error(self, mocker):
-        mocker.patch("httpx.get", side_effect=[
-            httpx.HTTPError(message="Expected Error"),
-            httpx.HTTPError(message="Expected Error"),
-            self.mock_response
-        ])
+        mocker.patch(
+            "httpx.get",
+            side_effect=[
+                httpx.HTTPError(message="Expected Error"),
+                httpx.HTTPError(message="Expected Error"),
+                self.mock_response,
+            ],
+        )
 
         logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku)
         result = scrape_item(self.sku)

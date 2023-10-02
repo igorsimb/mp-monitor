@@ -1,7 +1,7 @@
 from django import forms
 
 
-def validate_sku_format(value):
+def validate_sku_format(value: str) -> None:
     if not value.isdigit() or len(value) < 5:
         raise forms.ValidationError("Неверный формат SKU.")
 
