@@ -10,7 +10,7 @@ from main.models import Tenant
 class CustomUser(AbstractUser):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Организация")
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):  # type: ignore
         if not self.tenant:
             self.tenant = Tenant.objects.create(name=self.email)
         super().save(*args, **kwargs)
@@ -18,7 +18,8 @@ class CustomUser(AbstractUser):
 
 # Add user to the Tenant group upon creation
 @receiver(post_save, sender=CustomUser)
-def add_user_to_group(sender, instance, created, **kwargs):
+def add_user_to_group(sender, instance, created, **kwargs):  # type: ignore  # pylint: disable=[unused-argument]
+
     if instance.is_superuser:
         return
     if created:

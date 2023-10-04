@@ -89,7 +89,9 @@ disable=R,
         long-suffix,
         map-builtin-not-iterating,
         misplaced-comparison-constant,
+        missing-class-docstring,
         missing-function-docstring,
+        missing-module-docstring,
         metaclass-assignment,
         next-method-called,
         next-method-defined,
@@ -119,6 +121,7 @@ disable=R,
         standarderror-builtin,
         suppressed-message,
         sys-max-int,
+        too-few-public-methods,
         trailing-newlines,
         unichr-builtin,
         unicode-builtin,
@@ -323,7 +326,7 @@ ignore-comments=yes
 ignore-docstrings=yes
 
 # Ignore imports when computing similarities.
-ignore-imports=no
+ignore-imports=yes
 
 
 [SPELLING]
