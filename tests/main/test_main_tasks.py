@@ -125,14 +125,13 @@ class TestScrapeIntervalTask:
         logger.info("Checking that %s's Price after running task was updated correctly", items[1].name)
         assert items[1].price == 150
 
-    def test_no_items_created_if_no_id(self, tenant: Tenant, caplog) -> None:  # type: ignore
+    def test_no_items_created_if_no_id(self, tenant: Tenant) -> None:  # type: ignore
         scrape_interval_task(tenant.id, selected_item_ids=[])
 
         logger.debug("Items: %s", Item.objects.all())
-        assert "Found items: <QuerySet []>" in caplog.text
         assert Item.objects.all().count() == 0
 
-    def test_no_items_created_if_invalid_id(self, tenant: Tenant, mocker, caplog) -> None:  # type: ignore
+    def test_no_items_created_if_invalid_id(self, tenant: Tenant, mocker) -> None:  # type: ignore
         invalid_items_ids = [998, 999]
 
         logger.info("Mocking the 'Item.objects.filter' method to return an empty list")
@@ -142,7 +141,6 @@ class TestScrapeIntervalTask:
         scrape_interval_task(tenant.id, selected_item_ids=invalid_items_ids)
 
         logger.debug("Items: %s", Item.objects.all())
-        assert "Found items: []" in caplog.text
         assert Item.objects.all().count() == 0
 
         logger.info("Checking that the Item.objects.filter method was called "

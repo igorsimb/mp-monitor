@@ -2,6 +2,7 @@ import logging
 import re
 
 from django.contrib.auth import get_user_model
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -142,6 +143,10 @@ def create_scrape_interval_task(request):
                 every=interval,
                 period=IntervalSchedule.SECONDS,
             )
+            if created:
+                logger.debug("Interval created with schedule: every %s %s", schedule.every, schedule.period)
+            else:
+                logger.error("Something went wrong. Interval was not created!")
 
             kwargs_str = {"tenant_id": "1", "selected_item_ids_json": " + json.dumps(str(selected_item_ids)) + "}
             print(f"{kwargs_str=}")
@@ -153,10 +158,7 @@ def create_scrape_interval_task(request):
                 start_time=timezone.now(),  # trigger once right away and then keep the interval
                 args=[request.user.tenant.id, selected_item_ids],
             )
-
-            print(f"{scrape_interval_task.name=}")
-            print(f"{scrape_interval_task.args=}")
-            print(f"{scrape_interval_task.kwargs=}")
+            logger.debug("Interval task '%s' was successfully created for '%s'",scrape_interval_task.name, request.user)
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
             request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
@@ -173,7 +175,7 @@ def create_scrape_interval_task(request):
     return render(request, "main/item_list.html", context)
 
 
-def destroy_scrape_interval_task(request) -> HttpResponseRedirect:
+def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     uncheck_all_boxes(request)
 
     periodic_task = PeriodicTask.objects.get(name=f"scrape_interval_task_{request.user}")
