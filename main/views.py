@@ -99,7 +99,7 @@ def scrape_items(request, skus: str) -> HttpResponse | HttpResponseRedirect:
 
             logger.info("Checking for items_data: %s", items_data)
             for item_data in items_data:
-                item, created = Item.objects.update_or_create(
+                item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
                     tenant=request.user.tenant,
                     sku=item_data["sku"],
                     defaults=item_data,
@@ -138,7 +138,7 @@ def create_scrape_interval_task(request):
             interval = scrape_interval_form.cleaned_data["interval"]
             print(f"{interval=}")
             print(f'"{request.user.tenant.id=}"')
-            schedule, created = IntervalSchedule.objects.get_or_create(
+            schedule, created = IntervalSchedule.objects.get_or_create(  # pylint: disable=unused-variable
                 every=interval,
                 period=IntervalSchedule.SECONDS,
             )
