@@ -36,7 +36,7 @@ def scrape_item(sku: str) -> dict:
             data = response.json()
             break
         except httpx.HTTPError as e:
-            logger.error(f"HTTP error occurred: {e}")
+            logger.error("HTTP error occurred: %s", e)
             retry_count += 1
 
     item = data.get("data", {}).get("products")[0]
@@ -52,7 +52,7 @@ def scrape_item(sku: str) -> dict:
     num_reviews = int(item.get("feedbacks")) if item.get("feedbacks") is not None else None
 
     if price is None:
-        logger.error(f"Could not find salePriceU for sku {sku}")
+        logger.error("Could not find salePriceU for sku %s", sku)
 
     return {
         "name": name,
@@ -69,3 +69,4 @@ def scrape_item(sku: str) -> dict:
 
 def uncheck_all_boxes(request) -> None:
     Item.objects.filter(tenant=request.user.tenant.id).update(is_parser_active=False)
+    logger.debug("All boxes unchecked.")
