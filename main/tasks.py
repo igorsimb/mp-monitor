@@ -11,8 +11,9 @@ user = get_user_model()
 
 
 @shared_task(bind=True)
-def scrape_interval_task(self, tenant_id: int, selected_item_ids: list[int]) -> None:
+def scrape_interval_task(self, tenant_id: int, selected_item_ids: list[int]) -> None: # pylint: disable=[unused-argument]
     items = Item.objects.filter(id__in=selected_item_ids)
+    logger.debug("Found items: %s", items)
     tenant = Tenant.objects.get(id=tenant_id)
     items_skus = [item.sku for item in items]
 
@@ -23,9 +24,13 @@ def scrape_interval_task(self, tenant_id: int, selected_item_ids: list[int]) -> 
         items_data.append(item_data)
 
     for item_data in items_data:
-        logger.info(f'Updating item: {item_data["sku"]} | Name: {item_data["name"]}...')
+        logger.info("Looking for item with SKU: %s | Name: %s...", item_data["sku"], item_data["name"])
         item, created = Item.objects.update_or_create(
             tenant=tenant,
             sku=item_data["sku"],
             defaults=item_data,
         )
+        if created:
+            logger.debug("Created item: %s | Name: %s...", item.sku, item.name)
+        else:
+            logger.debug("Updated item: %s | Name: %s...", item.sku, item.name)
