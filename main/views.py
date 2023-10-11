@@ -12,7 +12,7 @@ from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 from .forms import ScrapeForm, ScrapeIntervalForm
 from .models import Item, Price
-from .utils import scrape_item, uncheck_all_boxes
+from .utils import scrape_item, uncheck_all_boxes, show_successful_scrape_message
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -106,6 +106,8 @@ def scrape_items(request, skus: str) -> HttpResponse | HttpResponseRedirect:
                     defaults=item_data,
                 )
 
+            show_successful_scrape_message(request, items_data, max_items_on_screen=10)
+
             return redirect("item_list")
     else:
         form = ScrapeForm()
@@ -158,7 +160,9 @@ def create_scrape_interval_task(request):
                 start_time=timezone.now(),  # trigger once right away and then keep the interval
                 args=[request.user.tenant.id, selected_item_ids],
             )
-            logger.debug("Interval task '%s' was successfully created for '%s'",scrape_interval_task.name, request.user)
+            logger.debug(
+                "Interval task '%s' was successfully created for '%s'", scrape_interval_task.name, request.user
+            )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
             request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
