@@ -1,12 +1,16 @@
 import logging
 
 import httpx
+from django.contrib import messages
+from django.http import HttpRequest
+from django.utils.safestring import mark_safe
 
 from main.models import Item
 
 logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 3
+MAX_ITEMS_ON_SCREEN = 10
 
 
 def extract_valid_price(item: dict) -> float | None:
@@ -67,6 +71,34 @@ def scrape_item(sku: str) -> dict:
     }
 
 
-def uncheck_all_boxes(request) -> None:
-    Item.objects.filter(tenant=request.user.tenant.id).update(is_parser_active=False)
+def uncheck_all_boxes(request: HttpRequest) -> None:
+    Item.objects.filter(tenant=request.user.tenant.id).update(is_parser_active=False)  # type: ignore
     logger.debug("All boxes unchecked.")
+
+
+def show_successful_scrape_message(
+    request: HttpRequest, items_data: list[dict], max_items_on_screen: int = MAX_ITEMS_ON_SCREEN
+) -> None:
+    """Displays a success message to the user indicating that the scrape was successful.
+    Message depends on the number of items scraped to avoid screen clutter.
+
+    Args:
+        request: The HttpRequest object.
+        items_data: A list of dictionaries containing the data for the scraped items.
+        max_items_on_screen: The maximum number of items to display on the screen before it starts showing only
+            the number of items.
+
+    Returns:
+        None
+    """
+    if len(items_data) == 0:
+        messages.error(request, "Добавьте хотя бы 1 товар")
+        return
+    if len(items_data) == 1:
+        # debug, info, success, warning, error
+        messages.success(request, f'Обновлена информация по товару: "{items_data[0]["name"]} ({items_data[0]["sku"]})"')
+    elif 1 < len(items_data) <= max_items_on_screen:
+        formatted_items = [f"<li>{item['sku']}: {item['name']}</li>" for item in items_data]
+        messages.success(request, mark_safe(f'Обновлена информация по товарам: <ul>{"".join(formatted_items)}</ul>'))
+    elif len(items_data) > max_items_on_screen:
+        messages.success(request, f"Обновлена информация по {len(items_data)} товарам")

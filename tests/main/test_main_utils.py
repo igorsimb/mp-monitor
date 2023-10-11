@@ -2,10 +2,14 @@ import logging
 
 import httpx
 import pytest
+from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.http import HttpRequest
+from django.utils.safestring import mark_safe
+from pytest_mock import MockerFixture
 
 from main.models import Item, Tenant
-from main.utils import uncheck_all_boxes, scrape_item
+from main.utils import uncheck_all_boxes, scrape_item, show_successful_scrape_message, MAX_ITEMS_ON_SCREEN
 
 pytestmark = [pytest.mark.django_db]
 
@@ -213,3 +217,68 @@ class TestScrapeItem:
 
         logger.info("Checking that the resulting price is None")
         assert result["price"] is None
+
+
+class TestShowSuccessfulScrapeMessage:
+    @staticmethod
+    def create_items_data(num_items: int) -> list[dict]:
+        return [{"name": f"Item {i}", "sku": str(10000 + i)} for i in range(1, num_items + 1)]
+
+    @pytest.fixture
+    def mock_request(self) -> HttpRequest:
+        return HttpRequest()
+
+    def test_message_one_item_scraped(self, mock_request: HttpRequest, mocker: MockerFixture) -> None:
+        logger.info("Creating 1 item")
+        items_data = self.create_items_data(1)
+
+        mocker.patch("django.contrib.messages.success")
+        show_successful_scrape_message(mock_request, items_data)
+        expected_message = f'Обновлена информация по товару: "{items_data[0]["name"]} ({items_data[0]["sku"]})"'
+        messages.success.assert_called_once_with(mock_request, expected_message)
+
+    def test_message_multiple_items_scraped_max(self, mock_request: HttpRequest, mocker: MockerFixture) -> None:
+        logger.info("Creating %s items", MAX_ITEMS_ON_SCREEN)
+        items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN)
+
+        mocker.patch("django.contrib.messages.success")
+        show_successful_scrape_message(mock_request, items_data)
+        expected_message = mark_safe(
+            "Обновлена информация по товарам: <ul>"
+            + "".join([f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data])
+            + "</ul>"
+        )
+
+        messages.success.assert_called_once_with(mock_request, expected_message)
+
+    def test_message_multiple_items_scraped_less_than_max(
+        self, mock_request: HttpRequest, mocker: MockerFixture
+    ) -> None:
+        logger.info("Creating %s items", (MAX_ITEMS_ON_SCREEN - 1))
+        items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN - 1)
+
+        mocker.patch("django.contrib.messages.success")
+        show_successful_scrape_message(mock_request, items_data)
+        expected_message = mark_safe(
+            "Обновлена информация по товарам: <ul>"
+            + "".join([f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data])
+            + "</ul>"
+        )
+        assert len(items_data) < MAX_ITEMS_ON_SCREEN
+        messages.success.assert_called_once_with(mock_request, expected_message)
+
+    def test_message_multiple_items_scraped_more_than_max(
+        self, mock_request: HttpRequest, mocker: MockerFixture
+    ) -> None:
+        logger.info("Creating %s items", (MAX_ITEMS_ON_SCREEN + 1))
+        items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN + 1)
+
+        mocker.patch("django.contrib.messages.success")
+        show_successful_scrape_message(mock_request, items_data)
+        messages.success.assert_called_once_with(mock_request, f"Обновлена информация по {len(items_data)} товарам")
+
+    def test_no_items_scraped(self, mock_request: HttpRequest, mocker: MockerFixture) -> None:
+        items_data = []
+        mocker.patch("django.contrib.messages.error")
+        show_successful_scrape_message(mock_request, items_data)
+        messages.error.assert_called_once_with(mock_request, "Добавьте хотя бы 1 товар")
