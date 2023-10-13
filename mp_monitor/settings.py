@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+from django.contrib.messages import constants as message_constants
 from django.utils import timezone
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -166,7 +166,7 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 
 # Generate log file paths based on year and month
-def log_file_path(instance, filename):
+def log_file_path(instance, filename):  # pylint: disable=unused-argument
     today = timezone.now()
     log_dir = os.path.join("logs", str(today.year), today.strftime("%B"))
     os.makedirs(log_dir, exist_ok=True)  # Create the directory if it doesn't exist
@@ -238,3 +238,8 @@ LOGGING = {
         # },
     },
 }
+
+# Django Messages settings
+# Instead of "error" we use "danger" to indicate a bootstrap class
+# Source: https://docs.djangoproject.com/en/4.2/ref/settings/#message-tags
+MESSAGE_TAGS = {message_constants.ERROR: "danger"}

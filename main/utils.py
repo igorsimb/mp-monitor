@@ -71,6 +71,23 @@ def scrape_item(sku: str) -> dict:
     }
 
 
+def at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[str]) -> bool:
+    """
+    Checks if at least one item is selected.
+    If not, displays an error message and redirects to the item list page.
+    Args:
+        request: The HttpRequest object.
+        selected_item_ids: A list of stringified integers representing the IDs of the selected items.
+    """
+    if len(selected_item_ids) == 0:
+        messages.error(request, "Выберите хотя бы 1 товар")
+        logger.warning("No items were selected.")
+        return False
+
+    logger.info("Items with these ids where selected: %s", selected_item_ids)
+    return True
+
+
 def uncheck_all_boxes(request: HttpRequest) -> None:
     Item.objects.filter(tenant=request.user.tenant.id).update(is_parser_active=False)  # type: ignore
     logger.debug("All boxes unchecked.")

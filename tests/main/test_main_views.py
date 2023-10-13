@@ -11,7 +11,12 @@ from django_celery_beat.models import PeriodicTask
 
 from main.forms import ScrapeForm, ScrapeIntervalForm
 from main.models import Item
-from main.views import ItemListView, ItemDetailView, scrape_items, destroy_scrape_interval_task
+from main.views import (
+    ItemListView,
+    ItemDetailView,
+    scrape_items,
+    destroy_scrape_interval_task,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +243,7 @@ class TestScrapeItemsView:
 
 
 class TestCreateScrapeIntervalTaskView:
+    # pylint: disable=unused-argument
     # Use pytest-mock (mocker) to isolate the tests from API in case API fails or real item's info changes (e.g. price)
     @pytest.fixture(autouse=True)
     def create_items(self, mocker) -> None:  # type: ignore
@@ -319,8 +325,14 @@ class TestCreateScrapeIntervalTaskView:
             "selected_items": [1, 2],
         }
 
+    def test_task_created(self, client: Client, logged_in_user: User, valid_form_data: dict, mocker):
+        mocker.patch("django.contrib.messages.error")
+        client.post(reverse("create_scrape_interval"), data=valid_form_data)
+        assert (
+            PeriodicTask.objects.all().count() == 1
+        ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+
     def test_redirect_if_valid_form_data(self, client: Client, logged_in_user: User, valid_form_data: dict) -> None:
-        # pylint: disable=unused-argument
         logger.info("Sending a POST request to the view with valid form data")
         response = client.post(reverse("create_scrape_interval"), data=valid_form_data)
 
@@ -329,7 +341,6 @@ class TestCreateScrapeIntervalTaskView:
         logger.debug("Successfully redirected to %s", response.url)
 
     def test_interval_task_exists_in_session(self, client: Client, logged_in_user: User, valid_form_data: dict) -> None:
-        # pylint: disable=unused-argument
         logger.info("Sending a POST request to the view with valid form data")
         client.post(reverse("create_scrape_interval"), data=valid_form_data)
 
@@ -368,10 +379,19 @@ class TestCreateScrapeIntervalTaskView:
             PeriodicTask.objects.all().count() == 0
         ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
 
+    def test_no_items_selected_does_not_create_task(self, client, logged_in_user, mocker):
+        mocker.patch("django.contrib.messages.error")
+        no_items_selected = {
+            "interval": 60,
+            "selected_items": [],
+        }
+        client.post(reverse("create_scrape_interval"), data=no_items_selected)
+        assert (
+            PeriodicTask.objects.all().count() == 0
+        ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+
 
 class TestDestroyScrapeIntervalTaskView:
-    # At the moment Interval Task can be created without active items. This will be changed in future and,
-    # as a result, create_items fixture will need to be used.
     @pytest.fixture
     def client(self) -> Client:
         return Client()

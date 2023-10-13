@@ -9,7 +9,13 @@ from django.utils.safestring import mark_safe
 from pytest_mock import MockerFixture
 
 from main.models import Item, Tenant
-from main.utils import uncheck_all_boxes, scrape_item, show_successful_scrape_message, MAX_ITEMS_ON_SCREEN
+from main.utils import (
+    uncheck_all_boxes,
+    scrape_item,
+    show_successful_scrape_message,
+    MAX_ITEMS_ON_SCREEN,
+    at_least_one_item_selected,
+)
 
 pytestmark = [pytest.mark.django_db]
 
@@ -250,9 +256,7 @@ class TestShowSuccessfulScrapeMessage:
 
         messages.success.assert_called_once_with(mock_request, expected_message)
 
-    def test_message_multiple_items_scraped_less_than_max(
-        self, mock_request: HttpRequest
-    ) -> None:
+    def test_message_multiple_items_scraped_less_than_max(self, mock_request: HttpRequest) -> None:
         logger.info("Creating %s items", (MAX_ITEMS_ON_SCREEN - 1))
         items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN - 1)
 
@@ -265,9 +269,7 @@ class TestShowSuccessfulScrapeMessage:
         assert len(items_data) < MAX_ITEMS_ON_SCREEN
         messages.success.assert_called_once_with(mock_request, expected_message)
 
-    def test_message_multiple_items_scraped_more_than_max(
-        self, mock_request: HttpRequest
-    ) -> None:
+    def test_message_multiple_items_scraped_more_than_max(self, mock_request: HttpRequest) -> None:
         logger.info("Creating %s items", (MAX_ITEMS_ON_SCREEN + 1))
         items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN + 1)
 
@@ -279,3 +281,32 @@ class TestShowSuccessfulScrapeMessage:
         mocker.patch("django.contrib.messages.error")
         show_successful_scrape_message(mock_request, items_data)
         messages.error.assert_called_once_with(mock_request, "Добавьте хотя бы 1 товар")
+
+
+class TestAtLeastOneItemSelected:
+    @pytest.fixture
+    def mock_request(self, mocker: MockerFixture) -> HttpRequest:
+        mocker.patch("django.contrib.messages.error")
+        return HttpRequest()
+
+    def test_at_least_one_item_selected_message(self, mock_request: HttpRequest) -> None:
+        selected_item_ids = []
+        at_least_one_item_selected(mock_request, selected_item_ids)
+        messages.error.assert_called_once_with(mock_request, "Выберите хотя бы 1 товар")
+
+    def test_no_items_selected_returns_false(self, mock_request: HttpRequest) -> None:
+        selected_item_ids = []
+        response = at_least_one_item_selected(mock_request, selected_item_ids)
+
+        logger.info("Checking that return value is False")
+        assert response is False
+        logger.debug("Return value is False")
+
+    @pytest.mark.parametrize("selected_item_ids", [["1"], ["1", "2"], ["1", "2", "3"]], ids=["1", "2", "3"])
+    def test_many_item_selected_returns_true(self, selected_item_ids, mock_request: HttpRequest, mocker) -> None:
+        mocker.patch("django.contrib.messages.error")
+        response = at_least_one_item_selected(mock_request, selected_item_ids)
+
+        logger.info("Checking that return value is True")
+        assert response is True
+        logger.debug("Return value is True")
