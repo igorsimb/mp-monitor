@@ -12,7 +12,7 @@ from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 from .forms import ScrapeForm, ScrapeIntervalForm
 from .models import Item, Price
-from .utils import scrape_item, uncheck_all_boxes, show_successful_scrape_message
+from .utils import scrape_item, uncheck_all_boxes, show_successful_scrape_message, at_least_one_item_selected
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -126,6 +126,9 @@ def create_scrape_interval_task(request):
         if scrape_interval_form.is_valid():
             logger.info("Starting the task")
             selected_item_ids = request.POST.getlist("selected_items")
+
+            if not at_least_one_item_selected(request, selected_item_ids):
+                return redirect("item_list")
 
             uncheck_all_boxes(request)
 
