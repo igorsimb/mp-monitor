@@ -14,7 +14,7 @@ from main.utils import (
     scrape_item,
     show_successful_scrape_message,
     MAX_ITEMS_ON_SCREEN,
-    at_least_one_item_selected,
+    is_at_least_one_item_selected,
 )
 
 pytestmark = [pytest.mark.django_db]
@@ -291,12 +291,12 @@ class TestAtLeastOneItemSelected:
 
     def test_at_least_one_item_selected_message(self, mock_request: HttpRequest) -> None:
         selected_item_ids = []
-        at_least_one_item_selected(mock_request, selected_item_ids)
+        is_at_least_one_item_selected(mock_request, selected_item_ids)
         messages.error.assert_called_once_with(mock_request, "Выберите хотя бы 1 товар")
 
     def test_no_items_selected_returns_false(self, mock_request: HttpRequest) -> None:
         selected_item_ids = []
-        response = at_least_one_item_selected(mock_request, selected_item_ids)
+        response = is_at_least_one_item_selected(mock_request, selected_item_ids)
 
         logger.info("Checking that return value is False")
         assert response is False
@@ -305,7 +305,7 @@ class TestAtLeastOneItemSelected:
     @pytest.mark.parametrize("selected_item_ids", [["1"], ["1", "2"], ["1", "2", "3"]], ids=["1", "2", "3"])
     def test_many_item_selected_returns_true(self, selected_item_ids, mock_request: HttpRequest, mocker) -> None:
         mocker.patch("django.contrib.messages.error")
-        response = at_least_one_item_selected(mock_request, selected_item_ids)
+        response = is_at_least_one_item_selected(mock_request, selected_item_ids)
 
         logger.info("Checking that return value is True")
         assert response is True

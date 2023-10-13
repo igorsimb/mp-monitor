@@ -71,7 +71,7 @@ def scrape_item(sku: str) -> dict:
     }
 
 
-def at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[str]) -> bool:
+def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[str]) -> bool:
     """
     Checks if at least one item is selected.
     If not, displays an error message and redirects to the item list page.
