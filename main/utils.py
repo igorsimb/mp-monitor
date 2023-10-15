@@ -79,7 +79,7 @@ def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[
         request: The HttpRequest object.
         selected_item_ids: A list of stringified integers representing the IDs of the selected items.
     """
-    if len(selected_item_ids) == 0:
+    if not selected_item_ids:
         messages.error(request, "Выберите хотя бы 1 товар")
         logger.warning("No items were selected.")
         return False
@@ -108,7 +108,7 @@ def show_successful_scrape_message(
     Returns:
         None
     """
-    if len(items_data) == 0:
+    if not items_data:
         messages.error(request, "Добавьте хотя бы 1 товар")
         return
     if len(items_data) == 1:
