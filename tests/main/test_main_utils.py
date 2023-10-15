@@ -55,9 +55,7 @@ class TestUncheckAllBoxes:
             assert not item.is_parser_active
 
     def test_no_items_exist(self, request, user, tenant):
-        """
-        Test if uncheck_all_boxes handles the case when no items exist for the user's tenant
-        """
+        """Test if uncheck_all_boxes handles the case when no items exist for the user's tenant."""
         request.user = user
         logger.info("Calling uncheck_all_boxes() with no items")
         uncheck_all_boxes(request)
@@ -65,9 +63,7 @@ class TestUncheckAllBoxes:
         assert Item.objects.filter(tenant=tenant).count() == 0
 
     def test_uncheck_for_one_tenant_when_multiple_tenants_exist(self, request):
-        """
-        Multiple tenants exist, but only items for the user's tenant are updated
-        """
+        """Multiple tenants exist, but only items for the user's tenant are updated."""
         logger.info("Creating 2 users and getting tenants")
         user1 = User.objects.create(username="user1", email="user1_email@test.com")
         logger.debug("User '%s' created", user1)
@@ -103,9 +99,7 @@ class TestUncheckAllBoxes:
         assert Item.objects.filter(is_parser_active=True).count() == 0
 
     def test_uncheck_all_boxes_already_inactive(self, request, user, tenant):
-        """
-        Test if the function handles items with is_parser_active=False gracefully
-        """
+        """Test if the function handles items with is_parser_active=False gracefully."""
         Item.objects.create(name="InactiveItem1", tenant=tenant, sku="12345", is_parser_active=False)
         Item.objects.create(name="InactiveItem2", tenant=tenant, sku="67899", is_parser_active=False)
 

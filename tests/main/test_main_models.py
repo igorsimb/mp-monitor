@@ -120,9 +120,7 @@ class TestItemModel:
         assert str(item) == "Sample Item (12345)"
 
     def test_save_method_creates_price(self):
-        """
-        Whenever Item object is saved, a new Price object should be created.
-        """
+        """Whenever Item object is saved, a new Price object should be created."""
         item = Item.objects.create(
             tenant_id=1,
             name="Sample Item",
@@ -134,12 +132,12 @@ class TestItemModel:
 
 class TestAddPermsToGroupSignal:
     @pytest.fixture
-    def item_group(self, db):
+    def item_group(self):
         group = Group.objects.create(name="Test Group")
         return group
 
     @pytest.fixture
-    def tenant(self, db):
+    def tenant(self):
         tenant = Tenant.objects.create(name="Test Group")
         return tenant
 

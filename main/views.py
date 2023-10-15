@@ -115,8 +115,8 @@ def scrape_items(request, skus: str) -> HttpResponse | HttpResponseRedirect:
 
 
 def create_scrape_interval_task(request):
-    """
-    Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
+    """Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
+
     The task itself prints all items belonging to this tenant every {{ interval }} seconds.
     """
 

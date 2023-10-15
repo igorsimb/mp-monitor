@@ -30,8 +30,8 @@ class TestItemListView:
 
     @pytest.fixture
     def request_with_user(self) -> WSGIRequest:
-        """
-        Returns a WSGIRequest object with a logged-in user and an empty session.
+        """Returns a WSGIRequest object with a logged-in user and an empty session.
+
         This fixture can be used to test views that require authentication
         """
         url = reverse("item_list")
@@ -85,8 +85,8 @@ class TestItemListView:
 class TestItemDetailView:
     @pytest.fixture
     def request_with_user(self) -> WSGIRequest:
-        """
-        Returns a WSGIRequest object with a logged-in user and an empty session.
+        """Returns a WSGIRequest object with a logged-in user and an empty session.
+
         This fixture can be used to test views that require authentication.
         """
         url = reverse("item_list")
@@ -121,8 +121,7 @@ class TestItemDetailView:
     def test_item_present_in_context(
         self, request_with_user: WSGIRequest, item: Item, expected_context_item: str
     ) -> None:
-        """
-        Checks whether the expected context item ('item' or 'prices') is present
+        """Checks whether the expected context item ('item' or 'prices') is present
         when viewing the 'ItemDetailView' with a user-authenticated request and a provided 'item'.
         """
         request = request_with_user
