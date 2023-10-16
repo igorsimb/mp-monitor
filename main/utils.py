@@ -43,6 +43,8 @@ def scrape_item(sku: str) -> dict:
             logger.error("HTTP error occurred: %s", e)
             retry_count += 1
 
+    # TODO: sometimes [0] is the wrong item. Need a checker that the item's SKU == sku (function's param)
+    # If the item is not found, try to find the one with the correct sku. This will help avoid parsing the wrong item.
     item = data.get("data", {}).get("products")[0]
 
     name = item.get("name")

@@ -93,12 +93,18 @@ def scrape_items(request, skus: str) -> HttpResponse | HttpResponseRedirect:
             # - separated by new line
             # - combination of the above
             # e.g. 141540568, 13742696,20904017 3048451
+            # TODO: this could be a separate helper funtion that returns items_data to decouple getting data from using data
             for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
                 logger.info("Scraping item: %s", sku)
                 item_data = scrape_item(sku)
                 items_data.append(item_data)
 
             logger.info("Checking for items_data: %s", items_data)
+            # TODO: this could be a separate helper funtion that updates/creates items, so the flow is like this:
+            # if form.is_valid()
+            # 1. get_items_data_from_skus(skus)
+            # 2. update_or_create_items(items_data)
+            # 3. show_successful_scrape_message(...)
             for item_data in items_data:
                 item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
                     tenant=request.user.tenant,

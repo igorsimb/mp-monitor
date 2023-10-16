@@ -3,6 +3,7 @@
 .git
 /.template/
 .mp_monitor
+.mp_monitor312
 .env
 ### Python template
 # Byte-compiled / optimized / DLL files

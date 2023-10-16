@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    # Third-party    "django_extensions",
+    # Third-party
+    "django_extensions",
     "debug_toolbar",
     "allauth",
     "allauth.account",
