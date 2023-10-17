@@ -1,4 +1,6 @@
 import logging
+import re
+from typing import Any
 
 import httpx
 from django.contrib import messages
@@ -73,6 +75,33 @@ def scrape_item(sku: str) -> dict:
     }
 
 
+def scrape_items_from_skus(skus: str) -> list[dict[str, Any]]:
+    """Scrapes item data from a string of SKUs.
+
+    Args:
+        skus: A string containing SKUs, separated by spaces, newlines, or commas.
+
+    Returns:
+        A list of dictionaries, where each dictionary contains the data for a single item.
+    """
+    logger.info("Going to scrape items: %s", skus)
+    items_data = []
+    for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
+        logger.info("Scraping item: %s", sku)
+        item_data = scrape_item(sku)
+        items_data.append(item_data)
+    return items_data
+
+
+def update_or_create_items(request, items_data):
+    for item_data in items_data:
+        item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
+            tenant=request.user.tenant,
+            sku=item_data["sku"],
+            defaults=item_data,
+        )
+
+
 def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[str]) -> bool:
     """Checks if at least one item is selected.
 
@@ -83,7 +112,7 @@ def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[
     """
     if not selected_item_ids:
         messages.error(request, "Выберите хотя бы 1 товар")
-        logger.warning("No items were selected.")
+        logger.warning("No items were selected. Task not created.")
         return False
 
     logger.info("Items with these ids where selected: %s", selected_item_ids)
@@ -114,6 +143,7 @@ def show_successful_scrape_message(
         messages.error(request, "Добавьте хотя бы 1 товар")
         return
     if len(items_data) == 1:
+        # pylint: disable=inconsistent-quotes
         # debug, info, success, warning, error
         messages.success(request, f'Обновлена информация по товару: "{items_data[0]["name"]} ({items_data[0]["sku"]})"')
     elif 1 < len(items_data) <= max_items_on_screen:
