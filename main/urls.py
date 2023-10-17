@@ -1,6 +1,12 @@
 from django.urls import path
 
-from .views import ItemListView, ItemDetailView, scrape_items, create_scrape_interval_task, destroy_scrape_interval_task
+from .views import (
+    ItemListView,
+    ItemDetailView,
+    create_scrape_interval_task,
+    destroy_scrape_interval_task,
+    scrape_items,
+)
 
 urlpatterns = [
     path("", ItemListView.as_view(), name="item_list"),

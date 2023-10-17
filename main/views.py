@@ -1,5 +1,4 @@
 import logging
-import re
 
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
@@ -12,7 +11,13 @@ from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 from .forms import ScrapeForm, ScrapeIntervalForm
 from .models import Item, Price
-from .utils import scrape_item, uncheck_all_boxes, show_successful_scrape_message, is_at_least_one_item_selected
+from .utils import (
+    uncheck_all_boxes,
+    show_successful_scrape_message,
+    is_at_least_one_item_selected,
+    scrape_items_from_skus,
+    update_or_create_items,
+)
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -79,39 +84,13 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         return super().get(request, *args, **kwargs)
 
 
-def scrape_items(request, skus: str) -> HttpResponse | HttpResponseRedirect:
+def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponseRedirect:
     if request.method == "POST":
         form = ScrapeForm(request.POST)
         if form.is_valid():
             skus = form.cleaned_data["skus"]
-            logger.info("Going to scrape items: %s", skus)
-
-            items_data = []
-            # the regex accepts the following formats for skus:
-            # - separated by comma with our without space in-between
-            # - separated by space
-            # - separated by new line
-            # - combination of the above
-            # e.g. 141540568, 13742696,20904017 3048451
-            # TODO: this could be a separate helper funtion that returns items_data to decouple getting data from using data
-            for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
-                logger.info("Scraping item: %s", sku)
-                item_data = scrape_item(sku)
-                items_data.append(item_data)
-
-            logger.info("Checking for items_data: %s", items_data)
-            # TODO: this could be a separate helper funtion that updates/creates items, so the flow is like this:
-            # if form.is_valid()
-            # 1. get_items_data_from_skus(skus)
-            # 2. update_or_create_items(items_data)
-            # 3. show_successful_scrape_message(...)
-            for item_data in items_data:
-                item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
-                    tenant=request.user.tenant,
-                    sku=item_data["sku"],
-                    defaults=item_data,
-                )
-
+            items_data = scrape_items_from_skus(skus)
+            update_or_create_items(request, items_data)
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
             return redirect("item_list")
