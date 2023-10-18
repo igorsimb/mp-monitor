@@ -1,4 +1,5 @@
 import logging
+from unittest.mock import Mock
 
 import httpx
 import pytest
@@ -15,6 +16,8 @@ from main.utils import (
     show_successful_scrape_message,
     MAX_ITEMS_ON_SCREEN,
     is_at_least_one_item_selected,
+    scrape_items_from_skus,
+    update_or_create_items,
 )
 
 pytestmark = [pytest.mark.django_db]
@@ -304,3 +307,78 @@ class TestAtLeastOneItemSelected:
         logger.info("Checking that return value is True")
         assert response is True
         logger.debug("Return value is True")
+
+
+class FixtureRequest:
+    pass
+
+
+class TestScrapeItemsFromSKUs:
+    # pylint: disable=unused-argument
+    @pytest.fixture
+    def mock_scrape_item(self, mocker) -> Mock:
+        return mocker.patch("main.utils.scrape_item", return_value={"sku": "test"})
+
+    def test_with_valid_skus(self, mock_scrape_item: Mock) -> None:
+        skus = "sku1 sku2 sku3"
+        result = scrape_items_from_skus(skus)
+        logger.info("Result: %s", result)
+        assert result == [{"sku": "test"}, {"sku": "test"}, {"sku": "test"}]
+
+    def test_with_skus_separated_by_commas_and_spaces(self, mock_scrape_item: Mock) -> None:
+        skus = "sku1, sku2, sku3 sku4\nsku5"
+        result = scrape_items_from_skus(skus)
+        logger.info("Result: %s", result)
+        assert result == [{"sku": "test"}, {"sku": "test"}, {"sku": "test"}, {"sku": "test"}, {"sku": "test"}]
+
+
+@pytest.mark.django_db
+class TestUpdateOrCreateItems:
+    @pytest.fixture
+    def user(self):
+        user = User.objects.create(username="test_user", email="test_email@test.com")
+        return user
+
+    @pytest.fixture
+    def tenant(self, user) -> Tenant:
+        tenant = Tenant.objects.get(name=user.email)
+        return tenant
+
+    def test_existing_item_updated_and_not_created(self, request, user, tenant):
+        request.user = user
+        item_data = {"sku": "123", "name": "Test Item"}
+        Item.objects.create(tenant=tenant, sku="123", name="Original Item")
+
+        logger.info("Calling update_or_create_items() with a mock item_data dictionary")
+        update_or_create_items(request, [item_data])
+
+        item = Item.objects.get(sku="123")
+        assert item.name == "Test Item"
+
+    def test_new_item_created(self, request, user):
+        request.user = user
+        item_data = {"sku": "456", "name": "New Item"}
+        update_or_create_items(request, [item_data])
+
+        item = Item.objects.get(sku="456")
+        assert item.name == "New Item"
+
+    def test_update_or_create_multiple_items(self, request, user):
+        request.user = user
+        Item.objects.create(tenant=user.tenant, sku="111", name="Original 1")
+
+        item_data = [
+            {"sku": "111", "name": "Item 1"},
+            {"sku": "222", "name": "Item 2"},
+        ]
+        update_or_create_items(request, item_data)
+
+        item1 = Item.objects.get(sku="111")
+        item2 = Item.objects.get(sku="222")
+
+        logger.info("Checking that the original item was updated")
+        assert item1.name != "Original 1"
+        assert item1.name == "Item 1"
+
+        logger.info("Checking that a new item was created")
+        assert item2.name == "Item 2"
