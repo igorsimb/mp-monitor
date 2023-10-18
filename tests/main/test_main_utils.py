@@ -332,7 +332,6 @@ class TestScrapeItemsFromSKUs:
         assert result == [{"sku": "test"}, {"sku": "test"}, {"sku": "test"}, {"sku": "test"}, {"sku": "test"}]
 
 
-@pytest.mark.django_db
 class TestUpdateOrCreateItems:
     @pytest.fixture
     def user(self):
