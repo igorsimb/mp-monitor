@@ -20,17 +20,29 @@ class Tenant(models.Model):
         verbose_name = "Организация"
         verbose_name_plural = "Организации"
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name
 
 
 class Item(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    sku = models.CharField(max_length=255)
-    price = models.DecimalField(
-        max_digits=10, decimal_places=0, null=True, validators=[MinValueValidator(float("0.00"))]
+    sku = models.CharField(max_length=20)
+    seller_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        null=True,
+        help_text="Цена товара от продавца",
+        validators=[MinValueValidator(float("0.00"))],
     )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        null=True,
+        help_text="Цена товара в магазине с учетом СПП",
+        validators=[MinValueValidator(float("0.00"))],
+    )
+    spp = models.IntegerField(null=True, blank=True)
     image = models.URLField(null=True, blank=True)
     category = models.CharField(max_length=255, null=True, blank=True)
     brand = models.CharField(max_length=255, null=True, blank=True)
