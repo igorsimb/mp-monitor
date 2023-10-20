@@ -195,6 +195,10 @@ class TestScrapeItemsView:
                                 "seller_name": data["seller_name"],
                                 "rating": data["rating"],
                                 "feedbacks": data["feedbacks"],
+                                "extended": {
+                                    "basicPriceU": data["salePriceU"],
+                                    "basicSale": 30,
+                                },
                             }
                         ]
                     },
@@ -224,13 +228,15 @@ class TestScrapeItemsView:
 
         return request
 
-    def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest) -> None:
+    def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:
         request = post_request_with_user
+        mocker.patch("main.utils.scrape_live_price", return_value=100)
         response = scrape_items(request, f"{self.sku1}, {self.sku2}")
         assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
 
-    def test_post_valid_form_updates_items(self, post_request_with_user: WSGIRequest) -> None:
+    def test_post_valid_form_updates_items(self, post_request_with_user: WSGIRequest, mocker) -> None:
         request = post_request_with_user
+        mocker.patch("main.utils.scrape_live_price", return_value=100)
 
         logger.info("Updating items")
         scrape_items(request, f"{self.sku1}, {self.sku2}")

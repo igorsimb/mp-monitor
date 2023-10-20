@@ -28,22 +28,32 @@ class TestScrapeIntervalTask:
             self.sku1: {
                 "name": self.name1,
                 "salePriceU": 10000,
+                "basicSale": 30,
                 "image": "test1.jpg",
                 "category": "Test Category 1",
                 "brand": "Test Brand 1",
                 "seller_name": "Test Brand 1",
                 "rating": 4.5,
                 "feedbacks": 10,
+                "extended": {
+                    "basicPriceU": "salePriceU",
+                    "basicSale": "basicSale",
+                },
             },
             self.sku2: {
                 "name": self.name2,
                 "salePriceU": 15000,
+                "basicSale": 30,
                 "image": "test2.jpg",
                 "category": "Test Category 2",
                 "brand": "Test Brand 2",
                 "seller_name": "Test Brand 2",
                 "rating": 4.2,
                 "feedbacks": 8,
+                "extended": {
+                    "basicPriceU": "salePriceU",
+                    "basicSale": "basicSale",
+                },
             },
         }
 
@@ -60,12 +70,18 @@ class TestScrapeIntervalTask:
                                 "name": data["name"],
                                 "id": sku,
                                 "salePriceU": data["salePriceU"],
+                                "priceU": data["salePriceU"],
                                 "image": data["image"],
                                 "category": data["category"],
                                 "brand": data["brand"],
                                 "seller_name": data["seller_name"],
                                 "rating": data["rating"],
                                 "feedbacks": data["feedbacks"],
+                                "live_price": data["salePriceU"],
+                                "extended": {
+                                    "basicPriceU": data["salePriceU"],
+                                    "basicSale": data["basicSale"],
+                                },
                             }
                         ]
                     },
@@ -95,7 +111,7 @@ class TestScrapeIntervalTask:
         item2 = Item.objects.create(sku=self.sku2, name=self.name2, tenant=tenant)
         return [item1, item2]
 
-    def test_scrape_interval_task_updates_item_price(self, items: list, tenant: Tenant) -> None:
+    def test_scrape_interval_task_updates_item_price(self, items: list, tenant: Tenant, mocker) -> None:
         item1_old_price = items[0].price
         item2_old_price = items[1].price
 
@@ -104,7 +120,13 @@ class TestScrapeIntervalTask:
         logger.info("Checking that %s's Price before running task is None", items[1].name)
         assert items[1].price is None, f"{items[1].name}'s price should be None, but it is {item2_old_price}"
 
-        scrape_interval_task(tenant.id, selected_item_ids=[item.id for item in items])
+        # scrape_live_price uses selenium to get the live price of the item from WB
+        # So mocking is necessary to avoid going to WB
+        mocker.patch("main.utils.scrape_live_price", return_value=100)
+        scrape_interval_task(tenant.id, selected_item_ids=[items[0].id])
+
+        mocker.patch("main.utils.scrape_live_price", return_value=150)
+        scrape_interval_task(tenant.id, selected_item_ids=[items[1].id])
 
         items[0].refresh_from_db()
         items[1].refresh_from_db()
@@ -121,6 +143,7 @@ class TestScrapeIntervalTask:
         logger.info("Checking that %s's Price after running task was updated correctly", items[0].name)
         assert items[0].price == 100
 
+        # mocker.patch("main.utils.scrape_live_price", return_value=150)
         assert items[1].name == self.name2
         logger.info("Checking that %s's Price after running task was updated correctly", items[1].name)
         assert items[1].price == 150
@@ -143,8 +166,10 @@ class TestScrapeIntervalTask:
         logger.debug("Items: %s", Item.objects.all())
         assert Item.objects.all().count() == 0
 
-        logger.info("Checking that the Item.objects.filter method was called "
-                    "with the correct arguments: ids=%s", invalid_items_ids)
+        logger.info(
+            "Checking that the Item.objects.filter method was called " "with the correct arguments: ids=%s",
+            invalid_items_ids,
+        )
         Item.objects.filter.assert_called_once_with(id__in=invalid_items_ids)  # type: ignore
 
     def test_invalid_tenant_id_is_called(self, items: list, mocker) -> None:  # type: ignore
@@ -157,6 +182,8 @@ class TestScrapeIntervalTask:
         with pytest.raises(Tenant.DoesNotExist):
             scrape_interval_task(tenant_id=invalid_tenant_id, selected_item_ids=[item.id for item in items])
 
-        logger.info("Checking that the 'Tenant.objects.get' method was called once "
-                    "with the correct arguments (id=%s),", invalid_tenant_id)
+        logger.info(
+            "Checking that the 'Tenant.objects.get' method was called once " "with the correct arguments (id=%s),",
+            invalid_tenant_id,
+        )
         Tenant.objects.get.assert_called_once_with(id=invalid_tenant_id)  # type: ignore

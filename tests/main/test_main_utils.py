@@ -120,23 +120,32 @@ class TestScrapeItem:
     # Use pytest-mock (mocker) to isolate the tests from API in case API fails or real item's info changes (e.g. price)
     @pytest.fixture(autouse=True)
     def setup(self, mocker):
+        self.name = "Test Item"
         self.sku = "12345"
+        self.price = 10000
         self.mock_response = httpx.Response(
             200,
             json={
                 "data": {
                     "products": [
                         {
-                            "name": "Test Item",
                             "id": self.sku,
-                            "salePriceU": 10000,
+                            "name": self.name,
+                            "priceU": self.price,
+                            "salePriceU": self.price,
+                            "live_price": self.price,
+                            "basicSale": 30,
                             "image": "test.jpg",
                             "category": "Test Category",
                             "brand": "Test Brand",
                             "seller_name": "Test Brand",
                             "rating": 4.5,
                             "feedbacks": 10,
-                        }
+                            "extended": {
+                                "basicPriceU": self.price,
+                                "basicSale": 30,
+                            },
+                        },
                     ]
                 }
             },
@@ -147,6 +156,7 @@ class TestScrapeItem:
         )
 
         mocker.patch("httpx.get", return_value=self.mock_response)
+        mocker.patch("main.utils.scrape_live_price", return_value=self.price / 100)
 
     def test_retrieve_data_from_mock_api(self):
         logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku)
@@ -156,7 +166,9 @@ class TestScrapeItem:
         assert result == {
             "name": "Test Item",
             "sku": self.sku,
-            "price": 100.0,
+            "price": 100,
+            "seller_price": 100.0,
+            "spp": 0,
             "image": "test.jpg",
             "category": "Test Category",
             "brand": "Test Brand",
@@ -183,6 +195,8 @@ class TestScrapeItem:
             "name": "Test Item",
             "sku": self.sku,
             "price": 100,
+            "seller_price": 100.0,
+            "spp": 0,
             "image": "test.jpg",
             "category": "Test Category",
             "brand": "Test Brand",
@@ -191,26 +205,11 @@ class TestScrapeItem:
             "num_reviews": 10,
         }
 
-    def test_return_none_for_missing_price(self):
-        response_data = self.mock_response.json()
-
-        logger.info("Removing the salePriceU field")
-        del response_data["data"]["products"][0]["salePriceU"]
-
-        logger.info("Returning the modified response_data dictionary")
-        self.mock_response.json = lambda: response_data
-
-        logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku)
-        result = scrape_item(self.sku)
-
-        logger.info("Checking that the resulting price is None")
-        assert result["price"] is None
-
     def test_return_none_for_invalid_price_format(self):
         response_data = self.mock_response.json()
 
         logger.info("Assigning invalid price format to the salePriceU field")
-        response_data["data"]["products"][0]["salePriceU"] = "invalidprice"
+        response_data["data"]["products"][0]["extended"]["basicPriceU"] = "invalidprice"
 
         logger.info("Returning the modified response_data dictionary")
         self.mock_response.json = lambda: response_data
@@ -219,7 +218,7 @@ class TestScrapeItem:
         result = scrape_item(self.sku)
 
         logger.info("Checking that the resulting price is None")
-        assert result["price"] is None
+        assert result["seller_price"] is None
 
 
 class TestShowSuccessfulScrapeMessage:

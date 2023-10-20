@@ -7,6 +7,12 @@ from django.contrib import messages
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
 from main.models import Item
 
 logger = logging.getLogger(__name__)
@@ -15,20 +21,54 @@ MAX_RETRIES = 3
 MAX_ITEMS_ON_SCREEN = 10
 
 
+def scrape_live_price(sku):
+    """Scrapes the live price of a product from Wildberries.
+
+    Args:
+        sku (str): The SKU of the product.
+
+    Returns:
+        int: The live price of the product.
+    """
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(options=chrome_options)
+
+    regular_link = f"https://www.wildberries.ru/catalog/{sku}/detail.aspx"
+    driver.get(regular_link)
+    # Wait for the presence of the price element
+    price_element = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(
+            (
+                By.XPATH,
+                "//div[@class='product-page__price-block product-page__price-block--aside']//ins["
+                "@class='price-block__final-price']",
+            )
+        )
+    )
+    parsed_price = price_element.get_attribute("textContent").replace("₽", "").replace("\xa0", "").strip()
+    parsed_price = int(parsed_price)
+    print(f"My final price ee: {parsed_price} ({type(parsed_price)})")
+
+    return parsed_price
+
+
 def extract_valid_price(item: dict) -> float | None:
-    sale_price = item.get("salePriceU")
+    sale_price = item["extended"]["basicPriceU"]
 
     if sale_price is not None and isinstance(sale_price, (int, float)):
         try:
-            price = float(sale_price) / 100
+            seller_price = float(sale_price) / 100
         except (ValueError, TypeError):
-            price = None
+            seller_price = None
     else:
-        price = None
-    return price
+        seller_price = None
+    return seller_price
 
 
 def scrape_item(sku: str) -> dict:
+    live_price = scrape_live_price(sku)
+    logger.info("Live price: %s", live_price)
     # Looks like this: https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={sku}
     url = httpx.URL("https://card.wb.ru/cards/detail", params={"appType": 1, "curr": "rub", "nm": sku})
     retry_count = 0
@@ -48,10 +88,12 @@ def scrape_item(sku: str) -> dict:
     # TODO: sometimes [0] is the wrong item. Need a checker that the item's SKU == sku (function's param)
     # If the item is not found, try to find the one with the correct sku. This will help avoid parsing the wrong item.
     item = data.get("data", {}).get("products")[0]
+    logger.info("My Item: %s", item)
 
     name = item.get("name")
     sku = item.get("id")
-    price = extract_valid_price(item)
+    # price with only seller discount
+    seller_price = extract_valid_price(item)
     image = item.get("image")
     category = item.get("category")
     brand = item.get("brand")
@@ -59,13 +101,37 @@ def scrape_item(sku: str) -> dict:
     rating = float(item.get("rating")) if item.get("rating") is not None else None
     num_reviews = int(item.get("feedbacks")) if item.get("feedbacks") is not None else None
 
-    if price is None:
+    logger.info("seller_price: %s", seller_price)
+    if seller_price is None:
         logger.error("Could not find salePriceU for sku %s", sku)
+
+    price_before_any_discount = item.get("priceU") / 100 if item.get("priceU") else None
+    seller_discount = item["extended"]["basicSale"]
+
+    try:
+        spp = round((seller_price - live_price) / seller_price * 100)
+    except TypeError:
+        logger.error(
+            "Could not calculate SPP for sku %s using seller_price (%s) and live_price (%s)",
+            sku,
+            seller_price,
+            live_price,
+        )
+        spp = 0
+
+    # ! IMPORTANT: breakdown of all types of prices and SPP
+    logger.info("Price before any discount: %s", price_before_any_discount)
+    logger.info("Seller's discount: %s", seller_discount)
+    logger.info("Seller's price: %s", seller_price)
+    logger.info("SPP: %s%%", spp)  # e.g. SPP: 5%
+    logger.info("Live price on WB: %s", live_price)
 
     return {
         "name": name,
         "sku": sku,
-        "price": price,
+        "seller_price": seller_price,
+        "price": live_price,
+        "spp": spp,
         "image": image,
         "category": category,
         "brand": brand,
