@@ -2,20 +2,22 @@ import os
 from pathlib import Path
 from django.contrib.messages import constants as message_constants
 from django.utils import timezone
+from environs import Env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+env = Env()
+env.read_env()
 
-# SECURITY WARNING: keep the secret key used in production secret!
+
 SECRET_KEY = "django-insecure-3gg8w_nv9is-j^#%&s^(gx#%e5am1nj)iq$$&j*yag6x+fd7_f"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=False)
+LOCAL_DEVELOPMENT = env.bool("LOCAL_DEVELOPMENT", default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -117,6 +119,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
+STATIC_DIR = [BASE_DIR / "static"]
+
+if LOCAL_DEVELOPMENT:
+    STATICFILES_DIRS = [BASE_DIR / "static"]
+else:
+    STATIC_ROOT = BASE_DIR / "static"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

@@ -5,6 +5,10 @@
 .mp_monitor
 .mp_monitor312
 .env
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+cloc_commands.md
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
