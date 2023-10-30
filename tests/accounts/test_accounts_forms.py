@@ -33,7 +33,7 @@ class TestCustomUserCreationForm:
     def test_passwords_do_not_match(self):
         form_data = {"email": "test@example.com", "password1": "validpassword123", "password2": "validpassword456"}
         form = CustomUserCreationForm(data=form_data)
-        assert form.is_valid() == False
+        assert not form.is_valid()
         assert "password2" in form.errors
 
     def test_signup_form_does_not_create_duplicate_user(self):
@@ -58,4 +58,4 @@ class TestCustomUserCreationForm:
         assert not form.is_valid()
         assert "password2" in form.errors
         error_messages = form.errors.get("password2", [])
-        assert any("This password is too short" in error for error in error_messages), form.errors
+        assert any("Введённый пароль слишком короткий" in error for error in error_messages), form.errors
