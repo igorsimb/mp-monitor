@@ -9,12 +9,12 @@
         {% csrf_token %}
         <div class="form-floating mb-3">
             {% render_field form.login class="form-control" id="floatingEmail" %}
-            <label for="floatingEmail">Email address</label>
+            <label for="floatingEmail">Email</label>
         </div>
         <div class="form-floating mb-3">
             {% render_field form.password class="form-control" id="floatingPassword" %}
-            <label for="floatingPassword">Password</label>
+            <label for="floatingPassword">Пароль</label>
         </div>
-        <button type="submit" class="btn btn-success">Log in</button>
+        <button type="submit" class="btn btn-success">Войти</button>
     </form>
 {% endblock content %}

@@ -1,11 +1,12 @@
 {% extends "main/base.html" %}
 {% block title %}Log Out{% endblock %}
 {% block content %}
-    <h1>Log Out</h1>
-    <p>Are you sure you want to log out?</p>
+    <h1>Выйти</h1>
+    <p>Вы уверены, что хотите выйти?</p>
     <form method="post" action="{% url 'account_logout' %}">
         {% csrf_token %}
         {{ form.as_p }}
-        <button class="btn btn-danger" type="submit">Log Out</button>
+        <a href="{% url 'item_list' %}" class="btn btn-outline-secondary">Отменить</a>
+        <button class="btn btn-danger" type="submit">Выйти</button>
     </form>
 {% endblock content %}

@@ -1,5 +1,6 @@
 import logging
-
+from django.core.paginator import Paginator
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseRedirect, HttpResponse
@@ -17,6 +18,9 @@ from .utils import (
     is_at_least_one_item_selected,
     scrape_items_from_skus,
     update_or_create_items,
+    calculate_percentage_change,
+    add_table_class,
+    add_price_trend_indicator,
 )
 
 user = get_user_model()
@@ -24,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class ItemListView(PermissionListMixin, ListView):
+    # TODO: add min/max pills if min or max
     model = Item
     context_object_name = "items"
     permission_required = ["view_item"]
@@ -31,6 +36,7 @@ class ItemListView(PermissionListMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         form = ScrapeForm()
         scrape_interval_form = ScrapeIntervalForm()
         sku = None
@@ -52,31 +58,20 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
     context_object_name = "item"
     slug_field = "sku"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> dict:
+        items_per_page = 10
         context = super().get_context_data(**kwargs)
+
         prices = Price.objects.filter(item=self.object)
-        context["prices"] = prices
+        paginator = Paginator(prices, items_per_page)
+        page_number = self.request.GET.get("page")
+        prices_paginated = paginator.get_page(page_number)
 
-        # Add bootstrap table classes based on price comparison
-        # https://getbootstrap.com/docs/5.3/content/tables/#variants
-        for i in range(len(prices)):
-            try:
-                if prices[i].value < prices[i + 1].value:
-                    prices[i].table_class = "table-danger"
-                    prices[i].trend = "↓"
-                elif prices[i].value > prices[i + 1].value:
-                    prices[i].table_class = "table-success"
-                    prices[i].trend = "↑"
-                else:
-                    prices[i].table_class = "table-warning"
-                    prices[i].trend = "="
+        calculate_percentage_change(prices_paginated)
+        add_table_class(prices_paginated)
+        add_price_trend_indicator(prices_paginated)
 
-            # the original price is the last price in the list, so no comparison is possible
-            except IndexError:
-                prices[i].table_class = ""
-            except TypeError:
-                logger.warning("Can't compare price to NoneType")
-
+        context["prices"] = prices_paginated
         return context
 
     def get(self, request, *args, **kwargs):
@@ -119,27 +114,25 @@ def create_scrape_interval_task(request):
 
             # Update the database for checked boxes
             for item_id in selected_item_ids:
+                logger.info("Updating db with item with id=%s", item_id)
                 Item.objects.filter(id=int(item_id)).update(is_parser_active=True)
 
             # Convert the list of stringified numbers to a list of integers to avoid the following error:
             # json.decoder.JSONDecodeError: Expecting value: line 1 column 6 (char 5)
             selected_item_ids = [int(item) for item in selected_item_ids]
-            print(f"{selected_item_ids=}")
+            print(f"Igor {selected_item_ids=}")
 
             interval = scrape_interval_form.cleaned_data["interval"]
             print(f"{interval=}")
             print(f'"{request.user.tenant.id=}"')
-            schedule, created = IntervalSchedule.objects.get_or_create(  # pylint: disable=unused-variable
+            schedule, created = IntervalSchedule.objects.get_or_create(
                 every=interval,
                 period=IntervalSchedule.SECONDS,
             )
             if created:
                 logger.debug("Interval created with schedule: every %s %s", schedule.every, schedule.period)
             else:
-                logger.error("Something went wrong. Interval was not created!")
-
-            kwargs_str = {"tenant_id": "1", "selected_item_ids_json": " + json.dumps(str(selected_item_ids)) + "}
-            print(f"{kwargs_str=}")
+                logger.debug("Existing Interval started: every %s %s", schedule.every, schedule.period)
 
             scrape_interval_task = PeriodicTask.objects.create(
                 interval=schedule,

@@ -1,13 +1,15 @@
 import logging
+from datetime import datetime
 
+from _decimal import InvalidOperation
 from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Q, Max, Min
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
-from django_celery_beat.models import IntervalSchedule
 from guardian.shortcuts import assign_perm, get_perms
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ class Tenant(models.Model):
         verbose_name = "Организация"
         verbose_name_plural = "Организации"
 
-    def __str__(self):
+    def __str__(self):  # pylint: disable=invalid-str-returned
         return self.name
 
 
@@ -68,6 +70,48 @@ class Item(models.Model):
     def get_absolute_url(self) -> str:
         return reverse("item_detail", kwargs={"slug": self.sku})
 
+    # TODO: test the properties below
+    @property
+    def max_price(self) -> float:
+        # In detail template  {{ item.max_price }}
+        return Price.objects.filter(item=self).aggregate(max_price=Max("value"))["max_price"]
+
+    @property
+    def max_price_date(self) -> datetime:
+        # In detail template  {{ item.max_price_date }}
+        max_price = Price.objects.filter(item=self).aggregate(max_price=Max("value"))["max_price"]
+        max_price_date = Price.objects.filter(item=self, value=max_price).latest("date_added").date_added
+        return max_price_date
+
+    @property
+    def min_price(self) -> float:
+        # In detail template  {{ item.max_price }}
+        return Price.objects.filter(item=self).aggregate(min_price=Min("value"))["min_price"]
+
+    @property
+    def min_price_date(self) -> datetime:
+        # In detail template  {{ item.min_price_date }}
+        min_price = Price.objects.filter(item=self).aggregate(min_price=Min("value"))["min_price"]
+        min_price_date = Price.objects.filter(item=self, value=min_price).latest("date_added").date_added
+        return min_price_date
+
+    def price_percent_change(self) -> float:
+
+        prices = Price.objects.filter(
+            Q(item=self)
+        )
+        for i in range(len(prices)):
+            try:
+                previous_price = prices[i + 1].value
+                current_price = prices[i].value
+                percent_change = ((current_price - previous_price) / previous_price) * 100
+                prices[i].percent_change = round(percent_change, 2)
+                return prices[i].percent_change
+            except (IndexError, InvalidOperation):
+                prices[i].percent_change = 0
+            except TypeError:
+                logger.warning("Can't compare price to NoneType")
+
     def save(self, *args, **kwargs):  # type: ignore
         super().save(*args, **kwargs)
         Price.objects.create(item=self, value=self.price, date_added=timezone.now())
@@ -77,7 +121,7 @@ class Item(models.Model):
 # add a scraped item to db. This is because Django adds ManyToMany related fields after saving.
 # Source: https://stackoverflow.com/a/23772575
 @receiver(post_save, sender=Item)
-def add_perms_to_group(sender, instance, created, **kwargs) -> None:  # type: ignore
+def add_perms_to_group(sender, instance, created, **kwargs) -> None:  # type: ignore # pylint: disable=unused-argument
     group, created = Group.objects.get_or_create(name=instance.tenant)
     if not group.permissions.filter(codename="view_item").exists():
         logger.info("Adding 'view_item' permission for item '%s' to group '%s'", instance.name, group.name)
@@ -109,7 +153,8 @@ class Price(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"{self.item.name}'s price"
+        # return f"{self.item.name}'s price"
+        return str(self.value)
 
 
 class Printer(models.Model):
@@ -118,13 +163,6 @@ class Printer(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
-
-
-# 2 Models: Product and Parcer.
-# Product would have a parcer = models.ForeignKey(Parcer, on_delete=models.SET_NULL); is_enabled =
-# models.BooleanField(default=True)
-# Parcer would have interval = models.IntegerField()
-# So we would start a parser with an interval and pick what products to do it for.
 
 # TODO:
 # 1. Use enums for choices for seconds, minutes, hours

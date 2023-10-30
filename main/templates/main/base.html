@@ -2,7 +2,7 @@
 
 <!doctype html>
 {# https://blog.getbootstrap.com/#dark-mode #}
-<html lang="en" data-bs-theme="light"> {# light or dark #}
+<html lang="en" class="h-100" data-bs-theme="light"> {# light or dark #}
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -13,13 +13,56 @@
 
     <title>{% block title %}{% endblock title %}</title>
 </head>
-<body>
+<body class="d-flex flex-column h-100">
+
+<!-- Navigation -->
+{% if user.is_authenticated %}
+    <nav class="d-flex flex-wrap justify-content-center bg-dark text-light sticky-top py-2 mb-4 border-bottom">
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto navbar-brand">
+            <svg class="bi me-2" width="40" height="32">
+                <use xlink:href="#bootstrap"></use>
+            </svg>
+            <span class="fs-4">{{ user.tenant }}</span>
+        </a>
+
+        <ul class="nav nav-pills bg-dark">
+            <li class="nav-item"><a href="#" class="nav-link active" aria-current="page">Главная</a></li>
+            <li class="nav-item"><a href="#" class="nav-link link-light">О нас</a></li>
+            <li class="nav-item"><a href="{% url 'account_logout' %}" class="nav-link link-light">Выйти</a></li>
+        </ul>
+    </nav>
+
+{% else %}
+    <nav class="d-flex flex-wrap justify-content-center bg-dark text-light sticky-top py-2 mb-4 border-bottom">
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto navbar-brand">
+            <svg class="bi me-2" width="40" height="32">
+                <use xlink:href="#bootstrap">Добро пожаловать!</use>
+            </svg>
+            <span class="fs-4"></span>
+        </a>
+        <ul class="nav nav-pills bg-dark">
+            <li class="nav-item"><a href="{% url 'item_list' %}" class="nav-link active" aria-current="page">Главная</a>
+            </li>
+            <li class="nav-item"><a href="{% url 'account_login' %}" class="nav-link link-light">Логин</a></li>
+            <li class="nav-item"><a href="{% url 'account_signup' %}" class="nav-link link-light">Регистрация</a></li>
+            <li class="nav-item"><a href="#" class="nav-link link-light">О нас</a></li>
+        </ul>
+    </nav>
+{% endif %}
 
 {% block content %}{% endblock content %}
 
+<!-- Footer -->
+<footer class="mt-auto py-1 bg-body-tertiary text-end px-3">
+    <div class="container">
+        <span class="text-body-secondary">my.email@example.com</span>
+    </div>
+</footer>
 
 <!-- Bootstrap JS -->
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.esm.min.js' %}"></script>
 
 
 </body>
