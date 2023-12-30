@@ -29,6 +29,7 @@ class TestScrapeIntervalTask:
                 "name": self.name1,
                 "salePriceU": 10000,
                 "basicSale": 30,
+                "sale": 30,
                 "image": "test1.jpg",
                 "category": "Test Category 1",
                 "brand": "Test Brand 1",
@@ -44,6 +45,7 @@ class TestScrapeIntervalTask:
                 "name": self.name2,
                 "salePriceU": 15000,
                 "basicSale": 30,
+                "sale": 30,
                 "image": "test2.jpg",
                 "category": "Test Category 2",
                 "brand": "Test Brand 2",
@@ -71,6 +73,7 @@ class TestScrapeIntervalTask:
                                 "id": sku,
                                 "salePriceU": data["salePriceU"],
                                 "priceU": data["salePriceU"],
+                                "sale": data["sale"],
                                 "image": data["image"],
                                 "category": data["category"],
                                 "brand": data["brand"],
@@ -80,7 +83,7 @@ class TestScrapeIntervalTask:
                                 "live_price": data["salePriceU"],
                                 "extended": {
                                     "basicPriceU": data["salePriceU"],
-                                    "basicSale": data["basicSale"],
+                                    "sale": data["basicSale"],
                                 },
                             }
                         ]

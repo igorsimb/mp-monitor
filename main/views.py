@@ -1,6 +1,5 @@
 import logging
 from django.core.paginator import Paginator
-from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseRedirect, HttpResponse
@@ -120,7 +119,6 @@ def create_scrape_interval_task(request):
             # Convert the list of stringified numbers to a list of integers to avoid the following error:
             # json.decoder.JSONDecodeError: Expecting value: line 1 column 6 (char 5)
             selected_item_ids = [int(item) for item in selected_item_ids]
-            print(f"Igor {selected_item_ids=}")
 
             interval = scrape_interval_form.cleaned_data["interval"]
             print(f"{interval=}")

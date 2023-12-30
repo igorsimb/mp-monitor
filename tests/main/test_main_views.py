@@ -156,7 +156,9 @@ class TestScrapeItemsView:
         sku_data = {
             self.sku1: {
                 "name": "Test Item 1",
+                "priceU": 20000,
                 "salePriceU": 10000,
+                "basicSale": 30,
                 "image": "test1.jpg",
                 "category": "Test Category 1",
                 "brand": "Test Brand 1",
@@ -166,7 +168,9 @@ class TestScrapeItemsView:
             },
             self.sku2: {
                 "name": "Test Item 2",
+                "priceU": 20000,
                 "salePriceU": 15000,
+                "basicSale": 30,
                 "image": "test2.jpg",
                 "category": "Test Category 2",
                 "brand": "Test Brand 2",
@@ -189,6 +193,8 @@ class TestScrapeItemsView:
                                 "name": data["name"],
                                 "id": sku,
                                 "salePriceU": data["salePriceU"],
+                                "priceU": data["priceU"],
+                                "sale": data["basicSale"],
                                 "image": data["image"],
                                 "category": data["category"],
                                 "brand": data["brand"],
