@@ -1,3 +1,4 @@
+import decimal
 import logging
 import re
 from typing import Any
@@ -67,7 +68,7 @@ def scrape_live_price(sku):
     return parsed_price
 
 
-def extract_valid_price(item: dict) -> float | None:
+def extract_price_before_spp_old(item: dict) -> float | None:
     try:
         sale_price = item["extended"]["basicPriceU"]
         logger.info("Found sale price in item['extended']['basicPriceU']")
@@ -85,26 +86,72 @@ def extract_valid_price(item: dict) -> float | None:
     return seller_price
 
 
-def scrape_item(sku: str) -> dict:
+def extract_price_before_spp(item: dict) -> float | None:
+    original_price = item["priceU"]
+    sale = item["sale"]
+    try:
+        discount = original_price * (int(sale) / 100)
+        price_before_spp = original_price - discount
+        logger.info("Price before SPP = %s", price_before_spp)
+        return float(price_before_spp) / 100
+    except (KeyError, TypeError):
+        logger.error("Could not extract price before SPP from item: %s", item)
+        return None
+
+
+def check_item_stock(item: dict) -> bool:
+    # TODO: Below assumption is Incorrect (e.g. 157375971 in stock, but no panelPromoId)
+    # Current theory is that data.products[0].panelPromoId field does not exist
+    # if item NOT in stock, and exists if item IS in stock
+
+    # is_in_stock = False
+    # panel_promo_id = item.get("panelPromoId")
+    # if panel_promo_id is not None:
+    #     is_in_stock = True
+
+    is_in_stock = True
+    return is_in_stock
+
+
+def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     """
     Right now:
         no extended
-        PriceU = the price before every discount (scratched out)
-        SalePriceU = the final price (no need for Selenium here)
+        priceU = the price before every discount (scratched out)
         sale = seller discount
+        salePriceU = the final price (aka, price with spp, no need for Selenium here)
+
+
+    Args:
+        sku (str): The SKU of the product.
+        use_selenium (bool): Whether to use Selenium to scrape the live price (slower).
+
+    Returns:
+        dict: A dictionary containing the data for the scraped item.
     """
-    logger.info("Going to scrape live for sku: %s", sku)
-    live_price = scrape_live_price(sku)
-    logger.info("Live price: %s", live_price)
+    if use_selenium:
+        logger.info("Going to scrape live for sku: %s", sku)
+        price_after_spp = scrape_live_price(sku)
+        logger.info("Live price: %s", price_after_spp)
+
     # Looks like this: https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={sku}
     url = httpx.URL("https://card.wb.ru/cards/detail", params={"appType": 1, "curr": "rub", "nm": sku})
+    # pylint: disable=line-too-long
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
+        "Origin": "https://www.wildberries.ru",
+        "Referer": "https://www.wildberries.ru/catalog/155282898/detail.aspx",
+    }
     retry_count = 0
     data = {}
 
     # in case of a server error, retry the request up to MAX_RETRIES times
     while retry_count < MAX_RETRIES:
         try:
-            response = httpx.get(url, timeout=15)
+            response = httpx.get(url, headers=headers, timeout=15)
             response.raise_for_status()
             data = response.json()
             break
@@ -112,14 +159,21 @@ def scrape_item(sku: str) -> dict:
             logger.error("HTTP error occurred: %s", e)
             retry_count += 1
 
-    # TODO: sometimes [0] is the wrong item. Need a checker that the item's SKU == sku (function's param)
-    # If the item is not found, try to find the one with the correct sku. This will help avoid parsing the wrong item.
     item = data.get("data", {}).get("products")[0]
+
+    # makes sure that the correct id (i.e. = sku) is being pulled from api
+    if item.get("id") != sku:
+        for product in data.get("data", {}).get("products"):
+            if product.get("id") == sku:
+                item = product
+                logger.info("Found item with SKU: %s", sku)
+                break
 
     name = item.get("name")
     sku = item.get("id")
     # price with only seller discount
-    seller_price = extract_valid_price(item)
+    price_before_spp = extract_price_before_spp(item)
+    price_after_spp = item.get("salePriceU") / 100
     image = item.get("image")
     category = item.get("category")
     brand = item.get("brand")
@@ -127,39 +181,49 @@ def scrape_item(sku: str) -> dict:
     rating = float(item.get("rating")) if item.get("rating") is not None else None
     num_reviews = int(item.get("feedbacks")) if item.get("feedbacks") is not None else None
 
-    logger.info("seller_price: %s", seller_price)
-    if seller_price is None:
-        logger.error("Could not find salePriceU for sku %s", sku)
+    logger.info("seller_price: %s", price_before_spp)
+    if price_before_spp is None:
+        logger.error("Could not find seller's price for sku %s", sku)
 
-    price_before_any_discount = item.get("priceU") / 100 if item.get("priceU") else None
+    # is_in_stock is always True until https://github.com/igorsimb/mp-monitor/issues/41 is resolved
+    logger.info("Checking if item is in stock")
+    is_in_stock = check_item_stock(item)
+    if is_in_stock:
+        logger.info("At least one item is in stock.")
+    else:
+        logger.info("No items for sku (%s) are in stock.", sku)
+
+    price_before_any_discount = item.get("priceU") / 100 if \
+        (item.get("priceU") and isinstance(item.get("priceU"), int)) else None
+
     try:
         seller_discount = item["extended"]["basicSale"]
     except KeyError:
         seller_discount = item["sale"]
 
     try:
-        spp = round((seller_price - live_price) / seller_price * 100)
+        spp = round(((price_before_spp - price_after_spp) / price_before_spp) * 100)
     except TypeError:
         logger.error(
-            "Could not calculate SPP for sku %s using seller_price (%s) and live_price (%s)",
+            "Could not calculate SPP for sku %s using price_before_spp (%s) and price_after_spp (%s)",
             sku,
-            seller_price,
-            live_price,
+            price_before_spp,
+            price_after_spp,
         )
         spp = 0
 
     # ! IMPORTANT: breakdown of all types of prices and SPP
     logger.info("Price before any discount: %s", price_before_any_discount)
     logger.info("Seller's discount: %s", seller_discount)
-    logger.info("Seller's price: %s", seller_price)
+    logger.info("Seller's price: %s", price_before_spp)
     logger.info("SPP: %s%%", spp)  # e.g. SPP: 5%
-    logger.info("Live price on WB: %s", live_price)
+    logger.info("Live price on WB: %s", price_after_spp)
 
     return {
         "name": name,
         "sku": sku,
-        "seller_price": seller_price,
-        "price": live_price,
+        "seller_price": price_before_spp,
+        "price": price_after_spp,
         "spp": spp,
         "image": image,
         "category": category,
@@ -167,6 +231,7 @@ def scrape_item(sku: str) -> dict:
         "seller_name": seller_name,
         "rating": rating,
         "num_reviews": num_reviews,
+        "is_in_stock": is_in_stock,
     }
 
 
@@ -283,6 +348,11 @@ def calculate_percentage_change(prices: Page) -> None:
             prices[i].percent_change = 0
         except TypeError:
             logger.warning("Can't compare price to NoneType")
+            prices[i].percent_change = 100
+        except decimal.DivisionByZero:
+            logger.warning("Can't divide by zero")
+            prices[i].percent_change = 100
+
 
 
 def add_table_class(prices: Page) -> None:

@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from _decimal import InvalidOperation
+from _decimal import InvalidOperation, DivisionByZero
 from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -52,6 +52,7 @@ class Item(models.Model):
     rating = models.FloatField(null=True, blank=True)
     num_reviews = models.IntegerField(null=True, blank=True)
     is_parser_active = models.BooleanField(default=False)
+    is_in_stock = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "Товар"
@@ -107,7 +108,7 @@ class Item(models.Model):
                 percent_change = ((current_price - previous_price) / previous_price) * 100
                 prices[i].percent_change = round(percent_change, 2)
                 return prices[i].percent_change
-            except (IndexError, InvalidOperation):
+            except (IndexError, InvalidOperation, DivisionByZero):
                 prices[i].percent_change = 0
             except TypeError:
                 logger.warning("Can't compare price to NoneType")

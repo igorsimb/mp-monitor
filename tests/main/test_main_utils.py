@@ -135,6 +135,7 @@ class TestScrapeItem:
                             "salePriceU": self.price,
                             "live_price": self.price,
                             "basicSale": 30,
+                            "sale": 30,
                             "image": "test.jpg",
                             "category": "Test Category",
                             "brand": "Test Brand",
@@ -166,10 +167,11 @@ class TestScrapeItem:
         assert result == {
             "name": "Test Item",
             "sku": self.sku,
-            "price": 100,
-            "seller_price": 100.0,
-            "spp": 0,
+            "price": 100.0,
+            "seller_price": 70.0,
+            "spp": -43,
             "image": "test.jpg",
+            "is_in_stock": True,
             "category": "Test Category",
             "brand": "Test Brand",
             "seller_name": "Test Brand",
@@ -195,9 +197,10 @@ class TestScrapeItem:
             "name": "Test Item",
             "sku": self.sku,
             "price": 100,
-            "seller_price": 100.0,
-            "spp": 0,
+            "seller_price": 70.0,
+            "spp": -43,
             "image": "test.jpg",
+            "is_in_stock": True,
             "category": "Test Category",
             "brand": "Test Brand",
             "seller_name": "Test Brand",
@@ -208,10 +211,10 @@ class TestScrapeItem:
     def test_return_none_for_invalid_price_format(self):
         response_data = self.mock_response.json()
 
-        logger.info("Assigning invalid price format to the salePriceU field")
-        response_data["data"]["products"][0]["extended"]["basicPriceU"] = "invalidprice"
+        logger.info("Assigning invalid price format to the priceU field")
+        response_data["data"]["products"][0]["priceU"] = "invalidprice"
 
-        logger.info("Returning the modified response_data dictionary")
+        logger.info("Returning the modified response_data dictionary: %s", response_data)
         self.mock_response.json = lambda: response_data
 
         logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku)
