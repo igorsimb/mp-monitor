@@ -14,6 +14,10 @@ class ScrapeForm(forms.Form):
     )
 
 
+class UpdateItemsForm(forms.Form):
+    pass
+
+
 class TaskForm(forms.Form):
     interval = forms.FloatField(min_value=1, label="Interval (seconds)")
 

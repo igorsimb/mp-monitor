@@ -1,7 +1,9 @@
 import logging
-from django.core.paginator import Paginator
+
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
+from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -9,7 +11,7 @@ from django.views.generic import ListView, DetailView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
-from .forms import ScrapeForm, ScrapeIntervalForm
+from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm
 from .models import Item, Price
 from .utils import (
     uncheck_all_boxes,
@@ -41,6 +43,7 @@ class ItemListView(PermissionListMixin, ListView):
         sku = None
         context["sku"] = sku
         context["form"] = form
+        context["update_items_form"] = UpdateItemsForm()
         context["scrape_interval_form"] = scrape_interval_form
         context["scrape_interval_task"] = self.request.session.get("scrape_interval_task")
         return context
@@ -83,6 +86,7 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
         form = ScrapeForm(request.POST)
         if form.is_valid():
             skus = form.cleaned_data["skus"]
+            logger.info("Scraping items with SKUs: %s", skus)
             items_data = scrape_items_from_skus(skus)
             update_or_create_items(request, items_data)
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
@@ -93,7 +97,34 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
     return render(request, "main/item_list.html", {"form": form})
 
 
-def create_scrape_interval_task(request):
+def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
+    if request.method == "POST":
+        form = UpdateItemsForm(request.POST)
+        if form.is_valid():
+            skus = request.POST.getlist("selected_items")
+            # Convert the list of stringified numbers to a string of integers for scrape_items_from_skus:
+            skus = " ".join(skus)
+            logger.info("Beginning to update items info...")
+            if not is_at_least_one_item_selected(request, skus):
+                return redirect("item_list")
+
+            uncheck_all_boxes(request)
+
+            items_data = scrape_items_from_skus(skus)
+            update_or_create_items(request, items_data)
+            show_successful_scrape_message(request, items_data, max_items_on_screen=10)
+
+            return redirect("item_list")
+        else:
+            logger.error("Form is invalid. %s", form.errors)
+            messages.error(request, "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.")
+            return redirect("item_list")
+    else:
+        form = UpdateItemsForm()
+    return render(request, "main/item_list.html", {"update_items_form": form})
+
+
+def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
     """Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
 
     The task itself prints all items belonging to this tenant every {{ interval }} seconds.
