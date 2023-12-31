@@ -15,7 +15,7 @@ from main.views import (
     ItemListView,
     ItemDetailView,
     scrape_items,
-    destroy_scrape_interval_task,
+    destroy_scrape_interval_task, update_items,
 )
 
 logger = logging.getLogger(__name__)
@@ -222,6 +222,7 @@ class TestScrapeItemsView:
         # To prevent the following error: "django.contrib.messages.api.MessageFailure:
         # You cannot add messages without installing django.contrib.messages.middleware.MessageMiddleware"
         mocker.patch("django.contrib.messages.success")
+        mocker.patch("django.contrib.messages.error")
 
     @pytest.fixture
     def post_request_with_user(self) -> WSGIRequest:
@@ -234,18 +235,44 @@ class TestScrapeItemsView:
 
         return request
 
-    def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:
+    @pytest.fixture
+    def update_post_request_with_user(self) -> WSGIRequest:
+        skus = f"{self.sku1}, {self.sku2}"
+        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
+        factory = RequestFactory()
+        url = reverse("update_items")
+        request = factory.post(url, {"selected_items": skus})
+        request.user = user
+
+        return request
+
+    def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user
         mocker.patch("main.utils.scrape_live_price", return_value=100)
         response = scrape_items(request, f"{self.sku1}, {self.sku2}")
         assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
 
-    def test_post_valid_form_updates_items(self, post_request_with_user: WSGIRequest, mocker) -> None:
+    def test_post_valid_form_updates_items(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user
         mocker.patch("main.utils.scrape_live_price", return_value=100)
 
         logger.info("Updating items")
         scrape_items(request, f"{self.sku1}, {self.sku2}")
+        logger.debug("Items updated with skus: %s, %s", self.sku1, self.sku2)
+        number_of_items = Item.objects.filter(sku__in=[self.sku1, self.sku2]).count()
+
+        logger.info("Checking if the items were updated in the database as expected")
+        assert number_of_items == 2, f"Number of items should be 2, but it is {number_of_items}"
+
+    def test_update_items_view(self, update_post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
+        request = update_post_request_with_user
+        mocker.patch("main.views.scrape_items_from_skus", return_value=[
+            {"sku": "12345", "name": "Test Item 1"},
+            {"sku": "67890", "name": "Test Item 2"},
+            ])
+
+        logger.info("Updating items...")
+        update_items(request)
         logger.debug("Items updated with skus: %s, %s", self.sku1, self.sku2)
         number_of_items = Item.objects.filter(sku__in=[self.sku1, self.sku2]).count()
 

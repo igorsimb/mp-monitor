@@ -1,0 +1,80 @@
+{% load widget_tweaks %}
+
+<form method="POST" action="{% url 'update_items' %}">
+    {% csrf_token %}
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Обновить информацию о товарах</h4>
+                <div class="container border">
+                    <div class="p-2">
+                        Выберите товары и нажмите на
+                        <button type="submit" class="btn btn-success">Обновить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container flex-grow-1 d-flex flex-column">
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+            <tr class="text-center">
+                <th id="select-all" style="cursor: default">Выбрать все</th>
+                <th>SKU</th>
+                <th>Наименование</th>
+                <th>СПП</th>
+                <th>Цена WB</th>
+                <th>Разница %</th>
+            </tr>
+            </thead>
+            <tbody id="table-body">
+            {% for item in items %}
+                <tr>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                                <div class="form-check text-center">
+                                    <input
+                                            class="form-check-input mt-0"
+                                            type="checkbox"
+                                            value="{{ item.sku }}"
+                                            name="selected_items"
+                                    >
+                                        {% render_field update_items_form.selected_items class="form-control" id="selected_items" %}
+                                </div>
+                        </div>
+                    </td>
+                    <td><a href="{{ item.get_absolute_url }}">{{ item.sku }}</a></td>
+                    <td>{{ item.name }} ({{ item.prices.count }})</td>
+                    <td class="text-center">{{ item.spp }}%</td>
+                    <td class="text-center">
+                                    <span class="position-relative">
+                                        {{ item.price }}
+                                        {% if not item.is_in_stock %}
+                                            <a title="Возможно, товара нет в наличии"
+                                               class="text-decoration-none position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger mx-1"
+                                               style="font-size: 0.5rem; cursor: help;">
+                                            !
+                                            </a>
+                                        {% endif %}
+                                    </span>
+                    </td>
+                    <td class="text-center">
+                        {% if item.price_percent_change > 0 %}
+                            +{{ item.price_percent_change|floatformat }}%
+                        {% elif item.price_percent_change == 0 %}
+                            =
+                        {% else %}
+                            {{ item.price_percent_change|floatformat }}%
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">Товары не найдены</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
