@@ -53,6 +53,8 @@ class Item(models.Model):
     num_reviews = models.IntegerField(null=True, blank=True)
     is_parser_active = models.BooleanField(default=False)
     is_in_stock = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Товар"
@@ -81,7 +83,7 @@ class Item(models.Model):
     def max_price_date(self) -> datetime:
         # In detail template  {{ item.max_price_date }}
         max_price = Price.objects.filter(item=self).aggregate(max_price=Max("value"))["max_price"]
-        max_price_date = Price.objects.filter(item=self, value=max_price).latest("date_added").date_added
+        max_price_date = Price.objects.filter(item=self, value=max_price).latest("created_at").created_at
         return max_price_date
 
     @property
@@ -93,7 +95,7 @@ class Item(models.Model):
     def min_price_date(self) -> datetime:
         # In detail template  {{ item.min_price_date }}
         min_price = Price.objects.filter(item=self).aggregate(min_price=Min("value"))["min_price"]
-        min_price_date = Price.objects.filter(item=self, value=min_price).latest("date_added").date_added
+        min_price_date = Price.objects.filter(item=self, value=min_price).latest("created_at").created_at
         return min_price_date
 
     def price_percent_change(self) -> float:
@@ -115,7 +117,7 @@ class Item(models.Model):
 
     def save(self, *args, **kwargs):  # type: ignore
         super().save(*args, **kwargs)
-        Price.objects.create(item=self, value=self.price, date_added=timezone.now())
+        Price.objects.create(item=self, value=self.price, created_at=timezone.now())
 
 
 # Having post_save signal solves "Object needs to be persisted first" if adding perms on save, resulting in failure to
@@ -137,12 +139,13 @@ class Price(models.Model):
     value = models.DecimalField(
         max_digits=10, decimal_places=0, null=True, validators=[MinValueValidator(float("0.00"))]
     )
-    date_added = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Цена"
         verbose_name_plural = "Цены"
-        ordering = ["-date_added"]
+        ordering = ["-created_at"]
         default_permissions = ("add", "change", "delete")
         permissions = (("view_item", "Can view item"),)
 
@@ -156,14 +159,6 @@ class Price(models.Model):
     def __str__(self) -> str:
         # return f"{self.item.name}'s price"
         return str(self.value)
-
-
-class Printer(models.Model):
-    name = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ("-created_at",)
 
 # TODO:
 # 1. Use enums for choices for seconds, minutes, hours

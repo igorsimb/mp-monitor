@@ -26,6 +26,7 @@
                 <th>СПП</th>
                 <th>Цена WB</th>
                 <th>Разница %</th>
+                <th>Обновлено</th>
             </tr>
             </thead>
             <tbody id="table-body">
@@ -68,6 +69,7 @@
                             {{ item.price_percent_change|floatformat }}%
                         {% endif %}
                     </td>
+                    <td>{{ item.updated_at }}</td>
                 </tr>
             {% empty %}
                 <tr>

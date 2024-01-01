@@ -14,7 +14,7 @@
     <div class="container">
         <div class="row justify-content-center">
 
-            <div class="card text-bg-light w-75">
+            <div class="card text-bg-light">
                 <div class="card-body">
                     <h3 class="card-title">{{ item.name }}</h3>
 
@@ -43,10 +43,10 @@
                 </div>
             </div>
 
-            <div class="d-inline-flex w-75 p-0 m-0">
+            <div class="d-inline-flex p-0 m-0">
                 <div class="h3 mt-5 text-center">История цен</div>
             </div>
-            <table class="table table-hover w-75">
+            <table class="table table-hover border border-dark-subtle">
                 <thead>
                 <tr>
                     <th>Дата</th>
@@ -57,7 +57,7 @@
                 <tbody>
                 {% for price in prices %}
                     <tr class="{{ price.table_class }}">
-                        <td>{{ price.date_added }}</td>
+                        <td>{{ price.created_at }}</td>
                         <td>{{ price.value }}</td>
 
                         {#                <td>{{ price.percent_change|floatformat}}%</td>#}
