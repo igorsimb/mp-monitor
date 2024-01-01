@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from main.models import Tenant, Item, Price, Printer
+from main.models import Tenant, Item, Price
 
 
 class ItemAdmin(admin.ModelAdmin):
@@ -9,7 +9,7 @@ class ItemAdmin(admin.ModelAdmin):
 
 
 class PriceAdmin(admin.ModelAdmin):
-    list_display = ("get_item_sku", "get_item_name", "value", "date_added")
+    list_display = ("get_item_sku", "get_item_name", "value", "created_at")
     list_editable = ("value",)
     search_fields = ("item__name", "item__sku")
 
@@ -22,11 +22,6 @@ class PriceAdmin(admin.ModelAdmin):
         return obj.item.name
 
 
-class PrinterAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "created_at")
-
-
 admin.site.register(Tenant)
 admin.site.register(Item, ItemAdmin)
 admin.site.register(Price, PriceAdmin)
-admin.site.register(Printer, PrinterAdmin)

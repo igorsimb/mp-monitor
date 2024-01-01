@@ -124,7 +124,7 @@ class Migration(migrations.Migration):
             options={
                 "verbose_name": "Цена",
                 "verbose_name_plural": "Цены",
-                "ordering": ["-date_added"],
+                "ordering": ["-created_at"],
                 "permissions": (("view_item", "Can view item"),),
                 "default_permissions": ("add", "change", "delete"),
             },

@@ -189,29 +189,29 @@ class TestPriceModel:
         logger.info("Checking if the Price instance was created successfully...")
         assert price.id is not None
 
-    def test_create_new_price_with_valid_parameters(self, item, tenant):
-        price = Price.objects.create(item=item, value=10, date_added=timezone.now())
+    def test_create_new_price_with_valid_parameters(self, item):
+        price = Price.objects.create(item=item, value=10, created_at=timezone.now())
         assert price.value == 10
 
-    def test_retrieve_price_date_added(self, item, tenant):
+    def test_retrieve_price_created_at(self, item):
         current_time = timezone.now()
-        price = Price.objects.create(item=item, value=10, date_added=current_time)
+        price = Price.objects.create(item=item, value=10, created_at=current_time)
 
         # Truncate both datetime values to the minute, no need for (milli)seconds
-        price_date_added_minutes = price.date_added.replace(microsecond=0)
+        price_created_at_minutes = price.created_at.replace(microsecond=0)
         current_time_minutes = current_time.replace(microsecond=0)
 
-        assert price_date_added_minutes == current_time_minutes
+        assert price_created_at_minutes == current_time_minutes
 
-    def test_create_new_price_with_null_value(self, item, tenant):
-        price = Price.objects.create(item=item, value=None, date_added=timezone.now())
+    def test_create_new_price_with_null_value(self, item):
+        price = Price.objects.create(item=item, value=None, created_at=timezone.now())
 
         assert price.value is None
 
-    def test_create_new_price_with_negative_value(self, item, tenant):
+    def test_create_new_price_with_negative_value(self, item):
         with pytest.raises(IntegrityError):
             logger.info(
                 "Checking that a new Price object with a negative value cannot be saved due to "
                 "no_negative_price_value CHECK constraint..."
             )
-            Price.objects.create(item=item, value=-100, date_added=timezone.now())
+            Price.objects.create(item=item, value=-100, created_at=timezone.now())
