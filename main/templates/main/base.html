@@ -11,13 +11,21 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+    <!-- Google fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
     <title>{% block title %}{% endblock title %}</title>
 </head>
 <body class="d-flex flex-column h-100">
 
 <!-- Navigation -->
 {% if user.is_authenticated %}
-    <nav class="d-flex flex-wrap justify-content-center bg-dark text-light sticky-top py-2 mb-4 border-bottom">
+    <nav class="d-flex flex-wrap justify-content-center bg-dark text-light sticky-top py-2 border-bottom">
         <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto navbar-brand">
             <svg class="bi me-2" width="40" height="32">
                 <use xlink:href="#bootstrap"></use>
@@ -33,7 +41,7 @@
     </nav>
 
 {% else %}
-    <nav class="d-flex flex-wrap justify-content-center bg-dark text-light sticky-top py-2 mb-4 border-bottom">
+    <nav class="d-flex flex-wrap justify-content-center bg-dark text-light sticky-top py-2 border-bottom">
         <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto navbar-brand">
             <svg class="bi me-2" width="40" height="32">
                 <use xlink:href="#bootstrap">Добро пожаловать!</use>
