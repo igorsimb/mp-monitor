@@ -5,7 +5,7 @@ from _decimal import InvalidOperation, DivisionByZero
 from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Q, Max, Min
+from django.db.models import Q, Max, Min, Avg
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -90,6 +90,11 @@ class Item(models.Model):
     def min_price(self) -> float:
         # In detail template  {{ item.max_price }}
         return Price.objects.filter(item=self).aggregate(min_price=Min("value"))["min_price"]
+
+    @property
+    def avg_price(self) -> int:
+        # In detail template  {{ item.avg_price }}
+        return int(Price.objects.filter(item=self).aggregate(avg_price=Avg("value"))["avg_price"])
 
     @property
     def min_price_date(self) -> datetime:

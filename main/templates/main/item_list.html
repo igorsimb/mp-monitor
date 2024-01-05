@@ -7,8 +7,9 @@
 
 {% block content %}
 
-    <main class="flex-shrink-0">
-        <div class="container">
+{#    <main class="flex-shrink-0 container border border-secondary-subtle border-top-0 border-bottom-0">#}
+    <main class="flex-shrink-0 container">
+        <div>
             {% if messages %}
                 {% for message in messages %}
                     <div {% if message.tags %}
@@ -21,14 +22,14 @@
             {% endif %}
         </div>
 
-        <div class="container my-4">
+        <div class="my-4">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <div class="mb-3">
                         <form method="POST" action="{% url 'scrape_item' skus=form.skus.value %}">
                             {% csrf_token %}
 
-                            <label for="skus" class="form-label h4">Добавить новые товары для парсинга</label>
+                            <label for="skus" class="form-label h2">Добавить новые товары для парсинга</label>
                             {% render_field form.skus class="form-control" id="skus" rows="3" placeholder=form.skus.help_text %}
                             <button type="submit" class="btn btn-primary mt-2">Добавить</button>
                         </form>
