@@ -122,6 +122,7 @@ class TestScrapeItem:
     def setup(self, mocker):
         self.name = "Test Item"
         self.sku = "12345"
+        self.sku_no_stock = "67890"
         self.price = 10000
         self.mock_response = httpx.Response(
             200,
@@ -146,6 +147,9 @@ class TestScrapeItem:
                                 "basicPriceU": self.price,
                                 "basicSale": 30,
                             },
+                            "sizes": [{
+                                "stocks": ["3"]
+                            }],
                         },
                     ]
                 }
@@ -159,9 +163,38 @@ class TestScrapeItem:
         mocker.patch("httpx.get", return_value=self.mock_response)
         mocker.patch("main.utils.scrape_live_price", return_value=self.price / 100)
 
+    @pytest.fixture
+    def item_with_empty_stock(self, mocker: MockerFixture):
+        self.sku_no_stock = "67890"
+        self.price = 10000
+        self.mock_response2 = httpx.Response(
+            200,
+            json={
+                "data": {
+                    "products": [
+                        {
+                            "id": self.sku_no_stock,
+                            "priceU": self.price,
+                            "salePriceU": self.price,
+                            "sale": 30,
+                            "sizes": [{
+                                "stocks": []
+                            }],
+                        },
+                    ]
+                }
+            },
+        )
+        self.mock_response2.request = httpx.Request(
+            method="GET", url=f"https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={self.sku}"
+        )
+        mocker.patch("httpx.get", return_value=self.mock_response2)
+        mocker.patch("main.utils.scrape_live_price", return_value=self.price / 100)
+
     def test_retrieve_data_from_mock_api(self):
         logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku)
         result = scrape_item(self.sku)
+        logger.debug("Result: %s", result)
 
         logger.info("Checking that the result is the expected parsed item dictionary")
         assert result == {
@@ -179,7 +212,13 @@ class TestScrapeItem:
             "num_reviews": 10,
         }
 
-    def test_retry_request_on_http_error(self, mocker):
+    def test_item_not_in_stock(self, item_with_empty_stock: None) -> None: # pylint: disable=unused-argument
+        logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku_no_stock)
+        result = scrape_item(self.sku_no_stock)
+        logger.info("Checking that the item is not in stock")
+        assert result["is_in_stock"] is False, f"Incorrect value for Item: {result}"
+
+    def test_retry_request_on_http_error(self, mocker) -> None:
         mocker.patch(
             "httpx.get",
             side_effect=[

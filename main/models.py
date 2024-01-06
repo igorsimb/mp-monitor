@@ -9,7 +9,6 @@ from django.db.models import Q, Max, Min, Avg
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
-from django.utils import timezone
 from guardian.shortcuts import assign_perm, get_perms
 
 logger = logging.getLogger(__name__)
@@ -122,7 +121,8 @@ class Item(models.Model):
 
     def save(self, *args, **kwargs):  # type: ignore
         super().save(*args, **kwargs)
-        Price.objects.create(item=self, value=self.price, created_at=timezone.now())
+        # Price.objects.create(item=self, value=self.price, created_at=timezone.now())
+        Price.objects.create(item=self, value=self.price)
 
 
 # Having post_save signal solves "Object needs to be persisted first" if adding perms on save, resulting in failure to

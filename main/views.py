@@ -73,7 +73,12 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         add_table_class(prices_paginated)
         add_price_trend_indicator(prices_paginated)
 
+        item_updated_at = self.object.updated_at
+        price_created_at = self.object.prices.latest("created_at")
+
         context["prices"] = prices_paginated
+        context["item_updated_at"] = item_updated_at
+        context["price_created_at"] = price_created_at
         return context
 
     def get(self, request, *args, **kwargs):

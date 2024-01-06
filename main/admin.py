@@ -4,7 +4,7 @@ from main.models import Tenant, Item, Price
 
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "price", "tenant", "is_parser_active")
+    list_display = ("sku", "name", "price", "tenant", "is_in_stock", "is_parser_active")
     list_editable = ("is_parser_active",)
 
 

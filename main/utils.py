@@ -100,16 +100,15 @@ def extract_price_before_spp(item: dict) -> float | None:
 
 
 def check_item_stock(item: dict) -> bool:
-    # TODO: Below assumption is Incorrect (e.g. 157375971 in stock, but no panelPromoId)
-    # Current theory is that data.products[0].panelPromoId field does not exist
-    # if item NOT in stock, and exists if item IS in stock
+    sku = item.get("id")
+    # Item availability is hidden in item.sizes[0].stocks
+    is_in_stock = any(item["stocks"] for item in item.get("sizes", []))
 
-    # is_in_stock = False
-    # panel_promo_id = item.get("panelPromoId")
-    # if panel_promo_id is not None:
-    #     is_in_stock = True
+    if is_in_stock:
+        logger.info("At least one item for sku (%s) is in stock.", sku)
+    else:
+        logger.info("No items for sku (%s) are in stock.", sku)
 
-    is_in_stock = True
     return is_in_stock
 
 
@@ -134,8 +133,8 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
         price_after_spp = scrape_live_price(sku)
         logger.info("Live price: %s", price_after_spp)
 
-    # Looks like this: https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={sku}
-    url = httpx.URL("https://card.wb.ru/cards/detail", params={"appType": 1, "curr": "rub", "nm": sku})
+    # Looks like this: https://card.wb.ru/cards/detail?appType=1&curr=rub&dest=-455203&nm={sku}
+    url = httpx.URL("https://card.wb.ru/cards/detail", params={"appType": 1, "curr": "rub", "dest": -455203, "nm": sku})
     # pylint: disable=line-too-long
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -188,10 +187,6 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     # is_in_stock is always True until https://github.com/igorsimb/mp-monitor/issues/41 is resolved
     logger.info("Checking if item is in stock")
     is_in_stock = check_item_stock(item)
-    if is_in_stock:
-        logger.info("At least one item is in stock.")
-    else:
-        logger.info("No items for sku (%s) are in stock.", sku)
 
     price_before_any_discount = item.get("priceU") / 100 if \
         (item.get("priceU") and isinstance(item.get("priceU"), int)) else None

@@ -7,14 +7,11 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb ms-3">
             <li class="breadcrumb-item"><a href="{% url 'item_list' %}">Назад к товарам</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ item.name }}</li>
+            <li class="breadcrumb-item active" aria-current="page">{{ item.name }} ({{ item.sku }})</li>
         </ol>
     </nav>
 
     <div class="container">
-
-
-        {#        <div class="justify-content-center">#}
 
         <div class="card">
             <div class="card-header text-center h3">
@@ -68,15 +65,15 @@
             {% for price in prices %}
                 <tr class="{{ price.table_class }}">
                     <td>{{ price.created_at }}</td>
-                    <td>{{ price.value }}</td>
-
-                    {#                <td>{{ price.percent_change|floatformat}}%</td>#}
-                    <td>
-                        {% if price.percent_change > 0 %}
-                            {{ price.trend }} {{ price.percent_change|floatformat }}%
+                    {#  https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#cut #}
+                    <td>{% if not item.is_in_stock and price.updated_at|date:"U" == price.created_at|date:"U" %}
+                            <span class="text-bg-danger p-1">Нет в наличии</span>
                         {% else %}
-                            {{ price.trend }} {{ price.percent_change|floatformat }}%
+                            {{ price.value }}
                         {% endif %}
+                    </td>
+                    <td>
+                        {{ price.trend }} {{ price.percent_change|floatformat }}%
                     </td>
                 </tr>
             {% endfor %}
@@ -119,7 +116,6 @@
                 {% endif %}
             </ul>
         </nav>
-        {#        </div>#}
     </div>
 
 {% endblock content %}
