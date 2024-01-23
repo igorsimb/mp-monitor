@@ -15,7 +15,7 @@ from main.views import (
     ItemListView,
     ItemDetailView,
     scrape_items,
-    destroy_scrape_interval_task, update_items,
+    destroy_scrape_interval_task, update_items, create_scrape_interval_task,
 )
 
 logger = logging.getLogger(__name__)
@@ -359,8 +359,8 @@ class TestCreateScrapeIntervalTaskView:
     @pytest.fixture
     def valid_form_data(self) -> dict[str, Any]:
         return {
-            "interval": 60,
-            "selected_items": [1, 2],
+            "interval_value": 60,
+            "period": "seconds",
         }
 
     def test_task_created(self, client: Client, logged_in_user: User, valid_form_data: dict, mocker):

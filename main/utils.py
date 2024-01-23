@@ -1,10 +1,13 @@
 import decimal
 import logging
 import re
+import time
 from typing import Any
+import random
 
 import httpx
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.core.paginator import Page
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
@@ -15,13 +18,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from main.models import Item
+from main.models import Item, Tenant
 
 logger = logging.getLogger(__name__)
 
-MAX_RETRIES = 3
+MAX_RETRIES = 10
 MAX_ITEMS_ON_SCREEN = 10
-
+User = get_user_model()
 
 def scrape_live_price(sku):
     """Scrapes the live price of a product from Wildberries.
@@ -142,22 +145,29 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
         "Origin": "https://www.wildberries.ru",
-        "Referer": "https://www.wildberries.ru/catalog/155282898/detail.aspx",
     }
     retry_count = 0
     data = {}
 
+    logger.info("Starting while loop...")
     # in case of a server error, retry the request up to MAX_RETRIES times
     while retry_count < MAX_RETRIES:
         try:
-            response = httpx.get(url, headers=headers, timeout=15)
+            response = httpx.get(url, headers=headers, timeout=60)
             response.raise_for_status()
             data = response.json()
-            break
+            if data:
+                logger.info("Breaking the loop...")
+                break
         except httpx.HTTPError as e:
-            logger.error("HTTP error occurred: %s", e)
+            logger.error("HTTP error occurred: %s. Failed to scrape url: %s. Attempt #%s", e, url, retry_count+1)
             retry_count += 1
+            sleep_amount_sec = random.uniform(0.5, 10)
+            logger.info("Sleeping for %s seconds", sleep_amount_sec)
+            time.sleep(sleep_amount_sec)
 
+    logger.info("Exited while loop...")
+    logger.info("Cool data=%s", data)
     item = data.get("data", {}).get("products")[0]
 
     # makes sure that the correct id (i.e. = sku) is being pulled from api
@@ -184,7 +194,6 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     if price_before_spp is None:
         logger.error("Could not find seller's price for sku %s", sku)
 
-    # is_in_stock is always True until https://github.com/igorsimb/mp-monitor/issues/41 is resolved
     logger.info("Checking if item is in stock")
     is_in_stock = check_item_stock(item)
 
@@ -207,7 +216,7 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
         )
         spp = 0
 
-    # ! IMPORTANT: breakdown of all types of prices and SPP
+    # breakdown of all types of prices and SPP (SPP currently is incorrect)
     logger.info("Price before any discount: %s", price_before_any_discount)
     logger.info("Seller's discount: %s", seller_discount)
     logger.info("Seller's price: %s", price_before_spp)
@@ -230,7 +239,7 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     }
 
 
-def scrape_items_from_skus(skus: str) -> list[dict[str, Any]]:
+def scrape_items_from_skus(skus: str, is_parser_active: bool = False) -> list[dict[str, Any]]:
     """Scrapes item data from a string of SKUs.
 
     Args:
@@ -244,14 +253,30 @@ def scrape_items_from_skus(skus: str) -> list[dict[str, Any]]:
     for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
         logger.info("Scraping item: %s", sku)
         item_data = scrape_item(sku)
+        if is_parser_active:
+            item_data["is_parser_active"] = True
         items_data.append(item_data)
     return items_data
 
 
 def update_or_create_items(request, items_data):
+    logger.info("Update request=%s", request)
     for item_data in items_data:
         item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
             tenant=request.user.tenant,
+            sku=item_data["sku"],
+            defaults=item_data,
+        )
+
+
+# TODO: this should be just update, not update_or_create
+def update_or_create_items_interval(tenant_id, items_data):
+    logger.info("Update tenant_id=%s", tenant_id)
+    tenant = Tenant.objects.get(id=tenant_id)
+    logger.info("Update tenant=%s", tenant)
+    for item_data in items_data:
+        item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
+            tenant=tenant,
             sku=item_data["sku"],
             defaults=item_data,
         )
@@ -349,7 +374,6 @@ def calculate_percentage_change(prices: Page) -> None:
             prices[i].percent_change = 100
 
 
-
 def add_table_class(prices: Page) -> None:
     """Add Bootstrap table classes based on price comparison.
 
@@ -380,7 +404,7 @@ def add_table_class(prices: Page) -> None:
             elif prices[i].value > prices[i + 1].value:
                 prices[i].table_class = "table-success"
             else:
-                prices[i].table_class = "table-warning"
+                prices[i].table_class = ""
 
         # the original price is the last price in the list, so no comparison is possible
         except IndexError:
