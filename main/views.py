@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -39,11 +40,12 @@ class ItemListView(PermissionListMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         form = ScrapeForm()
+        update_items_form = UpdateItemsForm()
         scrape_interval_form = ScrapeIntervalForm()
         sku = None
         context["sku"] = sku
         context["form"] = form
-        context["update_items_form"] = UpdateItemsForm()
+        context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
         context["scrape_interval_task"] = self.request.session.get("scrape_interval_task")
         return context
@@ -128,8 +130,8 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
         form = UpdateItemsForm()
     return render(request, "main/item_list.html", {"update_items_form": form})
 
-
-def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
+# TODO: remove this if the new create_scrape_interval_task view works fine
+def create_scrape_interval_task_old(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
     """Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
 
     The task itself prints all items belonging to this tenant every {{ interval }} seconds.
@@ -185,6 +187,79 @@ def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResp
             return redirect("item_list")
 
     else:
+        scrape_interval_form = ScrapeIntervalForm()
+
+    context = {
+        "scrape_interval_form": scrape_interval_form,
+        "scrape_interval_task": request.session.get("scrape_interval_task"),
+    }
+    return render(request, "main/item_list.html", context)
+
+
+def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
+    """Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
+
+    The task itself prints all items belonging to this tenant every {{ interval }} seconds.
+    """
+
+    if request.method == "POST":
+        scrape_interval_form = ScrapeIntervalForm(request.POST)
+
+        if scrape_interval_form.is_valid():
+            logger.info("Starting the task")
+            skus = request.POST.getlist("selected_items")
+
+            # Convert the list of stringified numbers to a string of integers for scrape_items_from_skus:
+            skus = " ".join(skus)
+
+            # if not is_at_least_one_item_selected(request, selected_item_ids):
+            if not is_at_least_one_item_selected(request, skus):
+                return redirect("item_list")
+
+            uncheck_all_boxes(request)
+
+            # Convert the list of stringified numbers to a list of integers to avoid the following error:
+            # json.decoder.JSONDecodeError: Expecting value: line 1 column 6 (char 5)
+            # selected_item_ids = [int(item) for item in selected_item_ids]
+            skus_list = skus.split(" ")
+            skus_list = [int(sku) for sku in skus_list]
+
+            interval = scrape_interval_form.cleaned_data["interval_value"]
+            schedule, created = IntervalSchedule.objects.get_or_create(
+                every=interval,
+                period=IntervalSchedule.SECONDS,
+            )
+            if created:
+                logger.info("Interval created with schedule: every %s %s", schedule.every, schedule.period)
+            else:
+                logger.info("Existing Interval started: every %s %s", schedule.every, schedule.period)
+
+            scrape_interval_task = PeriodicTask.objects.create(
+                interval=schedule,
+                name=f"scrape_interval_task_{request.user}",
+                task="main.tasks.update_or_create_items_task",
+                # start_time=timezone.now(),  # trigger once right away and then keep the interval
+                args=[request.user.tenant.id, skus_list], # prolly don't need request, just skus_list
+            )
+            logger.info(
+                "Interval task '%s' was successfully created for '%s'\nargs: %s", scrape_interval_task.name, request.user,
+                scrape_interval_task.args)
+
+            # store 'scrape_interval_task' in session to display as context in item_list.html
+            request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
+
+            # Set the selected items' field "is_parser_active" to True
+            items = Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list))
+            items_bulk_update_list = []
+            for item in items:
+                item.is_parser_active = True
+                items_bulk_update_list.append(item)
+            Item.objects.bulk_update(items_bulk_update_list, ["is_parser_active"])
+
+            return redirect("item_list")
+
+    else:
+        messages.error(request, "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.")
         scrape_interval_form = ScrapeIntervalForm()
 
     context = {

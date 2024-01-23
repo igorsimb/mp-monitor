@@ -9,6 +9,7 @@ from django.db.models import Q, Max, Min, Avg
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ class Item(models.Model):
     rating = models.FloatField(null=True, blank=True)
     num_reviews = models.IntegerField(null=True, blank=True)
     is_parser_active = models.BooleanField(default=False)
+    schedule = models.CharField(max_length=255, null=True, blank=True)
     is_in_stock = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -139,6 +141,26 @@ def add_perms_to_group(sender, instance, created, **kwargs) -> None:  # type: ig
             logger.error("Failed to add 'view_item' permission for item '%s' to group '%s'", instance.name, group.name)
 
 
+class Schedule(models.Model):
+    class Period(models.TextChoices):
+        SECONDS = "seconds", _("Секунд")
+        MINUTES = "minutes", _("Минут")
+        HOURS = "hours", _("Часов")
+        DAYS = "days", _("Дней")
+    type = models.CharField(max_length=50,
+                            verbose_name="Тип расписания",
+                            default="interval",
+                            choices=[("interval", "Интервал"), ("cronjob", "CronJob")])
+    interval_value = models.IntegerField(verbose_name="Каждые", validators=[MinValueValidator(1)], null=True, blank=True)
+    cronjob_value = models.CharField(max_length=100, verbose_name="CronJob", blank=True, null=True)
+    period = models.CharField(max_length=100, choices=Period.choices, default=Period.HOURS)
+
+
+class ItemSchedule(models.Model):
+    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+
+
 class Price(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="prices")
     value = models.DecimalField(
@@ -162,9 +184,6 @@ class Price(models.Model):
         ]
 
     def __str__(self) -> str:
-        # return f"{self.item.name}'s price"
         return str(self.value)
 
-# TODO:
-# 1. Use enums for choices for seconds, minutes, hours
-# 2. Use Custom models manager for queryset of enabled products
+# TODO: Use Custom models manager for queryset of enabled products

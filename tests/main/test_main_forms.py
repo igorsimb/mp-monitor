@@ -66,16 +66,16 @@ class TestTaskForm:
 
 class TestScrapeIntervalForm:
     @pytest.mark.parametrize(
-        "interval, expected_validity",
+        "interval, period, expected_validity",
         [
-            (5.0, True),  # Valid interval
-            (-1.0, False),  # Negative interval
-            (0.0, False),  # Zero interval
-            ("not_a_float", False),  # Non-float interval
+            (5.0, "seconds", True),  # Valid interval
+            (-1.0, "seconds", False),  # Negative interval
+            (0.0, "seconds", False),  # Zero interval
+            ("not_a_float", "seconds", False),  # Non-float interval
         ],
         ids=["valid_interval", "negative_interval", "zero_interval", "non_float_interval"],
     )
-    def test_form_validity(self, interval, expected_validity):
-        form_data = {"interval": interval}
+    def test_form_validity(self, interval, period, expected_validity):
+        form_data = {"interval_value": interval, "period": period}
         form = ScrapeIntervalForm(data=form_data)
         assert form.is_valid() == expected_validity

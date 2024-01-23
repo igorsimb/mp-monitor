@@ -7,7 +7,6 @@
 
 {% block content %}
 
-{#    <main class="flex-shrink-0 container border border-secondary-subtle border-top-0 border-bottom-0">#}
     <main class="flex-shrink-0 container">
         <div>
             {% if messages %}
@@ -22,7 +21,18 @@
             {% endif %}
         </div>
 
-        <div class="my-4">
+        <!-- START Add items collapse -->
+        <p class="mt-2">
+            <a class="btn btn-sm btn-outline-success"
+               title="Добавить новые товары для парсинга"
+               data-bs-toggle="collapse"
+               href="#addItems" role="button"
+               aria-expanded="false"
+               aria-controls="addItems">
+                <span class="material-symbols-sharp">add</span>
+            </a>
+        </p>
+        <div class="collapse" id="addItems">
             <div class="row">
                 <div class="col-md-12">
                     <div class="mb-3">
@@ -30,14 +40,43 @@
                             {% csrf_token %}
 
                             <label for="skus" class="form-label h2">Добавить новые товары для парсинга</label>
-                            {% render_field form.skus class="form-control" id="skus" rows="3" placeholder=form.skus.help_text %}
-                            <button type="submit" class="btn btn-primary mt-2">Добавить</button>
+                            {% render_field form.skus class="form-control focus-ring focus-ring-success" id="skus" rows="3" placeholder=form.skus.help_text %}
+                            <button type="submit" class="btn btn-success mt-2 mb-2">Добавить</button>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-        {% include "main/partials/update_items_form.html" %}
+        <!-- END Add items collapse -->
+
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs nav-fill bg-gradient" id="updateTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="manual-update-tab" data-bs-toggle="tab" type="button"
+                        data-bs-target="#manual-tab-pane" role="tab" aria-controls="manual-tab-pane"
+                        aria-selected="true">Обновить вручную
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-pane"
+                        type="button" role="tab" aria-controls="schedule-tab-pane" aria-selected="false">
+                    Создать Автоматическое Расписание
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab contents -->
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane show active" id="manual-tab-pane" role="tabpanel" aria-labelledby="manual-update-tab"
+                 tabindex="0">
+                {% include "main/partials/update_items_form.html" %}
+            </div>
+            <div class="tab-pane" id="schedule-tab-pane" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
+                {% include "main/partials/create_interval_form.html" %}
+            </div>
+        </div>
+
     </main>
 
 
