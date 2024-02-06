@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.humanize",
-    
     # Third-party
     "django_extensions",
     "debug_toolbar",
@@ -39,7 +38,6 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "guardian",
     "django_celery_beat",
-
     # Local
     "main.apps.MainConfig",
     "accounts.apps.AccountsConfig",

@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, TemplateView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
@@ -27,6 +27,10 @@ from .utils import (
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
+
+
+class IndexView(TemplateView):
+    template_name = "main/index.html"
 
 
 class ItemListView(PermissionListMixin, ListView):
@@ -129,6 +133,7 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
     else:
         form = UpdateItemsForm()
     return render(request, "main/item_list.html", {"update_items_form": form})
+
 
 # TODO: remove this if the new create_scrape_interval_task view works fine
 def create_scrape_interval_task_old(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
@@ -239,11 +244,14 @@ def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResp
                 name=f"scrape_interval_task_{request.user}",
                 task="main.tasks.update_or_create_items_task",
                 # start_time=timezone.now(),  # trigger once right away and then keep the interval
-                args=[request.user.tenant.id, skus_list], # prolly don't need request, just skus_list
+                args=[request.user.tenant.id, skus_list],  # prolly don't need request, just skus_list
             )
             logger.info(
-                "Interval task '%s' was successfully created for '%s'\nargs: %s", scrape_interval_task.name, request.user,
-                scrape_interval_task.args)
+                "Interval task '%s' was successfully created for '%s'\nargs: %s",
+                scrape_interval_task.name,
+                request.user,
+                scrape_interval_task.args,
+            )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
             request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
