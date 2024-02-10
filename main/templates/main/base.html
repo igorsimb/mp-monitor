@@ -29,11 +29,10 @@
 
 <!-- Navigation -->
 {% if user.is_authenticated %}
-    <nav class="d-flex flex-wrap justify-content-center py-3 mb-4 px-2">
+    <nav class="container d-flex flex-wrap justify-content-center py-3 mb-4 px-2">
         <a href="{% url 'index' %}"
-           class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-            {#            <img src="#" width="40" height="32" alt="logo">#}
-            <span class="fs-4">MP Monitor</span>
+           class="d-flex align-items-center ms-5 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+            <img src="{% static 'img/homepage/logo.jpg' %}" width="210" height="70" alt="logo">
         </a>
 
         <ul class="nav nav-pills">
@@ -42,16 +41,16 @@
             </li>
             <li class="nav-item"><a href="#" class="nav-link">Features</a></li>
             <li class="nav-item"><a href="#" class="nav-link">FAQs</a></li>
-            <li class="nav-item"><a href="#" class="nav-link">Выйти</a></li>
+            <li class="nav-item"><a href="{% url 'account_logout' %}" class="nav-link">Выйти</a></li>
         </ul>
     </nav>
 
 {% else %}
 
-    <nav class="d-flex flex-wrap justify-content-center py-3 mb-4 px-2">
-        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-            {#            <img src="#" width="40" height="32" alt="logo">#}
-            <span class="fs-4">MP Monitor</span>
+    <nav class="container d-flex flex-wrap justify-content-center py-3 mb-4 px-2">
+        <a href="{% url 'index' %}"
+           class="d-flex align-items-center ms-5 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+            <img src="{% static 'img/homepage/logo.jpg' %}" width="210" height="70" alt="logo">
         </a>
 
         <ul class="nav nav-pills">

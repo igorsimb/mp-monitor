@@ -78,7 +78,6 @@ static/css/bootstrap_slate.min.css
 static/css/bootstrap_united.min.css
 static/css/bootstrap_zephyr.min.css
 static/css/bootstrap_sketchy.min.css
-static/img/homepage
 
 docker-compose.yml
 docker-compose_backup.yml
