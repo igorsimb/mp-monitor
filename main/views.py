@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class IndexView(TemplateView):
+    """The entry point for the website."""
     template_name = "main/index.html"
 
 

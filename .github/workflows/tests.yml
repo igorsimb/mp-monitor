@@ -15,10 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: set up Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
+          cache: 'pip' # caching pip dependencies
 
       - name: Install dependencies
         run: |
@@ -30,5 +31,9 @@ jobs:
           python manage.py makemigrations
           python manage.py migrate
 
-      - name: Run tests
-        run: pytest
+      - name: Run tests with coverage info
+        run: pytest -n 4 --migrations --cov-config=.coveragerc --cov=. tests/
+
+#        Uncomment it for deployment checks (https://github.com/igorsimb/mp-monitor/issues/63)
+#      - name: Check deploy configuration
+#        run: python manage.py check --deploy --fail-level WARNING

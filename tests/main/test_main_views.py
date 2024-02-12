@@ -25,6 +25,14 @@ User = get_user_model()
 pytestmark = [pytest.mark.django_db]
 
 
+class TestIndex:
+    def test_unauthenticated(self, client: Client) -> None:
+        """An unauthenticated user gets a valid response"""
+        response = client.get(reverse("index"))
+
+        assert response.status_code == 200
+
+
 class TestItemListView:
     context_object_list = ["items", "sku", "form", "scrape_interval_form", "scrape_interval_task"]
 

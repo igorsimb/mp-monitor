@@ -11,13 +11,17 @@
 }
 
 .nav-link.active {
-    background-image: linear-gradient(to bottom, rgba(13,109,253,0.3) 0%, transparent 30%);
+    background-image: linear-gradient(to bottom, rgba(13, 109, 253, 0.3) 0%, transparent 30%);
 }
 
 /* Break bg outside the .container
 Source: https://www.youtube.com/watch?v=81pnuZFarRw
-#f8f9fa = bg-body-tertiary (Bootstrap) */
+#f8f9fa = bg-body-tertiary
+#cfe2ff = bg-primary-subtle
+#e9ecef = bg-body-secondary
+*/
 .bg-fullwidth {
     box-shadow: 0 0 0 100vmax #f8f9fa;
     clip-path: inset(0 -100vmax);
 }
+

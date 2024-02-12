@@ -1,0 +1,8 @@
+[run]
+# omit anything in a migrations directory anywhere
+omit = */migrations/*
+
+[report]
+skip_covered = True
+# show exact lines of missing coverage
+show_missing = True

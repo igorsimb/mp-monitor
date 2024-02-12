@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "allauth",
     "allauth.account",
+    "allauth.socialaccount",
     "widget_tweaks",
     "guardian",
     "django_celery_beat",
@@ -60,6 +61,7 @@ ROOT_URLCONF = "mp_monitor.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
+        # if use default [], it will redirect to allauth's login, signup, etc as opposed to our "accounts" app
         "DIRS": [os.path.join(BASE_DIR, "accounts", "templates")],
         "APP_DIRS": True,
         "OPTIONS": {

@@ -1,0 +1,81 @@
+{% load static %}
+
+<section class="py-4">
+    <h2 id="how_does_it_work" class="text-center display-6 fw-bold text-body-emphasis my-4">
+        Как это работает?
+    </h2>
+
+    <!-- 1 -->
+    <div class="row pt-3">
+        <div class="col-sm-5 col-md-6 order-2 order-sm-1 text-center">
+            <img loading="lazy" src="{% static 'img/homepage/tiny_add_new_items.png' %}" alt="Заполните артикулы"
+                 class="img-fluid img-thumbnail">
+        </div>
+        <div class="mt-2 col-sm-2 col-md-1 order-1 order-sm-2 d-flex flex-column align-items-center justify-content-center">
+            <span class="badge bg-primary bg-gradient rounded-circle fs-3 shadow">1</span>
+            <div class="bg-primary-subtle mt-4 flex-grow-1 d-none d-sm-block"
+                 style="width: 3px; height: auto;"></div>
+        </div>
+        <div class="col-sm-5 col-md-5 order-3 h-auto">
+            <h2>Заполните артикулы</h2>
+            <ul>
+                <li>
+                    Нажмите
+                    <span class="material-symbols-sharp btn btn-sm btn-outline-success disabled">add</span> в верхнем левом углу.
+                </li>
+                <li>
+                    Введите один или несколько артикулов через запятую, пробел или с новой строки
+                    (напр., 101231520, 109670641, 31299196).
+                </li>
+                <li>
+                    Нажмите <button class="btn btn-success rounded-pill disabled">Добавить</button>
+                </li>
+                <li>
+                    Дождитесь окончания первого парсинга.
+                </li>
+            </ul>
+
+        </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="row my-4" style="min-height: 200px;">
+        <div class="d-flex col-sm-5 col-md-6 order-2 order-sm-1 align-items-center">
+            <img loading="lazy" src="{% static 'img/homepage/tiny_create_schedule_button_arrow.png' %}" alt="Заполните артикулы"
+                 class="img-fluid img-thumbnail">
+        </div>
+        <div class="col-sm-2 col-md-1 order-1 order-sm-2 d-flex flex-column align-items-center justify-content-center">
+            <span class="badge bg-primary bg-gradient rounded-circle fs-3 shadow">2</span>
+            <div class="border-danger bg-primary-subtle mt-3 flex-grow-1 d-none d-sm-block"
+                 style="width: 3px; height: auto;"></div>
+        </div>
+        <div class="col-sm-5 col-md-5 order-3 h-auto">
+            <h2>Вкладка расписаний</h2>
+            <p>Кликните "Создать автоматическое расписание"</p>
+        </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="row">
+        <div class="col-sm-5 col-md-6 order-2 order-sm-1 text-center">
+            <img loading="lazy" src="{% static 'img/homepage/tiny_create_schedule.png' %}" alt="Создайте расписание"
+                 class="img-fluid img-thumbnail">
+        </div>
+        <div class="col-sm-2 col-md-1 order-1 order-sm-2 d-flex flex-column align-items-center justify-content-start">
+            <span class="badge bg-primary bg-gradient rounded-circle fs-3 shadow">3</span>
+        </div>
+        <div class="ol-sm-5 col-md-5 order-3 h-auto">
+            <h2>Создайте расписание</h2>
+            <p>В поле формы введите необходимое число и выберите из списка нужный период. Например,
+                "Обновлять информацию с Wildberries каждые 12 часов".</p>
+
+            <button class="btn btn-success bg-gradient btn-lg px-4 rounded-pill mt-3" type="button">
+                Демо
+            </button>
+            <button class="btn btn-outline-secondary bg-gradient btn-lg px-4 rounded-pill ms-4 mt-3" type="button">
+                Регистрация
+            </button>
+        </div>
+    </div>
+
+</section>
