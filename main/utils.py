@@ -26,6 +26,7 @@ MAX_RETRIES = 10
 MAX_ITEMS_ON_SCREEN = 10
 User = get_user_model()
 
+
 def scrape_live_price(sku):
     """Scrapes the live price of a product from Wildberries.
 
@@ -52,8 +53,10 @@ def scrape_live_price(sku):
             EC.presence_of_element_located(
                 (
                     By.XPATH,
-                    "//div[@class='product-page__price-block product-page__price-block--aside']//ins["
-                    "@class='price-block__final-price']",
+                    (
+                        "//div[@class='product-page__price-block product-page__price-block--aside']//ins["
+                        "@class='price-block__final-price']"
+                    ),
                 )
             )
         )
@@ -140,7 +143,10 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     url = httpx.URL("https://card.wb.ru/cards/detail", params={"appType": 1, "curr": "rub", "dest": -455203, "nm": sku})
     # pylint: disable=line-too-long
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0"
+            " Safari/537.36"
+        ),
         "Accept": "*/*",
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
@@ -160,9 +166,9 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
                 logger.info("Breaking the loop...")
                 break
         except httpx.HTTPError as e:
-            logger.error("HTTP error occurred: %s. Failed to scrape url: %s. Attempt #%s", e, url, retry_count+1)
+            logger.error("HTTP error occurred: %s. Failed to scrape url: %s. Attempt #%s", e, url, retry_count + 1)
             retry_count += 1
-            sleep_amount_sec = random.uniform(0.5, 10)
+            sleep_amount_sec = random.uniform(0.5, 5)
             logger.info("Sleeping for %s seconds", sleep_amount_sec)
             time.sleep(sleep_amount_sec)
 
@@ -197,8 +203,9 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     logger.info("Checking if item is in stock")
     is_in_stock = check_item_stock(item)
 
-    price_before_any_discount = item.get("priceU") / 100 if \
-        (item.get("priceU") and isinstance(item.get("priceU"), int)) else None
+    price_before_any_discount = (
+        item.get("priceU") / 100 if (item.get("priceU") and isinstance(item.get("priceU"), int)) else None
+    )
 
     try:
         seller_discount = item["extended"]["basicSale"]
@@ -305,7 +312,7 @@ def uncheck_all_boxes(request: HttpRequest) -> None:
 
 
 def show_successful_scrape_message(
-        request: HttpRequest, items_data: list[dict], max_items_on_screen: int = MAX_ITEMS_ON_SCREEN
+    request: HttpRequest, items_data: list[dict], max_items_on_screen: int = MAX_ITEMS_ON_SCREEN
 ) -> None:
     """Displays a success message to the user indicating that the scrape was successful.
     Message depends on the number of items scraped to avoid screen clutter.
@@ -377,26 +384,26 @@ def calculate_percentage_change(prices: Page) -> None:
 def add_table_class(prices: Page) -> None:
     """Add Bootstrap table classes based on price comparison.
 
-   Iterates through a list of Price objects and assigns the appropriate
-   Bootstrap table classes('table_class' attribute) based on price comparisons.
+    Iterates through a list of Price objects and assigns the appropriate
+    Bootstrap table classes('table_class' attribute) based on price comparisons.
 
-   Args:
-       prices (list): A list of Price objects to assign table classes to.
+    Args:
+        prices (list): A list of Price objects to assign table classes to.
 
-   Returns:
-       None: The function modifies the 'table_class' attribute of each Price object in place.
+    Returns:
+        None: The function modifies the 'table_class' attribute of each Price object in place.
 
-   Example of use in a template:
-        {% for price in prices %}
-            <tr class="{{ price.table_class }}">
-                <td>...</td>
-            </tr>
-        {% endfor %}
+    Example of use in a template:
+         {% for price in prices %}
+             <tr class="{{ price.table_class }}">
+                 <td>...</td>
+             </tr>
+         {% endfor %}
 
-   See Also:
-       - https://getbootstrap.com/docs/5.3/content/tables/#variants
+    See Also:
+        - https://getbootstrap.com/docs/5.3/content/tables/#variants
 
-       """
+    """
     for i in range(len(prices)):
         try:
             if prices[i].value < prices[i + 1].value:

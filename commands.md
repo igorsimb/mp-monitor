@@ -5,3 +5,9 @@
   (for windows:) `celery -A mp_monitor worker -l info -P gevent`
 - duplicate tab again  
 `celery -A mp_monitor beat -l INFO`
+
+### Check pytest coverage
+`pytest -n 4 --cov-config=.coveragerc --cov=. tests/`
+
+### Use pytest-xdist for multithreading tests
+`pytest -n 4` (4 = number of processes, up to 32)

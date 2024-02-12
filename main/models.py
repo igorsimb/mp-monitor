@@ -105,10 +105,7 @@ class Item(models.Model):
         return min_price_date
 
     def price_percent_change(self) -> float:
-
-        prices = Price.objects.filter(
-            Q(item=self)
-        )
+        prices = Price.objects.filter(Q(item=self))
         for i in range(len(prices)):
             try:
                 previous_price = prices[i + 1].value
@@ -147,11 +144,16 @@ class Schedule(models.Model):
         MINUTES = "minutes", _("Минут")
         HOURS = "hours", _("Часов")
         DAYS = "days", _("Дней")
-    type = models.CharField(max_length=50,
-                            verbose_name="Тип расписания",
-                            default="interval",
-                            choices=[("interval", "Интервал"), ("cronjob", "CronJob")])
-    interval_value = models.IntegerField(verbose_name="Каждые", validators=[MinValueValidator(1)], null=True, blank=True)
+
+    type = models.CharField(
+        max_length=50,
+        verbose_name="Тип расписания",
+        default="interval",
+        choices=[("interval", "Интервал"), ("cronjob", "CronJob")],
+    )
+    interval_value = models.IntegerField(
+        verbose_name="Каждые", validators=[MinValueValidator(1)], null=True, blank=True
+    )
     cronjob_value = models.CharField(max_length=100, verbose_name="CronJob", blank=True, null=True)
     period = models.CharField(max_length=100, choices=Period.choices, default=Period.HOURS)
 
@@ -185,5 +187,6 @@ class Price(models.Model):
 
     def __str__(self) -> str:
         return str(self.value)
+
 
 # TODO: Use Custom models manager for queryset of enabled products

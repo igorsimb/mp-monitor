@@ -3,190 +3,34 @@
 
 
 {% block title %}
-   MP Monitor - Главная
+    MP Monitor - Главная
 {% endblock title %}
 
 {% block content %}
 
-<main class="container col-xxl-8 px-4 py-3">
+    <main class="container px-4 py-3">
 
-    <!-- Hero section -->
-    <section aria-labelledby="hero-title" class="row flex-lg-row-reverse align-items-center g-5 py-5">
-        <div class="col-10 col-sm-8 col-lg-6">
-            <img src="{% static 'img/homepage/hero-image-2.png' %}" class="d-block mx-lg-auto img-fluid" alt="Cool image"
-                 width="700" height="500" loading="lazy">
-        </div>
-        <div class="col-lg-6">
-            <h1 id="hero-title" class="display-5 fw-bold text-body-emphasis lh-1 mb-3">Medium length display headline</h1>
-            <p class="lead">Separated they live in Bookmarks right at the coast of the famous Semantics, large
-                language</p>
-{#            <div class="d-grid gap-2 d-md-flex justify-content-md-start border">#}
-                <button type="button" class="btn btn-primary bg-gradient btn-lg px-4 me-md-2 mt-3 rounded-pill">Call to Action</button>
-{#            </div>#}
-        </div>
-    </section>
+        {% include "main/partials/homepage/hero_section.html" %}
+        {% include "main/partials/homepage/features.html" %}
+        {% include "main/partials/homepage/how_does_it_work.html" %}
+{#        {% include "main/partials/homepage/problem_solution.html" %}#}
+        {% include "main/partials/homepage/faq.html" %}
 
-    <!-- Features/Benefits -->
-    <section aria-labelledby="feature-title-1 feature-title-2 feature-title-3"
-             class="row g-4 py-5 row-cols-1 row-cols-lg-3 bg-body-tertiary bg-fullwidth">
-        <div class="col">
-            <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3">
-                <img
-                        class="glyph-icon"
-                        loading="eager"
-                        alt=""
-                        src="{% static 'img/homepage/glyph.svg' %}"
-                />
-            </div>
-            <h3 id="feature-title-1" class="fs-2 text-body-emphasis">Featured title 1</h3>
-            <p>Paragraph of text beneath the heading to explain the heading.</p>
-        </div>
-
-        <div class="col">
-            <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3">
-                <img
-                        class="glyph-icon"
-                        loading="eager"
-                        alt=""
-                        src="{% static 'img/homepage/glyph-1.svg' %}"
-                />
-            </div>
-            <h3 id="feature-title-2" class="fs-2 text-body-emphasis">Featured title 2</h3>
-            <p>Paragraph of text beneath the heading to explain the heading. No more than a couple of lines.</p>
-        </div>
-
-        <div class="feature col">
-            <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3">
-                <img
-                        class="glyph-icon"
-                        loading="eager"
-                        alt=""
-                        src="{% static 'img/homepage/glyph.svg' %}"
-                />
-            </div>
-            <h3 id="feature-title-3" class="fs-2 text-body-emphasis">Featured title 3</h3>
-            <p>Paragraph of text beneath the heading to explain the heading. We'll add onto it with another sentence and
-                probably just keep going until we run out of words.</p>
-        </div>
-    </section>
-
-    <!-- Problem/Solution -->
-    <section aria-labelledby="solution-title-1" class="row flex-lg-row align-items-center g-5 py-5">
-        <div class="col-10 col-sm-8 col-lg-6">
-            <img src="{% static 'img/homepage/benefit-image-1.png' %}" class="d-block mx-lg-auto img-fluid" alt="Cool image"
-                 width="700" height="500" loading="lazy">
-        </div>
-        <div class="col-lg-6">
-            <h2 id="solution-title-1" class="display-6 fw-bold text-body-emphasis lh-1 mb-3">Medium length display headline</h2>
-            <p class="">Separated they live in Bookmarks right at the coast of the famous Semantics, large
-                language</p>
-            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                {#                <button type="button" class="btn btn-primary btn-lg px-4 me-md-2">Call to Action</button>#}
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Showcase and embed your work with</li>
-                    <li class="list-group-item">Publish across social channels in a click</li>
-                    <li class="list-group-item">Sell your videos worldwide</li>
-                    <li class="list-group-item">Embed your work with</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <section aria-labelledby="solution-title-2" class="row flex-lg-row-reverse align-items-center g-5 py-5">
-        <div class="col-10 col-sm-8 col-lg-6">
-            <img src="{% static 'img/homepage/benefit-image-2.png' %}" class="d-block mx-lg-auto img-fluid" alt="Cool image"
-                 width="700" height="500" loading="lazy">
-        </div>
-        <div class="col-lg-6">
-            <h2 id="solution-title-2" class="display-6 fw-bold text-body-emphasis lh-1 mb-3">Medium length display headline</h2>
-            <p class="">Separated they live in Bookmarks right at the coast of the famous Semantics, large
-                language</p>
-            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                {#                <button type="button" class="btn btn-primary btn-lg px-4 me-md-2">Call to Action</button>#}
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Showcase and embed your work with</li>
-                    <li class="list-group-item">Publish across social channels in a click</li>
-                    <li class="list-group-item">Sell your videos worldwide</li>
-                    <li class="list-group-item">Embed your work with</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ -->
-    <section aria-labelledby="faq-title" class="row flex-lg-row align-items-center g-4 py-5 bg-body-tertiary bg-fullwidth">
-        <h2 id="faq-title" class="text-center display-6 fw-bold text-body-emphasis lh-1">Часто задаваемые вопросы</h2>
-        <div class="col accordion accordion-flush" id="accordionFlushExample">
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed rounded bg-body-tertiary fw-bold" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
-                        У меня есть вопрос 1?
-                    </button>
+        <!-- Call to action -->
+        <section aria-labelledby="cta-title" class="row my-5">
+            <div class="col text-center rounded-3">
+                <h2 id="cta-title" class="display-6 fw-bold text-body-emphasis">
+                    Начните получать актуальную информацию о ценах на Wildberries
                 </h2>
-                <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
-                    <div class="accordion-body">Placeholder content for this accordion, which is intended to demonstrate
-                        the
-                        <code>.accordion-flush</code> class. This is the first item's accordion body.
-                    </div>
+                <div class="mt-4">
+                    <a href="{% url 'account_signup' %}" class="btn btn-lg btn-success bg-gradient px-4 rounded-pill" type="button">
+                        Зарегистрироваться и начать мониторинг
+                    </a>
                 </div>
             </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed rounded bg-body-tertiary fw-bold" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
-                        У меня есть вопрос 2?
-                    </button>
-                </h2>
-                <div id="flush-collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
-                    <div class="accordion-body">Placeholder content for this accordion, which is intended to demonstrate
-                        the
-                        <code>.accordion-flush</code> class. This is the second item's accordion body. Let's imagine
-                        this
-                        being filled with some actual content.
-                    </div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed rounded bg-body-tertiary fw-bold" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#flush-collapseThree" aria-expanded="false"
-                            aria-controls="flush-collapseThree">
-                        У меня есть вопрос 3?
-                    </button>
-                </h2>
-                <div id="flush-collapseThree" class="accordion-collapse collapse"
-                     data-bs-parent="#accordionFlushExample">
-                    <div class="accordion-body">Placeholder content for this accordion, which is intended to demonstrate
-                        the
-                        <code>.accordion-flush</code> class. This is the third item's accordion body. Nothing more
-                        exciting
-                        happening here in terms of content, but just filling up the space to make it look, at least at
-                        first
-                        glance, a bit more representative of how this would look in a real-world application.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Call to action -->
-    <section aria-labelledby="cta-title" class="row my-5">
-        <div class="col p-5 text-center rounded-3">
-            <h2 id="cta-title" class="display-6 fw-bold text-body-emphasis">Главный призыв к действию идет сюда</h2>
-            {#            <p class="col-lg-8 mx-auto fs-5 text-muted">#}
-            {#                This is a custom jumbotron featuring an SVG image at the top, some longer text that wraps early thanks#}
-            {#                to a responsive <code>.col-*</code> class, and a customized call to action.#}
-            {#            </p>#}
-            <div class="d-inline-flex gap-2 mt-3">
-                <button class="btn btn-primary bg-gradient btn-lg px-4 rounded-pill" type="button">
-                    Call to action
-                </button>
-            </div>
-        </div>
-    </section>
-
-</main>
+    </main>
 
 
 {% endblock content %}
