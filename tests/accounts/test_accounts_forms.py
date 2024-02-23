@@ -1,6 +1,5 @@
 import logging
 
-import pytest
 from django.contrib.auth import get_user_model
 
 from accounts.forms import CustomUserCreationForm
@@ -10,7 +9,6 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-@pytest.mark.django_db
 class TestCustomUserCreationForm:
     def test_form_valid_with_correct_data(self):
         form_data = {"email": "test@example.com", "password1": "validpassword123", "password2": "validpassword123"}

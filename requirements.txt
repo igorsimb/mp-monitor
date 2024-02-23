@@ -44,6 +44,8 @@ docopt==0.6.2
 environs==10.3.0
 eventlet==0.35.2
 execnet==2.0.2
+factory-boy==3.3.0
+Faker==23.2.1
 frozenlist==1.4.1
 gevent==24.2.1
 greenlet==3.0.3

@@ -8,7 +8,6 @@ from accounts.models import CustomUser
 from main.models import Item, Tenant
 from main.tasks import scrape_interval_task
 
-pytestmark = [pytest.mark.django_db]
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +169,7 @@ class TestScrapeIntervalTask:
         assert Item.objects.all().count() == 0
 
         logger.info(
-            "Checking that the Item.objects.filter method was called " "with the correct arguments: ids=%s",
+            "Checking that the Item.objects.filter method was called with the correct arguments: ids=%s",
             invalid_items_ids,
         )
         Item.objects.filter.assert_called_once_with(id__in=invalid_items_ids)  # type: ignore
@@ -186,7 +185,7 @@ class TestScrapeIntervalTask:
             scrape_interval_task(tenant_id=invalid_tenant_id, selected_item_ids=[item.id for item in items])
 
         logger.info(
-            "Checking that the 'Tenant.objects.get' method was called once " "with the correct arguments (id=%s),",
+            "Checking that the 'Tenant.objects.get' method was called once with the correct arguments (id=%s),",
             invalid_tenant_id,
         )
         Tenant.objects.get.assert_called_once_with(id=invalid_tenant_id)  # type: ignore
