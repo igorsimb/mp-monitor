@@ -7,14 +7,19 @@ from django.dispatch import Signal
 
 from accounts.models import CustomUser, add_user_to_group
 from accounts.models import Tenant
+from tests.factories import UserFactory
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
 
-@pytest.mark.django_db
 class TestCustomUserModel:
+    def test_user_exists(self) -> None:
+        user = UserFactory()
+
+        assert user is not None
+
     def test_custom_user_creation(self):
         user = User.objects.create(email="testuser@test.com", username="testuser", password="testpassword")
 
@@ -45,7 +50,7 @@ def setup_signal_test():
     return user, signal
 
 
-@pytest.mark.django_db
+# pylint: disable=redefined-outer-name
 class TestAddUserToGroup:
     def test_group_created(self, setup_signal_test):
         user, signal = setup_signal_test

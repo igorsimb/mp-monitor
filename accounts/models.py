@@ -8,7 +8,16 @@ from main.models import Tenant
 
 
 class CustomUser(AbstractUser):
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Организация")
+    tenant = models.ForeignKey(Tenant,
+                               on_delete=models.CASCADE,
+                               null=True,
+                               blank=True,
+                               related_name="users",
+                               verbose_name="Организация"
+                               )
+
+    class Meta:
+        indexes = [models.Index(fields=["tenant"]),]
 
     def save(self, *args, **kwargs):  # type: ignore
         if not self.tenant:

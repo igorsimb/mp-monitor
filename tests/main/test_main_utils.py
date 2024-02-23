@@ -20,7 +20,6 @@ from main.utils import (
     update_or_create_items,
 )
 
-pytestmark = [pytest.mark.django_db]
 
 logger = logging.getLogger(__name__)
 
@@ -147,9 +146,7 @@ class TestScrapeItem:
                                 "basicPriceU": self.price,
                                 "basicSale": 30,
                             },
-                            "sizes": [{
-                                "stocks": ["3"]
-                            }],
+                            "sizes": [{"stocks": ["3"]}],
                         },
                     ]
                 }
@@ -177,9 +174,7 @@ class TestScrapeItem:
                             "priceU": self.price,
                             "salePriceU": self.price,
                             "sale": 30,
-                            "sizes": [{
-                                "stocks": []
-                            }],
+                            "sizes": [{"stocks": []}],
                         },
                     ]
                 }
@@ -212,7 +207,7 @@ class TestScrapeItem:
             "num_reviews": 10,
         }
 
-    def test_item_not_in_stock(self, item_with_empty_stock: None) -> None: # pylint: disable=unused-argument
+    def test_item_not_in_stock(self, item_with_empty_stock: None) -> None:  # pylint: disable=unused-argument
         logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku_no_stock)
         result = scrape_item(self.sku_no_stock)
         logger.info("Checking that the item is not in stock")

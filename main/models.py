@@ -16,11 +16,24 @@ logger = logging.getLogger(__name__)
 
 
 class Tenant(models.Model):
+    # in ORM can be referenced as tenant.Status.TRIALING
+    class Status(models.IntegerChoices):
+        TRIALING = 1, _("Trialing")
+        ACTIVE = 2, _("Active")
+        EXEMPT = 3, _("Exempt")  # for using service without paying, e.g. admins, etc
+        CANCELED = 4, _("Canceled")
+        TRIAL_EXPIRED = 5, _("Trial expired")
+
     name = models.CharField(max_length=255, unique=True)
+    status = models.IntegerField(choices=Status.choices, default=Status.TRIALING)
 
     class Meta:
         verbose_name = "Организация"
         verbose_name_plural = "Организации"
+        # speeds up database queries (https://docs.djangoproject.com/en/5.0/ref/models/options/#indexes)
+        indexes = [
+            models.Index(fields=["status"]),
+        ]
 
     def __str__(self):  # pylint: disable=invalid-str-returned
         return self.name

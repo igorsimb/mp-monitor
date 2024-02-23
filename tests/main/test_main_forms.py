@@ -7,8 +7,6 @@ from main.forms import ScrapeForm, TaskForm, ScrapeIntervalForm
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.django_db]
-
 User = get_user_model()
 
 

@@ -15,14 +15,13 @@ from main.views import (
     ItemListView,
     ItemDetailView,
     scrape_items,
-    destroy_scrape_interval_task, update_items,
+    destroy_scrape_interval_task,
+    update_items,
 )
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
-
-pytestmark = [pytest.mark.django_db]
 
 
 class TestIndex:
@@ -274,10 +273,13 @@ class TestScrapeItemsView:
 
     def test_update_items_view(self, update_post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = update_post_request_with_user
-        mocker.patch("main.views.scrape_items_from_skus", return_value=[
-            {"sku": "12345", "name": "Test Item 1"},
-            {"sku": "67890", "name": "Test Item 2"},
-            ])
+        mocker.patch(
+            "main.views.scrape_items_from_skus",
+            return_value=[
+                {"sku": "12345", "name": "Test Item 1"},
+                {"sku": "67890", "name": "Test Item 2"},
+            ],
+        )
 
         logger.info("Updating items...")
         update_items(request)
@@ -494,7 +496,7 @@ class TestDestroyScrapeIntervalTaskView:
         logger.info("Deleting the interval task")
         client.post(reverse("destroy_scrape_interval"), data=valid_form_data)
         assert "scrape_interval_task" not in client.session, (
-            f"Found 'scrape_interval_task' key in session keys, but it should not exist. "
+            "Found 'scrape_interval_task' key in session keys, but it should not exist. "
             f"Session keys: {client.session.keys()}"
         )
         logger.debug("Interval task was successfully deleted (%s)", task_info)

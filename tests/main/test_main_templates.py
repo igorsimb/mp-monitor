@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-@pytest.mark.django_db
 class TestMainTemplates:
     @pytest.fixture
     def client(self) -> Client:
@@ -44,4 +43,3 @@ class TestMainTemplates:
         logger.debug("Item Detail page response: %s", response)
         assert response.status_code == 200
         assert "main/item_detail.html" in [t.name for t in response.templates]
-

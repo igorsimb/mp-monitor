@@ -7,7 +7,6 @@ from django.urls import reverse
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.django_db
 class TestAccountsTemplates:
     @pytest.fixture
     def client(self):
