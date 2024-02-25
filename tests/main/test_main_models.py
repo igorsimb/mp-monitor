@@ -34,8 +34,8 @@ class TestTenantModel:
         TenantFactory(status=Tenant.Status.CANCELED)
         TenantFactory(status=Tenant.Status.TRIAL_EXPIRED)
 
-        active_tenants = set(Tenant.objects.active())
-        assert active_tenants == {trialing, active, exempt}
+        active_tenants = Tenant.objects.active()  # Queryset, aka a set
+        assert set(active_tenants) == {trialing, active, exempt}
 
     def test_tenant_name_is_equal_to_user_email(self) -> None:
         user = UserFactory()
