@@ -15,6 +15,13 @@ from guardian.shortcuts import assign_perm, get_perms
 logger = logging.getLogger(__name__)
 
 
+class TenantManager(models.Manager):
+    def active(self) -> models.QuerySet:
+        # in ORM: Tenant.objects.active()
+        qs = self.get_queryset()
+        return qs.filter(status__in=self.model.ACTIVE_STATUSES)
+
+
 class Tenant(models.Model):
     # in ORM can be referenced as tenant.Status.TRIALING
     class Status(models.IntegerChoices):
@@ -24,8 +31,15 @@ class Tenant(models.Model):
         CANCELED = 4, _("Canceled")
         TRIAL_EXPIRED = 5, _("Trial expired")
 
+    ACTIVE_STATUSES = (
+        Status.TRIALING,
+        Status.ACTIVE,
+        Status.EXEMPT,
+    )
     name = models.CharField(max_length=255, unique=True)
     status = models.IntegerField(choices=Status.choices, default=Status.TRIALING)
+
+    objects = TenantManager()
 
     class Meta:
         verbose_name = "Организация"

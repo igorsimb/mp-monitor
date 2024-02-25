@@ -8,27 +8,28 @@ from main.models import Tenant
 
 
 class CustomUser(AbstractUser):
-    tenant = models.ForeignKey(Tenant,
-                               on_delete=models.CASCADE,
-                               null=True,
-                               blank=True,
-                               related_name="users",
-                               verbose_name="Организация"
-                               )
+    tenant = models.ForeignKey(
+        Tenant, on_delete=models.CASCADE, null=True, blank=True, related_name="users", verbose_name="Организация"
+    )
 
     class Meta:
-        indexes = [models.Index(fields=["tenant"]),]
+        indexes = [
+            models.Index(fields=["tenant"]),
+        ]
 
     def save(self, *args, **kwargs):  # type: ignore
-        if not self.tenant:
+        if not self.tenant and self.username != "AnonymousUser":
             self.tenant = Tenant.objects.create(name=self.email)
+        # django-guardian creates AnonymousUser by default, setting status to CANCELED for now until
+        # https://github.com/igorsimb/mp-monitor/issues/73 is resolved
+        elif self.username == "AnonymousUser":
+            self.tenant = Tenant.objects.create(status=Tenant.Status.CANCELED)
         super().save(*args, **kwargs)
 
 
 # Add user to the Tenant group upon creation
 @receiver(post_save, sender=CustomUser)
 def add_user_to_group(sender, instance, created, **kwargs):  # type: ignore  # pylint: disable=[unused-argument]
-
     if instance.is_superuser:
         return
     if created:

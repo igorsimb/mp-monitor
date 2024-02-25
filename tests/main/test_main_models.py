@@ -10,7 +10,7 @@ from django.utils import timezone
 from guardian.shortcuts import assign_perm, get_perms
 
 from main.models import Tenant, Item, Price
-from tests.factories import UserFactory
+from tests.factories import UserFactory, TenantFactory
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,17 @@ class TestTenantModel:
 
         assert user.tenant is not None
         assert user.tenant.status == user.tenant.Status.TRIALING
+
+    def test_active_tenant(self) -> None:
+        """Tests the active() manager method to ensure it correctly returns active tenants."""
+        trialing = TenantFactory(status=Tenant.Status.TRIALING)
+        active = TenantFactory(status=Tenant.Status.ACTIVE)
+        exempt = TenantFactory(status=Tenant.Status.EXEMPT)
+        TenantFactory(status=Tenant.Status.CANCELED)
+        TenantFactory(status=Tenant.Status.TRIAL_EXPIRED)
+
+        active_tenants = set(Tenant.objects.active())
+        assert active_tenants == {trialing, active, exempt}
 
     def test_tenant_name_is_equal_to_user_email(self) -> None:
         user = UserFactory()
