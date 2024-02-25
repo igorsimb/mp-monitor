@@ -17,9 +17,12 @@ logger = logging.getLogger(__name__)
 
 class TenantManager(models.Manager):
     def active(self) -> models.QuerySet:
-        # in ORM: Tenant.objects.active()
+        """
+        Returns only active tenants.
+        Can be used in ORM like so: Tenant.objects.active()
+        """
         qs = self.get_queryset()
-        return qs.filter(status__in=self.model.ACTIVE_STATUSES)
+        return qs.filter(status__in=self.model.ACTIVE_STATUSES)  # type: ignore
 
 
 class Tenant(models.Model):
