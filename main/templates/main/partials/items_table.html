@@ -1,18 +1,19 @@
 {% load widget_tweaks %}
 {% load humanize %}
 
-<div class="flex-grow-1 d-flex flex-column mt-4">
-    <table class="table table-striped table-hover table-bordered">
-        <thead>
+
+<div class="table-responsive">
+    <table class="table table-hover table-bordered border-secondary-subtle">
+        <thead class="table-dark">
         <tr class="text-center">
             <th>
                 <input id="select-all" class="form-check-input mt-0" type="checkbox" aria-label="Выделить все">
             </th>
-            <th>SKU</th>
-            <th>Наименование</th>
+            <th>Артикул</th>
+            <th>Наименование товара</th>
             {#                <th>СПП</th>#}
             <th>Цена WB</th>
-            <th>Разница %</th>
+            <th class="fit">Разница %</th>
             <th>Обновлено</th>
         </tr>
         </thead>
@@ -60,4 +61,4 @@
         </tbody>
     </table>
 </div>
-{#</form>#}
+
