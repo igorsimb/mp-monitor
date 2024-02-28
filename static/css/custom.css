@@ -33,7 +33,7 @@ Source: https://www.youtube.com/watch?v=81pnuZFarRw
     clip-path: inset(0 -100vmax);
 }
 
-.custom-material-icon {
+.material-symbols-sharp, .custom-material-icon {
     display: inline-flex;
     vertical-align: text-bottom;
     font-size: 1.2rem;
@@ -156,3 +156,25 @@ source: https://uiverse.io/Pradeepsaranbishnoi/jolly-robin-0 */
   color: rgba(0, 0, 0, 0.8);
 }
 /* Add items button END */
+
+
+.item-price-card {
+  box-sizing: border-box;
+  border: 1px solid white;
+  backdrop-filter: blur(6px);
+  border-radius: 17px;
+  cursor: pointer;
+  transition: all 0.5s;
+
+}
+
+.item-price-card:hover {
+  border: 1px solid black;
+  /* Can also use var like so:
+  border: 1px solid var(--bs-primary-bg-subtle); */
+  transform: scale(1.03);
+}
+
+.item-price-card:active {
+  transform: scale(0.97) rotateZ(1.7deg);
+}
