@@ -5,7 +5,6 @@ from main.models import Tenant
 from mp_monitor import settings
 
 
-# @factory.django.mute_signals(signals.post_save)
 class TenantFactory(DjangoModelFactory):
     class Meta:
         model = Tenant
