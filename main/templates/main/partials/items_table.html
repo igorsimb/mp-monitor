@@ -3,7 +3,7 @@
 
 
 <div class="table-responsive">
-    <table class="table table-hover table-bordered border-secondary-subtle">
+    <table class="table table-hover table-bordered border-secondary-subtle mt-4">
         <thead class="table-dark">
         <tr class="text-center">
             <th>
@@ -13,7 +13,7 @@
             <th>Наименование товара</th>
             {#                <th>СПП</th>#}
             <th>Цена WB</th>
-            <th class="fit">Разница %</th>
+            <th class="fit"><a class="text-decoration-none text-light" title="По сравнению с предыдущим обновлением">Разница %</a></th>
             <th>Обновлено</th>
         </tr>
         </thead>
@@ -42,15 +42,21 @@
                                         {% endif %}
                                     </span>
                 </td>
-                <td class="text-center">
+
                     {% if item.price_percent_change > 0 %}
-                        +{{ item.price_percent_change|floatformat }}%
-                    {% elif item.price_percent_change == 0 %}
-                        =
-                    {% else %}
+                        <td class="text-center table-success">
+                        <span class="material-symbols-sharp">trending_up</span>
                         {{ item.price_percent_change|floatformat }}%
+                        </td>
+                    {% elif item.price_percent_change < 0 %}
+                        <td class="text-center table-danger">
+                        <span class="material-symbols-sharp">trending_down</span>
+                        {{ item.price_percent_change|floatformat }}%
+                        </td>
+                    {% else %}
+                        <td class="text-center"></td>
                     {% endif %}
-                </td>
+
                 <td>{{ item.updated_at|naturaltime }}</td>
             </tr>
         {% empty %}

@@ -4,48 +4,60 @@
 
 {% block content %}
 
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb ms-3">
-            <li class="breadcrumb-item"><a href="{% url 'item_list' %}">Назад к товарам</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ item.sku }}</li>
-        </ol>
-    </nav>
-
     <div class="container">
 
-        <div class="card">
-            <div class="card-header text-center h3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb p-3 bg-body-tertiary rounded-3">
+                <li class="breadcrumb-item">
+                    <a class="link-body-emphasis fw-semibold text-decoration-none" href="{% url 'item_list' %}">
+                        Назад к товарам
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    {{ item.sku }}
+                </li>
+            </ol>
+        </nav>
+
+        <div class="card border-primary">
+            <div class="card-header text-center h3 text-bg-primary bg-gradient">
                 {{ item.name }}
             </div>
-            <div class="mx-3">
+            <div class="mx-3 mt-1">
                 <a href="https://www.wildberries.ru/catalog/{{ item.sku }}/detail.aspx"
                    class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
                    title="Посмотреть товар на Wildberries" target="_blank">
-                    Перейти на страницу товара
+                    На страницу товара <span class="material-symbols-sharp">open_in_new</span>
                 </a>
             </div>
             <div class="card-body">
                 <div class="row justify-content-around mb-4">
-                    <div class="shadow col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5">
+
+                    <div class="shadow shadow-sm col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5 item-price-card">
                         <div>Текущая цена</div>
                         <div class="fw-bold">{{ item.price }}</div>
                     </div>
-                    <div class="shadow col-3 card p-2 text-center  bg-secondary-subtle bg-gradient fs-5">
+
+                    <div class="shadow shadow-sm col-3 card p-2 text-center  bg-secondary-subtle bg-gradient fs-5 item-price-card">
                         <div>Средняя цена</div>
                         <div class="fw-bold">{{ item.avg_price }}</div>
                     </div>
                 </div>
+
                 <div class="row justify-content-around mb-3">
-                    <div class="shadow col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5">
+
+                    <div class="shadow shadow-sm col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5 item-price-card">
                         <div>Максимальная цена</div>
                         <div class="fw-bold">{{ item.max_price }}</div>
                         <span class="text-body-tertiary fs-6">({{ item.max_price_date }})</span>
                     </div>
-                    <div class="shadow col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5">
+
+                    <div class="shadow shadow-sm col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5 item-price-card">
                         <div>Минимальная цена</div>
                         <div class="fw-bold">{{ item.min_price }}</div>
                         <span class="text-body-tertiary fs-6">({{ item.min_price_date }})</span>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -67,14 +79,23 @@
                     <td>{{ price.created_at }}</td>
                     {#  https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#cut #}
                     <td>{% if not item.is_in_stock and price.updated_at|date:"U" == price.created_at|date:"U" %}
-                            <span class="text-bg-danger p-1">Нет в наличии</span>
-                        {% else %}
-                            {{ price.value }}
-                        {% endif %}
+                        <span class="text-bg-danger p-1">Нет в наличии</span>
+                    {% else %}
+                        {{ price.value }}
+                    {% endif %}
                     </td>
                     <td>
-                        {{ price.trend }} {{ price.percent_change|floatformat }}%
+                        {#                        {{ price.trend }} {{ price.percent_change|floatformat }}%#}
+
+                        {% if price.percent_change > 0 %}
+                            <span class="material-symbols-sharp">trending_up</span>
+                            {{ price.percent_change|floatformat }}%
+                        {% elif price.percent_change < 0 %}
+                            <span class="material-symbols-sharp">trending_down</span>
+                            {{ price.percent_change|floatformat }}%
+                        {% endif %}
                     </td>
+
                 </tr>
             {% endfor %}
             </tbody>

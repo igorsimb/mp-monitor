@@ -370,7 +370,7 @@ def calculate_percentage_change(prices: Page) -> None:
             previous_price = prices[i + 1].value
             current_price = prices[i].value
             percent_change = ((current_price - previous_price) / previous_price) * 100
-            prices[i].percent_change = abs(round(percent_change, 2))
+            prices[i].percent_change = round(percent_change, 2)
         except IndexError:
             prices[i].percent_change = 0
         except TypeError:
