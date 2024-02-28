@@ -5,11 +5,10 @@ from main.models import Tenant
 from mp_monitor import settings
 
 
+# @factory.django.mute_signals(signals.post_save)
 class TenantFactory(DjangoModelFactory):
     class Meta:
         model = Tenant
-
-    name = factory.Faker("email")
 
 
 class UserFactory(DjangoModelFactory):
@@ -20,3 +19,4 @@ class UserFactory(DjangoModelFactory):
     email = factory.Sequence(lambda n: f"user_{n}@testing.com")
     username = factory.Sequence(lambda n: f"user_{n}")
     password = factory.PostGenerationMethodCall("set_password", "password")
+    tenant = factory.RelatedFactory(TenantFactory, "name")

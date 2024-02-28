@@ -28,11 +28,11 @@ class TestTenantModel:
 
     def test_active_tenant(self) -> None:
         """Tests the active() manager method to ensure it correctly returns active tenants."""
-        trialing = TenantFactory(status=Tenant.Status.TRIALING)
-        active = TenantFactory(status=Tenant.Status.ACTIVE)
-        exempt = TenantFactory(status=Tenant.Status.EXEMPT)
-        TenantFactory(status=Tenant.Status.CANCELED)
-        TenantFactory(status=Tenant.Status.TRIAL_EXPIRED)
+        trialing = TenantFactory(status=Tenant.Status.TRIALING, name="unique1@testing.com")
+        active = TenantFactory(status=Tenant.Status.ACTIVE, name="unique2@testing.com")
+        exempt = TenantFactory(status=Tenant.Status.EXEMPT, name="unique3@testing.com")
+        TenantFactory(status=Tenant.Status.CANCELED, name="unique4@testing.com")
+        TenantFactory(status=Tenant.Status.TRIAL_EXPIRED, name="unique6@testing.com")
 
         active_tenants = Tenant.objects.active()  # Queryset, aka a set
         assert set(active_tenants) == {trialing, active, exempt}
