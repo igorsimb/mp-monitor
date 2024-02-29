@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class IndexView(TemplateView):
     """The entry point for the website."""
+
     template_name = "main/index.html"
 
 
@@ -52,7 +53,9 @@ class ItemListView(PermissionListMixin, ListView):
         context["form"] = form
         context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
-        context["scrape_interval_task"] = self.request.session.get("scrape_interval_task")
+        context["scrape_interval_task"] = self.request.session.get(
+            "scrape_interval_task"
+        )
         return context
 
     def get(self, request, *args, **kwargs):
@@ -89,11 +92,17 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         return context
 
     def get(self, request, *args, **kwargs):
-        logger.info("Going to Details Page for item SKU '%s' (%s)", self.get_object().sku, self.get_object().name)
+        logger.info(
+            "Going to Details Page for item SKU '%s' (%s)",
+            self.get_object().sku,
+            self.get_object().name,
+        )
         return super().get(request, *args, **kwargs)
 
 
-def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponseRedirect:
+def scrape_items(
+    request: WSGIRequest, skus: str
+) -> HttpResponse | HttpResponseRedirect:
     if request.method == "POST":
         form = ScrapeForm(request.POST)
         if form.is_valid():
@@ -129,7 +138,10 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             return redirect("item_list")
         else:
             logger.error("Form is invalid. %s", form.errors)
-            messages.error(request, "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.")
+            messages.error(
+                request,
+                "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.",
+            )
             return redirect("item_list")
     else:
         form = UpdateItemsForm()
@@ -137,7 +149,9 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
 
 
 # TODO: remove this if the new create_scrape_interval_task view works fine
-def create_scrape_interval_task_old(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
+def create_scrape_interval_task_old(
+    request: WSGIRequest,
+) -> HttpResponse | HttpResponseRedirect:
     """Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
 
     The task itself prints all items belonging to this tenant every {{ interval }} seconds.
@@ -172,9 +186,17 @@ def create_scrape_interval_task_old(request: WSGIRequest) -> HttpResponse | Http
                 period=IntervalSchedule.SECONDS,
             )
             if created:
-                logger.debug("Interval created with schedule: every %s %s", schedule.every, schedule.period)
+                logger.debug(
+                    "Interval created with schedule: every %s %s",
+                    schedule.every,
+                    schedule.period,
+                )
             else:
-                logger.debug("Existing Interval started: every %s %s", schedule.every, schedule.period)
+                logger.debug(
+                    "Existing Interval started: every %s %s",
+                    schedule.every,
+                    schedule.period,
+                )
 
             scrape_interval_task = PeriodicTask.objects.create(
                 interval=schedule,
@@ -184,11 +206,15 @@ def create_scrape_interval_task_old(request: WSGIRequest) -> HttpResponse | Http
                 args=[request.user.tenant.id, selected_item_ids],
             )
             logger.debug(
-                "Interval task '%s' was successfully created for '%s'", scrape_interval_task.name, request.user
+                "Interval task '%s' was successfully created for '%s'",
+                scrape_interval_task.name,
+                request.user,
             )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
-            request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
+            request.session[
+                "scrape_interval_task"
+            ] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
 
             return redirect("item_list")
 
@@ -202,7 +228,9 @@ def create_scrape_interval_task_old(request: WSGIRequest) -> HttpResponse | Http
     return render(request, "main/item_list.html", context)
 
 
-def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
+def create_scrape_interval_task(
+    request: WSGIRequest,
+) -> HttpResponse | HttpResponseRedirect:
     """Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
 
     The task itself prints all items belonging to this tenant every {{ interval }} seconds.
@@ -236,16 +264,27 @@ def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResp
                 period=IntervalSchedule.SECONDS,
             )
             if created:
-                logger.info("Interval created with schedule: every %s %s", schedule.every, schedule.period)
+                logger.info(
+                    "Interval created with schedule: every %s %s",
+                    schedule.every,
+                    schedule.period,
+                )
             else:
-                logger.info("Existing Interval started: every %s %s", schedule.every, schedule.period)
+                logger.info(
+                    "Existing Interval started: every %s %s",
+                    schedule.every,
+                    schedule.period,
+                )
 
             scrape_interval_task = PeriodicTask.objects.create(
                 interval=schedule,
                 name=f"scrape_interval_task_{request.user}",
                 task="main.tasks.update_or_create_items_task",
                 # start_time=timezone.now(),  # trigger once right away and then keep the interval
-                args=[request.user.tenant.id, skus_list],  # prolly don't need request, just skus_list
+                args=[
+                    request.user.tenant.id,
+                    skus_list,
+                ],  # prolly don't need request, just skus_list
             )
             logger.info(
                 "Interval task '%s' was successfully created for '%s'\nargs: %s",
@@ -255,10 +294,14 @@ def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResp
             )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
-            request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
+            request.session[
+                "scrape_interval_task"
+            ] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
 
             # Set the selected items' field "is_parser_active" to True
-            items = Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list))
+            items = Item.objects.filter(
+                Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list)
+            )
             items_bulk_update_list = []
             for item in items:
                 item.is_parser_active = True
@@ -268,7 +311,10 @@ def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResp
             return redirect("item_list")
 
     else:
-        messages.error(request, "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.")
+        messages.error(
+            request,
+            "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.",
+        )
         scrape_interval_form = ScrapeIntervalForm()
 
     context = {
@@ -281,7 +327,9 @@ def create_scrape_interval_task(request: WSGIRequest) -> HttpResponse | HttpResp
 def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     uncheck_all_boxes(request)
 
-    periodic_task = PeriodicTask.objects.get(name=f"scrape_interval_task_{request.user}")
+    periodic_task = PeriodicTask.objects.get(
+        name=f"scrape_interval_task_{request.user}"
+    )
     periodic_task.delete()
     print(f"{periodic_task} has been deleted!")
 

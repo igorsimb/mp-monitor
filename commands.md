@@ -11,3 +11,9 @@
 
 ### Use pytest-xdist for multithreading tests
 `pytest -n 4` (4 = number of processes, up to 32)
+
+### Trigger pre-commit checks manually
+`pre-commit run --all-files`
+
+### Run ruff format on everything
+`ruff format .`

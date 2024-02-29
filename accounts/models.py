@@ -9,7 +9,12 @@ from main.models import Tenant
 
 class CustomUser(AbstractUser):
     tenant = models.ForeignKey(
-        Tenant, on_delete=models.CASCADE, null=True, blank=True, related_name="users", verbose_name="Организация"
+        Tenant,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="users",
+        verbose_name="Организация",
     )
 
     class Meta:

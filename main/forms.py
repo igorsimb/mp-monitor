@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import ModelForm, ValidationError
+from django.forms import ModelForm
 
 from main.models import Schedule
 
@@ -14,7 +14,7 @@ class ScrapeForm(forms.Form):
         label="SKUs",
         widget=forms.Textarea,
         help_text="Введите один или несколько артикулов через запятую, пробел или с новой строки.\n"
-                  "Например: 101231520, 109670641, 31299196",
+        "Например: 101231520, 109670641, 31299196",
     )
 
 

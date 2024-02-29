@@ -21,27 +21,35 @@ class TestCustomUserModel:
         assert user is not None
 
     def test_custom_user_creation(self):
-        user = User.objects.create(email="testuser@test.com", username="testuser", password="testpassword")
+        user = User.objects.create(
+            email="testuser@test.com", username="testuser", password="testpassword"
+        )
 
         assert user.email == "testuser@test.com"
         assert user.password == "testpassword"
         assert user.username == "testuser"
 
     def test_tenant_is_created_automatically_from_email(self):
-        user = User.objects.create(email="testuser2@test.com", username="testuser2", password="testpassword")
+        user = User.objects.create(
+            email="testuser2@test.com", username="testuser2", password="testpassword"
+        )
         logger.info("user.tenant.name = %s", user.tenant.name)
         assert user.tenant.name == "testuser2@test.com", f"{user.tenant.name=}"
 
     def test_user_creation_with_existing_tenant(self):
         existing_tenant = Tenant.objects.create(name="existing_tenant")
-        user = User.objects.create(username="testuser3", password="testpassword", tenant=existing_tenant)
+        user = User.objects.create(
+            username="testuser3", password="testpassword", tenant=existing_tenant
+        )
         assert user.tenant == existing_tenant
 
 
 @pytest.fixture
 def setup_signal_test():
     tenant = Tenant.objects.create(name="test_tenant")
-    user = User.objects.create(email="testuser@test.com", username="testuser", tenant=tenant)
+    user = User.objects.create(
+        email="testuser@test.com", username="testuser", tenant=tenant
+    )
 
     logger.debug("Creating a signal to connect the function to post_save")
     signal = Signal()
@@ -93,7 +101,9 @@ class TestAddUserToGroup:
         logger.debug("Emitting post-save signal again")
         signal.send(sender=CustomUser, instance=user, created=False)
 
-        logger.info("Checking if the user is removed from the old group and added to the new group")
+        logger.info(
+            "Checking if the user is removed from the old group and added to the new group"
+        )
         new_group = Group.objects.filter(name="new_tenant_name").first()
         logger.info("New group: %s", new_group)
         assert old_group not in user.groups.all()
