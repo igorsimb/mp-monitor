@@ -64,7 +64,12 @@ def scrape_live_price(sku):
         price_element = None
 
     if price_element is not None:
-        parsed_price = price_element.get_attribute("textContent").replace("₽", "").replace("\xa0", "").strip()
+        parsed_price = (
+            price_element.get_attribute("textContent")
+            .replace("₽", "")
+            .replace("\xa0", "")
+            .strip()
+        )
         parsed_price = int(parsed_price)
         print(f"My final price ee: {parsed_price} ({type(parsed_price)})")
     else:
@@ -140,7 +145,10 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
         logger.info("Live price: %s", price_after_spp)
 
     # Looks like this: https://card.wb.ru/cards/detail?appType=1&curr=rub&dest=-455203&nm={sku}
-    url = httpx.URL("https://card.wb.ru/cards/detail", params={"appType": 1, "curr": "rub", "dest": -455203, "nm": sku})
+    url = httpx.URL(
+        "https://card.wb.ru/cards/detail",
+        params={"appType": 1, "curr": "rub", "dest": -455203, "nm": sku},
+    )
     # pylint: disable=line-too-long
     headers = {
         "User-Agent": (
@@ -166,7 +174,12 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
                 logger.info("Breaking the loop...")
                 break
         except httpx.HTTPError as e:
-            logger.error("HTTP error occurred: %s. Failed to scrape url: %s. Attempt #%s", e, url, retry_count + 1)
+            logger.error(
+                "HTTP error occurred: %s. Failed to scrape url: %s. Attempt #%s",
+                e,
+                url,
+                retry_count + 1,
+            )
             retry_count += 1
             sleep_amount_sec = random.uniform(0.5, 5)
             logger.info("Sleeping for %s seconds", sleep_amount_sec)
@@ -194,7 +207,9 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     brand = item.get("brand")
     seller_name = item.get("brand")
     rating = float(item.get("rating")) if item.get("rating") is not None else None
-    num_reviews = int(item.get("feedbacks")) if item.get("feedbacks") is not None else None
+    num_reviews = (
+        int(item.get("feedbacks")) if item.get("feedbacks") is not None else None
+    )
 
     logger.info("seller_price: %s", price_before_spp)
     if price_before_spp is None:
@@ -204,7 +219,9 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     is_in_stock = check_item_stock(item)
 
     price_before_any_discount = (
-        item.get("priceU") / 100 if (item.get("priceU") and isinstance(item.get("priceU"), int)) else None
+        item.get("priceU") / 100
+        if (item.get("priceU") and isinstance(item.get("priceU"), int))
+        else None
     )
 
     try:
@@ -246,7 +263,9 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     }
 
 
-def scrape_items_from_skus(skus: str, is_parser_active: bool = False) -> list[dict[str, Any]]:
+def scrape_items_from_skus(
+    skus: str, is_parser_active: bool = False
+) -> list[dict[str, Any]]:
     """Scrapes item data from a string of SKUs.
 
     Args:
@@ -289,7 +308,9 @@ def update_or_create_items_interval(tenant_id, items_data):
         )
 
 
-def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[str] | str) -> bool:
+def is_at_least_one_item_selected(
+    request: HttpRequest, selected_item_ids: list[str] | str
+) -> bool:
     """Checks if at least one item is selected.
 
     If not, displays an error message and redirects to the item list page.
@@ -312,7 +333,9 @@ def uncheck_all_boxes(request: HttpRequest) -> None:
 
 
 def show_successful_scrape_message(
-    request: HttpRequest, items_data: list[dict], max_items_on_screen: int = MAX_ITEMS_ON_SCREEN
+    request: HttpRequest,
+    items_data: list[dict],
+    max_items_on_screen: int = MAX_ITEMS_ON_SCREEN,
 ) -> None:
     """Displays a success message to the user indicating that the scrape was successful.
     Message depends on the number of items scraped to avoid screen clutter.
@@ -332,10 +355,20 @@ def show_successful_scrape_message(
     if len(items_data) == 1:
         # pylint: disable=inconsistent-quotes
         # debug, info, success, warning, error
-        messages.success(request, f'Обновлена информация по товару: "{items_data[0]["name"]} ({items_data[0]["sku"]})"')
+        messages.success(
+            request,
+            f'Обновлена информация по товару: "{items_data[0]["name"]} ({items_data[0]["sku"]})"',
+        )
     elif 1 < len(items_data) <= max_items_on_screen:
-        formatted_items = [f"<li>{item['sku']}: {item['name']}</li>" for item in items_data]
-        messages.success(request, mark_safe(f'Обновлена информация по товарам: <ul>{"".join(formatted_items)}</ul>'))
+        formatted_items = [
+            f"<li>{item['sku']}: {item['name']}</li>" for item in items_data
+        ]
+        messages.success(
+            request,
+            mark_safe(
+                f'Обновлена информация по товарам: <ul>{"".join(formatted_items)}</ul>'
+            ),
+        )
     elif len(items_data) > max_items_on_screen:
         messages.success(request, f"Обновлена информация по {len(items_data)} товарам")
 

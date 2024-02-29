@@ -28,7 +28,9 @@ class TestTenantModel:
 
     def test_active_tenant(self) -> None:
         """Tests the active() manager method to ensure it correctly returns active tenants."""
-        trialing = TenantFactory(status=Tenant.Status.TRIALING, name="unique1@testing.com")
+        trialing = TenantFactory(
+            status=Tenant.Status.TRIALING, name="unique1@testing.com"
+        )
         active = TenantFactory(status=Tenant.Status.ACTIVE, name="unique2@testing.com")
         exempt = TenantFactory(status=Tenant.Status.EXEMPT, name="unique3@testing.com")
         TenantFactory(status=Tenant.Status.CANCELED, name="unique4@testing.com")
@@ -50,7 +52,9 @@ class TestTenantModel:
     def test_create_new_tenant_with_non_unique_name(self) -> None:
         tenant1 = Tenant(name="Tenant1")
         tenant1.save()
-        logger.info("Creating a new Tenant with the same name as the previous one: %s", tenant1)
+        logger.info(
+            "Creating a new Tenant with the same name as the previous one: %s", tenant1
+        )
         tenant2 = Tenant(name="Tenant1")
         logger.info("Checking that new Tenant is not saved")
         with pytest.raises(IntegrityError):
@@ -86,7 +90,9 @@ class TestTenantModel:
         logger.info("Deleting the tenant '%s'...", tenant)
         tenant.delete()
 
-        logger.info("Checking that the tenant '%s' is no longer in the database...", tenant)
+        logger.info(
+            "Checking that the tenant '%s' is no longer in the database...", tenant
+        )
         with pytest.raises(ObjectDoesNotExist):
             Tenant.objects.get(name="Test Tenant")
 
@@ -109,7 +115,9 @@ class TestItemModel:
         assert item.pk is not None
 
     def test_duplicate_sku(self) -> None:
-        logger.info("Checking that UNIQUE constraint for main_item.tenant_id, main_item.sku fails as expected")
+        logger.info(
+            "Checking that UNIQUE constraint for main_item.tenant_id, main_item.sku fails as expected"
+        )
         with pytest.raises(IntegrityError):
             Item.objects.create(
                 tenant_id=1,
@@ -131,7 +139,9 @@ class TestItemModel:
             sku="12345",
             price=100,
         )
-        assert item.get_absolute_url() == reverse("item_detail", kwargs={"slug": "12345"})
+        assert item.get_absolute_url() == reverse(
+            "item_detail", kwargs={"slug": "12345"}
+        )
 
     def test_str_method(self) -> None:
         item = Item.objects.create(
@@ -164,19 +174,26 @@ class TestAddPermsToGroupSignal:
         tenant = Tenant.objects.create(name="Test Group")
         return tenant
 
-    def test_creating_item_adds_view_item_permission(self, item_group: Group, tenant: Tenant) -> None:
+    def test_creating_item_adds_view_item_permission(
+        self, item_group: Group, tenant: Tenant
+    ) -> None:
         item = Item.objects.create(
             tenant=tenant,
             name="Sample Item",
             sku="12345",
             price=100,
         )
-        logger.info("Checking if the 'view_item' permission is assigned to the group '%s'", item_group.name)
-        assert "view_item" in get_perms(
-            item_group, item
+        logger.info(
+            "Checking if the 'view_item' permission is assigned to the group '%s'",
+            item_group.name,
+        )
+        assert (
+            "view_item" in get_perms(item_group, item)
         ), f"Expected 'view_item' permission to be assigned to the group '{item_group.name}' but it wasn't"
 
-    def test_manual_add_perm_does_not_create_duplicate_perm(self, item_group: Group, tenant: Tenant) -> None:
+    def test_manual_add_perm_does_not_create_duplicate_perm(
+        self, item_group: Group, tenant: Tenant
+    ) -> None:
         item = Item.objects.create(
             tenant=tenant,
             name="Sample Item",
@@ -184,10 +201,16 @@ class TestAddPermsToGroupSignal:
             price=100,
         )
 
-        logger.info("Manually adding the 'view_item' permission for item '%s' to group '%s'", item.name, item_group)
+        logger.info(
+            "Manually adding the 'view_item' permission for item '%s' to group '%s'",
+            item.name,
+            item_group,
+        )
         assign_perm("main.view_item", item_group, item)
 
-        logger.info("Checking that the signal does not add a duplicate permission to group")
+        logger.info(
+            "Checking that the signal does not add a duplicate permission to group"
+        )
         assert (
             len(get_perms(item_group, item)) == 1
         ), f"Group '{item_group}' should have only 1 permission, but it has {len(get_perms(item_group, item))}"

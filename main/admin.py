@@ -3,11 +3,13 @@ from django.contrib import admin
 from main.models import Tenant, Item, Price
 
 
+@admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     list_display = ("sku", "name", "price", "tenant", "is_in_stock", "is_parser_active")
     list_editable = ("is_parser_active",)
 
 
+@admin.register(Price)
 class PriceAdmin(admin.ModelAdmin):
     list_display = ("get_item_sku", "get_item_name", "value", "created_at")
     list_editable = ("value",)
@@ -23,5 +25,3 @@ class PriceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Tenant)
-admin.site.register(Item, ItemAdmin)
-admin.site.register(Price, PriceAdmin)

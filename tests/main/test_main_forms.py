@@ -53,7 +53,12 @@ class TestTaskForm:
                 (0.0, False),  # Zero interval
                 ("not_a_float", False),  # Non-float interval
             ],
-            ids=["valid_interval", "negative_interval", "zero_interval", "non_float_interval"],
+            ids=[
+                "valid_interval",
+                "negative_interval",
+                "zero_interval",
+                "non_float_interval",
+            ],
         )
         def test_task_form_validation(self, interval, expected_validity):
             form_data = {"interval": interval}
@@ -71,7 +76,12 @@ class TestScrapeIntervalForm:
             (0.0, "seconds", False),  # Zero interval
             ("not_a_float", "seconds", False),  # Non-float interval
         ],
-        ids=["valid_interval", "negative_interval", "zero_interval", "non_float_interval"],
+        ids=[
+            "valid_interval",
+            "negative_interval",
+            "zero_interval",
+            "non_float_interval",
+        ],
     )
     def test_form_validity(self, interval, period, expected_validity):
         form_data = {"interval_value": interval, "period": period}

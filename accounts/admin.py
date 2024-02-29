@@ -7,12 +7,16 @@ from accounts.forms import CustomUserCreationForm, CustomUserChangeForm
 from accounts.models import CustomUser
 
 
+@admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
-    list_display = ['email', 'username', 'tenant']
-    list_display_links = ['email', 'username', ]
+    list_display = ["email", "username", "tenant"]
+    list_display_links = [
+        "email",
+        "username",
+    ]
     # Now we can see Tenant in admin panel
     fieldsets = (
         (None, {"fields": ("tenant", "username", "password")}),
@@ -42,5 +46,4 @@ class CustomUserAdmin(UserAdmin):
     )
 
 
-admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.unregister(EmailAddress)
