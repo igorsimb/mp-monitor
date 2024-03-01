@@ -2,6 +2,7 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import user_passes_test
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -23,6 +24,7 @@ from .utils import (
     calculate_percentage_change,
     add_table_class,
     add_price_trend_indicator,
+    periodic_task_exists,
 )
 
 user = get_user_model()
@@ -324,6 +326,7 @@ def create_scrape_interval_task(
     return render(request, "main/item_list.html", context)
 
 
+@user_passes_test(periodic_task_exists, redirect_field_name=None)
 def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     uncheck_all_boxes(request)
 

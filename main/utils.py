@@ -8,9 +8,11 @@ import random
 import httpx
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Page
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
+from django_celery_beat.models import PeriodicTask
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -481,3 +483,13 @@ def add_price_trend_indicator(prices: Page) -> None:
             prices[i].table_class = ""
         except TypeError:
             logger.warning("Can't compare price to NoneType")
+
+
+def periodic_task_exists(request: WSGIRequest) -> bool:
+    """Checks for the existence of a periodic task with the given name."""
+
+    try:
+        PeriodicTask.objects.get(name=f"scrape_interval_task_{request.username}")
+        return True
+    except PeriodicTask.DoesNotExist:
+        return False

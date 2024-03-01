@@ -15,10 +15,12 @@
     </div>
 
     <button type="submit" class="btn btn-primary rounded-pill mb-2 me-2">Создать расписание</button>
-    <a href="{% url 'destroy_scrape_interval' %}"
-       class="btn btn-danger rounded-pill mb-2">
-        Удалить текущее
-    </a>
+    {% if scrape_interval_task %}
+        <a href="{% url 'destroy_scrape_interval' %}"
+           class="btn btn-danger rounded-pill mb-2">
+            Удалить текущее
+        </a>
+    {% endif %}
     <div class="mt-2 mb-1">
         {% if scrape_interval_task %}
             Активное расписание: {{ scrape_interval_task }}
