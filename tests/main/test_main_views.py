@@ -570,9 +570,9 @@ class TestDestroyScrapeIntervalTaskView:
         )
         logger.debug("Interval task was successfully deleted (%s)", task_info)
 
-    def test_interval_task_does_not_exist_exception(
+    def test_redirect_when_deleting_non_existing_task(
         self, client: Client, post_request_with_user: WSGIRequest
     ) -> None:
         # pylint: disable=unused-argument
-        with pytest.raises(PeriodicTask.DoesNotExist):
-            client.post(reverse("destroy_scrape_interval"))
+        response = client.post(reverse("destroy_scrape_interval"))
+        assert response.status_code == 302
