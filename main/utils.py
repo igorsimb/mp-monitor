@@ -1,9 +1,9 @@
 import decimal
 import logging
+import random
 import re
 import time
 from typing import Any
-import random
 
 import httpx
 from django.contrib import messages
@@ -20,6 +20,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from main.exceptions import InvalidSKUException
 from main.models import Item, Tenant
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,6 @@ def scrape_live_price(sku):
     regular_link = f"https://www.wildberries.ru/catalog/{sku}/detail.aspx"
     driver.get(regular_link)
     # Wait for the presence of the price element
-    # TODO: need to accomodate for this: If there's  no price, it will say 'Нет в наличии' (e.g. 31278957)
     try:
         price_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located(
@@ -125,14 +125,40 @@ def check_item_stock(item: dict) -> bool:
     return is_in_stock
 
 
+def is_sku_format_valid(sku: str) -> bool:
+    """Check if the SKU has a valid format.
+
+    Args:
+        sku (str): The SKU to check.
+
+    Returns:
+        bool: True if the SKU is valid, False otherwise.
+    """
+    # only numbers, between 5-12 characters long
+    if re.match(r"^[0-9]{5,12}$", sku):
+        return True
+    else:
+        return False
+
+
+def is_item_exists(item_info: list) -> bool:
+    """Check if item exists on Wildberries.
+
+    Non-existing items return an empty list.
+    """
+    if item_info:
+        return True
+    return False
+
+
+# WB's API constantly changes. Right now:
+#   no "extended" field in API
+#   priceU = the price before every discount (scratched out)
+#   sale = seller discount
+#   salePriceU = the final price (aka, price with spp, no need for Selenium here)
 def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     """
-    Right now:
-        no extended
-        priceU = the price before every discount (scratched out)
-        sale = seller discount
-        salePriceU = the final price (aka, price with spp, no need for Selenium here)
-
+    Scrape item from WB's API.
 
     Args:
         sku (str): The SKU of the product.
@@ -141,6 +167,11 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     Returns:
         dict: A dictionary containing the data for the scraped item.
     """
+
+    if not is_sku_format_valid(sku):
+        logger.error("Invalid format for SKU: %s", sku)
+        raise InvalidSKUException(message="Invalid format for SKU.", sku=sku)
+
     if use_selenium:
         logger.info("Going to scrape live for sku: %s", sku)
         price_after_spp = scrape_live_price(sku)
@@ -186,9 +217,12 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
             sleep_amount_sec = random.uniform(0.5, 5)
             logger.info("Sleeping for %s seconds", sleep_amount_sec)
             time.sleep(sleep_amount_sec)
-
     logger.info("Exited while loop...")
-    logger.info("Cool data=%s", data)
+
+    item_info: list = data.get("data", {}).get("products")
+    if not is_item_exists(item_info):
+        raise InvalidSKUException(message="Request returned no item for SKU.", sku=sku)
+
     item = data.get("data", {}).get("products")[0]
 
     # makes sure that the correct id (i.e. = sku) is being pulled from api
@@ -267,24 +301,29 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
 
 def scrape_items_from_skus(
     skus: str, is_parser_active: bool = False
-) -> list[dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], list[str]]:
     """Scrapes item data from a string of SKUs.
 
     Args:
         skus: A string containing SKUs, separated by spaces, newlines, or commas.
 
-    Returns:
-        A list of dictionaries, where each dictionary contains the data for a single item.
+    Returns a tuple consisting of:
+        - A list of dictionaries, where each dictionary contains the data for a single item.
+        - A list with invalid SKUs
     """
     logger.info("Going to scrape items: %s", skus)
     items_data = []
+    invalid_skus = []
     for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
         logger.info("Scraping item: %s", sku)
-        item_data = scrape_item(sku)
-        if is_parser_active:
-            item_data["is_parser_active"] = True
-        items_data.append(item_data)
-    return items_data
+        try:
+            item_data = scrape_item(sku)
+            items_data.append(item_data)
+            if is_parser_active:
+                item_data["is_parser_active"] = True
+        except InvalidSKUException as e:
+            invalid_skus.append(e.sku)
+    return items_data, invalid_skus
 
 
 def update_or_create_items(request, items_data):
@@ -352,7 +391,7 @@ def show_successful_scrape_message(
         None
     """
     if not items_data:
-        messages.error(request, "Добавьте хотя бы 1 товар")
+        messages.error(request, "Добавьте хотя бы 1 товар с корректным артикулом")
         return
     if len(items_data) == 1:
         # pylint: disable=inconsistent-quotes
@@ -373,6 +412,23 @@ def show_successful_scrape_message(
         )
     elif len(items_data) > max_items_on_screen:
         messages.success(request, f"Обновлена информация по {len(items_data)} товарам")
+
+
+def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
+    if len(invalid_skus) == 1:
+        messages.warning(
+            request,
+            f"Не удалось добавить следующий артикул: {', '.join(invalid_skus)}<br>"
+            "Возможен неверный формат артикула, или товара с таким артикулом не существует. "
+            "Пожалуйста, проверьте его корректность и при возникновении вопросов обратитесь в службу поддержки.",
+        )
+    else:
+        messages.warning(
+            request,
+            f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>"
+            "Возможен неверный формат артикулов, или товаров с такими артикулами не существует. "
+            "Пожалуйста, проверьте их корректность и при возникновении вопросов обратитесь в службу поддержки.",
+        )
 
 
 def calculate_percentage_change(prices: Page) -> None:

@@ -42,9 +42,7 @@ class TestUncheckAllBoxes:
 
         logger.info("Creating %s items for tenant '%s'", number_of_items, tenant)
         items = [
-            Item.objects.create(
-                tenant=tenant, name=f"Item {i}", sku=f"1234{i}", is_parser_active=True
-            )
+            Item.objects.create(tenant=tenant, name=f"Item {i}", sku=f"1234{i}", is_parser_active=True)
             for i in range(1, number_of_items + 1)
         ]
 
@@ -82,13 +80,9 @@ class TestUncheckAllBoxes:
         logger.debug("Tenant '%s' created", tenant2)
 
         logger.info("Creating items for both tenants")
-        item1 = Item.objects.create(
-            tenant=tenant1, name="Item 1", sku="12345", is_parser_active=True
-        )
+        item1 = Item.objects.create(tenant=tenant1, name="Item 1", sku="12345", is_parser_active=True)
         logger.debug("Item '%s' created", item1)
-        item2 = Item.objects.create(
-            tenant=tenant2, name="Item 2", sku="67899", is_parser_active=True
-        )
+        item2 = Item.objects.create(tenant=tenant2, name="Item 2", sku="67899", is_parser_active=True)
         logger.debug("Item '%s' created", item2)
 
         logger.info("Calling uncheck_all_boxes() for tenant '%s'", tenant1)
@@ -101,12 +95,8 @@ class TestUncheckAllBoxes:
         )
         item1.refresh_from_db()
         item2.refresh_from_db()
-        assert (
-            not item1.is_parser_active
-        ), f"Item1 is_parser_active should be False but it is {item1.is_parser_active}"
-        assert (
-            item2.is_parser_active
-        ), f"Item2 is_parser_active should be True but it is {item2.is_parser_active}"
+        assert not item1.is_parser_active, f"Item1 is_parser_active should be False but it is {item1.is_parser_active}"
+        assert item2.is_parser_active, f"Item2 is_parser_active should be True but it is {item2.is_parser_active}"
 
     def test_no_items_updated_if_user_not_authenticated(self, request):
         with pytest.raises(AttributeError):
@@ -121,19 +111,17 @@ class TestUncheckAllBoxes:
 
     def test_uncheck_all_boxes_already_inactive(self, request, user, tenant):
         """Test if the function handles items with is_parser_active=False gracefully."""
-        Item.objects.create(
-            name="InactiveItem1", tenant=tenant, sku="12345", is_parser_active=False
-        )
-        Item.objects.create(
-            name="InactiveItem2", tenant=tenant, sku="67899", is_parser_active=False
-        )
+        Item.objects.create(name="InactiveItem1", tenant=tenant, sku="12345", is_parser_active=False)
+        Item.objects.create(name="InactiveItem2", tenant=tenant, sku="67899", is_parser_active=False)
 
         request.user = user
         uncheck_all_boxes(request)
 
         inactive_items = Item.objects.filter(tenant=tenant, is_parser_active=False)
         for item in inactive_items:
-            assert not item.is_parser_active, f"Item {item.name} is_parser_active should be False but it is {item.is_parser_active}"
+            assert (
+                not item.is_parser_active
+            ), f"Item {item.name} is_parser_active should be False but it is {item.is_parser_active}"
 
 
 class TestScrapeItem:
@@ -271,9 +259,7 @@ class TestScrapeItem:
         logger.info("Assigning invalid price format to the priceU field")
         response_data["data"]["products"][0]["priceU"] = "invalidprice"
 
-        logger.info(
-            "Returning the modified response_data dictionary: %s", response_data
-        )
+        logger.info("Returning the modified response_data dictionary: %s", response_data)
         self.mock_response.json = lambda: response_data
 
         logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku)
@@ -286,10 +272,7 @@ class TestScrapeItem:
 class TestShowSuccessfulScrapeMessage:
     @staticmethod
     def create_items_data(num_items: int) -> list[dict]:
-        return [
-            {"name": f"Item {i}", "sku": str(10000 + i)}
-            for i in range(1, num_items + 1)
-        ]
+        return [{"name": f"Item {i}", "sku": str(10000 + i)} for i in range(1, num_items + 1)]
 
     @pytest.fixture
     def mock_request(self, mocker: MockerFixture) -> HttpRequest:
@@ -304,56 +287,44 @@ class TestShowSuccessfulScrapeMessage:
         expected_message = f'Обновлена информация по товару: "{items_data[0]["name"]} ({items_data[0]["sku"]})"'
         messages.success.assert_called_once_with(mock_request, expected_message)
 
-    def test_message_multiple_items_scraped_max(
-        self, mock_request: HttpRequest
-    ) -> None:
+    def test_message_multiple_items_scraped_max(self, mock_request: HttpRequest) -> None:
         logger.info("Creating %s items", MAX_ITEMS_ON_SCREEN)
         items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN)
 
         show_successful_scrape_message(mock_request, items_data)
         expected_message = mark_safe(
             "Обновлена информация по товарам: <ul>"
-            + "".join(
-                [f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data]
-            )
+            + "".join([f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data])
             + "</ul>"
         )
 
         messages.success.assert_called_once_with(mock_request, expected_message)
 
-    def test_message_multiple_items_scraped_less_than_max(
-        self, mock_request: HttpRequest
-    ) -> None:
+    def test_message_multiple_items_scraped_less_than_max(self, mock_request: HttpRequest) -> None:
         logger.info("Creating %s items", (MAX_ITEMS_ON_SCREEN - 1))
         items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN - 1)
 
         show_successful_scrape_message(mock_request, items_data)
         expected_message = mark_safe(
             "Обновлена информация по товарам: <ul>"
-            + "".join(
-                [f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data]
-            )
+            + "".join([f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data])
             + "</ul>"
         )
         assert len(items_data) < MAX_ITEMS_ON_SCREEN
         messages.success.assert_called_once_with(mock_request, expected_message)
 
-    def test_message_multiple_items_scraped_more_than_max(
-        self, mock_request: HttpRequest
-    ) -> None:
+    def test_message_multiple_items_scraped_more_than_max(self, mock_request: HttpRequest) -> None:
         logger.info("Creating %s items", (MAX_ITEMS_ON_SCREEN + 1))
         items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN + 1)
 
         show_successful_scrape_message(mock_request, items_data)
-        messages.success.assert_called_once_with(
-            mock_request, f"Обновлена информация по {len(items_data)} товарам"
-        )
+        messages.success.assert_called_once_with(mock_request, f"Обновлена информация по {len(items_data)} товарам")
 
     def test_no_items_scraped(self, mock_request: HttpRequest, mocker) -> None:
         items_data = []
         mocker.patch("django.contrib.messages.error")
         show_successful_scrape_message(mock_request, items_data)
-        messages.error.assert_called_once_with(mock_request, "Добавьте хотя бы 1 товар")
+        messages.error.assert_called_once_with(mock_request, "Добавьте хотя бы 1 товар с корректным артикулом")
 
 
 class TestAtLeastOneItemSelected:
@@ -362,9 +333,7 @@ class TestAtLeastOneItemSelected:
         mocker.patch("django.contrib.messages.error")
         return HttpRequest()
 
-    def test_at_least_one_item_selected_message(
-        self, mock_request: HttpRequest
-    ) -> None:
+    def test_at_least_one_item_selected_message(self, mock_request: HttpRequest) -> None:
         selected_item_ids = []
         is_at_least_one_item_selected(mock_request, selected_item_ids)
         messages.error.assert_called_once_with(mock_request, "Выберите хотя бы 1 товар")
@@ -377,12 +346,8 @@ class TestAtLeastOneItemSelected:
         assert response is False
         logger.debug("Return value is False")
 
-    @pytest.mark.parametrize(
-        "selected_item_ids", [["1"], ["1", "2"], ["1", "2", "3"]], ids=["1", "2", "3"]
-    )
-    def test_many_item_selected_returns_true(
-        self, selected_item_ids, mock_request: HttpRequest, mocker
-    ) -> None:
+    @pytest.mark.parametrize("selected_item_ids", [["1"], ["1", "2"], ["1", "2", "3"]], ids=["1", "2", "3"])
+    def test_many_item_selected_returns_true(self, selected_item_ids, mock_request: HttpRequest, mocker) -> None:
         mocker.patch("django.contrib.messages.error")
         response = is_at_least_one_item_selected(mock_request, selected_item_ids)
 
@@ -403,14 +368,14 @@ class TestScrapeItemsFromSKUs:
 
     def test_with_valid_skus(self, mock_scrape_item: Mock) -> None:
         skus = "sku1 sku2 sku3"
+        # TODO: scrape_items_from_skus now returns a tuple, adjust assertion accordingly
         result = scrape_items_from_skus(skus)
         logger.info("Result: %s", result)
         assert result == [{"sku": "test"}, {"sku": "test"}, {"sku": "test"}]
 
-    def test_with_skus_separated_by_commas_and_spaces(
-        self, mock_scrape_item: Mock
-    ) -> None:
+    def test_with_skus_separated_by_commas_and_spaces(self, mock_scrape_item: Mock) -> None:
         skus = "sku1, sku2, sku3 sku4\nsku5"
+        # TODO: scrape_items_from_skus now returns a tuple, adjust assertion accordingly
         result = scrape_items_from_skus(skus)
         logger.info("Result: %s", result)
         assert result == [

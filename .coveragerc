@@ -1,6 +1,11 @@
 [run]
-# omit anything in a migrations directory anywhere
-omit = */migrations/*
+# omit anything in a migrations directory anywhere and some additional files that don't require coverage
+omit =
+    */migrations/*
+    main\admin.py
+    manage.py
+    mp_monitor\asgi.py
+    mp_monitor\wsgi.py
 
 [report]
 skip_covered = True

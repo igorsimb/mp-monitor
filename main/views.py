@@ -25,6 +25,7 @@ from .utils import (
     add_table_class,
     add_price_trend_indicator,
     periodic_task_exists,
+    show_invalid_skus_message,
 )
 
 user = get_user_model()
@@ -110,14 +111,19 @@ def scrape_items(
         if form.is_valid():
             skus = form.cleaned_data["skus"]
             logger.info("Scraping items with SKUs: %s", skus)
-            items_data = scrape_items_from_skus(skus)
+            items_data, invalid_skus = scrape_items_from_skus(skus)
             update_or_create_items(request, items_data)
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
+
+            if invalid_skus:  # check if there are invalid SKUs
+                show_invalid_skus_message(request, invalid_skus)
 
             return redirect("item_list")
     else:
         form = ScrapeForm()
-    return render(request, "main/item_list.html", {"form": form})
+
+    context = {"form": form}
+    return render(request, "main/item_list.html", context)
 
 
 def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
