@@ -132,26 +132,18 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="item",
             name="tenant",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="main.tenant"
-            ),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="main.tenant"),
         ),
         migrations.AddConstraint(
             model_name="price",
-            constraint=models.CheckConstraint(
-                check=models.Q(("value__gte", 0)), name="no_negative_price_value"
-            ),
+            constraint=models.CheckConstraint(check=models.Q(("value__gte", 0)), name="no_negative_price_value"),
         ),
         migrations.AddConstraint(
             model_name="item",
-            constraint=models.UniqueConstraint(
-                fields=("tenant", "sku"), name="unique_tenant_sku"
-            ),
+            constraint=models.UniqueConstraint(fields=("tenant", "sku"), name="unique_tenant_sku"),
         ),
         migrations.AddConstraint(
             model_name="item",
-            constraint=models.CheckConstraint(
-                check=models.Q(("price__gte", 0.0)), name="no_negative_price"
-            ),
+            constraint=models.CheckConstraint(check=models.Q(("price__gte", 0.0)), name="no_negative_price"),
         ),
     ]

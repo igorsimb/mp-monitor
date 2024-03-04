@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class TenantManager(models.Manager):
+    """A manager to provide custom methods for Tenant"""
+
     def active(self) -> models.QuerySet:
         """
         Returns only active tenants.
@@ -93,9 +95,7 @@ class Item(models.Model):
 
         constraints = [
             models.UniqueConstraint(fields=["tenant", "sku"], name="unique_tenant_sku"),
-            models.CheckConstraint(
-                check=models.Q(price__gte=float("0.00")), name="no_negative_price"
-            ),
+            models.CheckConstraint(check=models.Q(price__gte=float("0.00")), name="no_negative_price"),
         ]
         default_permissions = ("add", "change", "delete")
         permissions = (("view_item", "Can view item"),)
@@ -110,61 +110,40 @@ class Item(models.Model):
     @property
     def max_price(self) -> float:
         # In detail template  {{ item.max_price }}
-        return Price.objects.filter(item=self).aggregate(max_price=Max("value"))[
-            "max_price"
-        ]
+        return Price.objects.filter(item=self).aggregate(max_price=Max("value"))["max_price"]
 
     @property
     def max_price_date(self) -> datetime:
         # In detail template  {{ item.max_price_date }}
-        max_price = Price.objects.filter(item=self).aggregate(max_price=Max("value"))[
-            "max_price"
-        ]
-        max_price_date = (
-            Price.objects.filter(item=self, value=max_price)
-            .latest("created_at")
-            .created_at
-        )
+        max_price = Price.objects.filter(item=self).aggregate(max_price=Max("value"))["max_price"]
+        max_price_date = Price.objects.filter(item=self, value=max_price).latest("created_at").created_at
         return max_price_date
 
     @property
     def min_price(self) -> float:
         # In detail template  {{ item.max_price }}
-        return Price.objects.filter(item=self).aggregate(min_price=Min("value"))[
-            "min_price"
-        ]
+        return Price.objects.filter(item=self).aggregate(min_price=Min("value"))["min_price"]
 
     @property
     def avg_price(self) -> int:
         # In detail template  {{ item.avg_price }}
-        return int(
-            Price.objects.filter(item=self).aggregate(avg_price=Avg("value"))[
-                "avg_price"
-            ]
-        )
+        return int(Price.objects.filter(item=self).aggregate(avg_price=Avg("value"))["avg_price"])
 
     @property
     def min_price_date(self) -> datetime:
         # In detail template  {{ item.min_price_date }}
-        min_price = Price.objects.filter(item=self).aggregate(min_price=Min("value"))[
-            "min_price"
-        ]
-        min_price_date = (
-            Price.objects.filter(item=self, value=min_price)
-            .latest("created_at")
-            .created_at
-        )
+        min_price = Price.objects.filter(item=self).aggregate(min_price=Min("value"))["min_price"]
+        min_price_date = Price.objects.filter(item=self, value=min_price).latest("created_at").created_at
         return min_price_date
 
     def price_percent_change(self) -> float:
+        # In item list template  {{ item.price_percent_change }}
         prices = Price.objects.filter(Q(item=self))
         for i in range(len(prices)):
             try:
                 previous_price = prices[i + 1].value
                 current_price = prices[i].value
-                percent_change = (
-                    (current_price - previous_price) / previous_price
-                ) * 100
+                percent_change = ((current_price - previous_price) / previous_price) * 100
                 prices[i].percent_change = round(percent_change, 2)
                 return prices[i].percent_change
             except (IndexError, InvalidOperation, DivisionByZero):
@@ -216,12 +195,8 @@ class Schedule(models.Model):
     interval_value = models.IntegerField(
         verbose_name="Каждые", validators=[MinValueValidator(1)], null=True, blank=True
     )
-    cronjob_value = models.CharField(
-        max_length=100, verbose_name="CronJob", blank=True, null=True
-    )
-    period = models.CharField(
-        max_length=100, choices=Period.choices, default=Period.HOURS
-    )
+    cronjob_value = models.CharField(max_length=100, verbose_name="CronJob", blank=True, null=True)
+    period = models.CharField(max_length=100, choices=Period.choices, default=Period.HOURS)
 
 
 class ItemSchedule(models.Model):

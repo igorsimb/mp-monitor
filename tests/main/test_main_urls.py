@@ -34,16 +34,12 @@ class TestMainUrls:
 
     def test_create_scrape_interval_task_url(self):
         url = reverse("create_scrape_interval")
-        logger.info(
-            "Resolving URL: %s to view function: %s", url, create_scrape_interval_task
-        )
+        logger.info("Resolving URL: %s to view function: %s", url, create_scrape_interval_task)
         assert resolve(url).func == create_scrape_interval_task
 
     def test_destroy_scrape_interval_task_url(self):
         url = reverse("destroy_scrape_interval")
-        logger.info(
-            "Resolving URL: %s to view function: %s", url, destroy_scrape_interval_task
-        )
+        logger.info("Resolving URL: %s to view function: %s", url, destroy_scrape_interval_task)
         assert resolve(url).func == destroy_scrape_interval_task
 
     @pytest.mark.parametrize(
@@ -57,6 +53,4 @@ class TestMainUrls:
             url,
             create_scrape_interval_task,
         )
-        assert (
-            resolve(url).func != expected_view
-        ), f"URL {url} resolved to {expected_view} when it should not have!"
+        assert resolve(url).func != expected_view, f"URL {url} resolved to {expected_view} when it should not have!"

@@ -19,9 +19,7 @@ class TestMainTemplates:
 
     @pytest.fixture
     def logged_in_user(self, client: Client) -> User:
-        user = User.objects.create_user(
-            username="testuser", email="testuser@test.com", password="testpassword"
-        )
+        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
         client.login(username="testuser", password="testpassword")
         return user
 

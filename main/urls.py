@@ -13,9 +13,7 @@ from .views import (
 urlpatterns = [
     path("", IndexView.as_view(), name="index"),
     path("item_list/", ItemListView.as_view(), name="item_list"),
-    path(
-        "scrape_interval/", create_scrape_interval_task, name="create_scrape_interval"
-    ),
+    path("scrape_interval/", create_scrape_interval_task, name="create_scrape_interval"),
     path(
         "destroy_scrape_interval/",
         destroy_scrape_interval_task,

@@ -30,8 +30,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="customuser",
-            index=models.Index(
-                fields=["tenant"], name="accounts_cu_tenant__89cfba_idx"
-            ),
+            index=models.Index(fields=["tenant"], name="accounts_cu_tenant__89cfba_idx"),
         ),
     ]
