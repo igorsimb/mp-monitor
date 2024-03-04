@@ -66,12 +66,7 @@ def scrape_live_price(sku):
         price_element = None
 
     if price_element is not None:
-        parsed_price = (
-            price_element.get_attribute("textContent")
-            .replace("₽", "")
-            .replace("\xa0", "")
-            .strip()
-        )
+        parsed_price = price_element.get_attribute("textContent").replace("₽", "").replace("\xa0", "").strip()
         parsed_price = int(parsed_price)
         print(f"My final price ee: {parsed_price} ({type(parsed_price)})")
     else:
@@ -135,7 +130,7 @@ def is_sku_format_valid(sku: str) -> bool:
         bool: True if the SKU is valid, False otherwise.
     """
     # only numbers, between 5-12 characters long
-    if re.match(r"^[0-9]{5,12}$", sku):
+    if re.match(r"^[0-9]{4,12}$", sku):
         return True
     else:
         return False
@@ -166,6 +161,9 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
 
     Returns:
         dict: A dictionary containing the data for the scraped item.
+
+    Raises:
+        InvalidSKUException: If the provided SKU is invalid
     """
 
     if not is_sku_format_valid(sku):
@@ -243,9 +241,7 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     brand = item.get("brand")
     seller_name = item.get("brand")
     rating = float(item.get("rating")) if item.get("rating") is not None else None
-    num_reviews = (
-        int(item.get("feedbacks")) if item.get("feedbacks") is not None else None
-    )
+    num_reviews = int(item.get("feedbacks")) if item.get("feedbacks") is not None else None
 
     logger.info("seller_price: %s", price_before_spp)
     if price_before_spp is None:
@@ -255,9 +251,7 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     is_in_stock = check_item_stock(item)
 
     price_before_any_discount = (
-        item.get("priceU") / 100
-        if (item.get("priceU") and isinstance(item.get("priceU"), int))
-        else None
+        item.get("priceU") / 100 if (item.get("priceU") and isinstance(item.get("priceU"), int)) else None
     )
 
     try:
@@ -299,9 +293,7 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     }
 
 
-def scrape_items_from_skus(
-    skus: str, is_parser_active: bool = False
-) -> tuple[list[dict[str, Any]], list[str]]:
+def scrape_items_from_skus(skus: str, is_parser_active: bool = False) -> tuple[list[dict[str, Any]], list[str]]:
     """Scrapes item data from a string of SKUs.
 
     Args:
@@ -349,9 +341,7 @@ def update_or_create_items_interval(tenant_id, items_data):
         )
 
 
-def is_at_least_one_item_selected(
-    request: HttpRequest, selected_item_ids: list[str] | str
-) -> bool:
+def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[str] | str) -> bool:
     """Checks if at least one item is selected.
 
     If not, displays an error message and redirects to the item list page.
@@ -401,14 +391,10 @@ def show_successful_scrape_message(
             f'Обновлена информация по товару: "{items_data[0]["name"]} ({items_data[0]["sku"]})"',
         )
     elif 1 < len(items_data) <= max_items_on_screen:
-        formatted_items = [
-            f"<li>{item['sku']}: {item['name']}</li>" for item in items_data
-        ]
+        formatted_items = [f"<li>{item['sku']}: {item['name']}</li>" for item in items_data]
         messages.success(
             request,
-            mark_safe(
-                f'Обновлена информация по товарам: <ul>{"".join(formatted_items)}</ul>'
-            ),
+            mark_safe(f'Обновлена информация по товарам: <ul>{"".join(formatted_items)}</ul>'),
         )
     elif len(items_data) > max_items_on_screen:
         messages.success(request, f"Обновлена информация по {len(items_data)} товарам")

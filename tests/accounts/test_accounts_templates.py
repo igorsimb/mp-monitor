@@ -21,15 +21,11 @@ class TestAccountsTemplates:
 
     @pytest.mark.skip(reason="Skipped until fixed for new frontend")
     def test_logout_redirect(self, client):
-        response = client.get(
-            reverse("account_logout"), follow=True
-        )  # follow the redirect
+        response = client.get(reverse("account_logout"), follow=True)  # follow the redirect
         logger.debug("Logout response: %s", response)
         assert response.status_code == 200
 
-        logger.info(
-            "Checking for the name of the resolved view after following the redirect..."
-        )
+        logger.info("Checking for the name of the resolved view after following the redirect...")
         assert response.resolver_match.url_name == "item_list"
 
     def test_signup_template(self, client):

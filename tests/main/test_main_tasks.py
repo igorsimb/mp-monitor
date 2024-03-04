@@ -102,9 +102,7 @@ class TestScrapeIntervalTask:
 
     @pytest.fixture
     def user(self) -> CustomUser:
-        return User.objects.create_user(
-            username="testuser", email="testuser@test.com", password="testpassword"
-        )
+        return User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
 
     @pytest.fixture
     def tenant(self, user: CustomUser) -> Tenant:
@@ -116,24 +114,14 @@ class TestScrapeIntervalTask:
         item2 = Item.objects.create(sku=self.sku2, name=self.name2, tenant=tenant)
         return [item1, item2]
 
-    def test_scrape_interval_task_updates_item_price(
-        self, items: list, tenant: Tenant, mocker
-    ) -> None:
+    def test_scrape_interval_task_updates_item_price(self, items: list, tenant: Tenant, mocker) -> None:
         item1_old_price = items[0].price
         item2_old_price = items[1].price
 
-        logger.info(
-            "Checking that %s's Price before running task is None", items[0].name
-        )
-        assert (
-            items[0].price is None
-        ), f"{items[0].name}'s price should be None, but it is {item1_old_price}"
-        logger.info(
-            "Checking that %s's Price before running task is None", items[1].name
-        )
-        assert (
-            items[1].price is None
-        ), f"{items[1].name}'s price should be None, but it is {item2_old_price}"
+        logger.info("Checking that %s's Price before running task is None", items[0].name)
+        assert items[0].price is None, f"{items[0].name}'s price should be None, but it is {item1_old_price}"
+        logger.info("Checking that %s's Price before running task is None", items[1].name)
+        assert items[1].price is None, f"{items[1].name}'s price should be None, but it is {item2_old_price}"
 
         # scrape_live_price uses selenium to get the live price of the item from WB
         # So mocking is necessary to avoid going to WB

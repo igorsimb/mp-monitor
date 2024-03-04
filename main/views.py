@@ -56,9 +56,7 @@ class ItemListView(PermissionListMixin, ListView):
         context["form"] = form
         context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
-        context["scrape_interval_task"] = self.request.session.get(
-            "scrape_interval_task"
-        )
+        context["scrape_interval_task"] = self.request.session.get("scrape_interval_task")
         return context
 
     def get(self, request, *args, **kwargs):
@@ -103,9 +101,7 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         return super().get(request, *args, **kwargs)
 
 
-def scrape_items(
-    request: WSGIRequest, skus: str
-) -> HttpResponse | HttpResponseRedirect:
+def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponseRedirect:
     if request.method == "POST":
         form = ScrapeForm(request.POST)
         if form.is_valid():
@@ -220,9 +216,7 @@ def create_scrape_interval_task_old(
             )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
-            request.session[
-                "scrape_interval_task"
-            ] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
+            request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
 
             return redirect("item_list")
 
@@ -302,14 +296,10 @@ def create_scrape_interval_task(
             )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
-            request.session[
-                "scrape_interval_task"
-            ] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
+            request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
 
             # Set the selected items' field "is_parser_active" to True
-            items = Item.objects.filter(
-                Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list)
-            )
+            items = Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list))
             items_bulk_update_list = []
             for item in items:
                 item.is_parser_active = True
@@ -336,9 +326,7 @@ def create_scrape_interval_task(
 def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     uncheck_all_boxes(request)
 
-    periodic_task = PeriodicTask.objects.get(
-        name=f"scrape_interval_task_{request.user}"
-    )
+    periodic_task = PeriodicTask.objects.get(name=f"scrape_interval_task_{request.user}")
     periodic_task.delete()
     print(f"{periodic_task} has been deleted!")
 

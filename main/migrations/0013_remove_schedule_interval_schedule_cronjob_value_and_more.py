@@ -16,9 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="schedule",
             name="cronjob_value",
-            field=models.CharField(
-                blank=True, max_length=100, null=True, verbose_name="CronJob"
-            ),
+            field=models.CharField(blank=True, max_length=100, null=True, verbose_name="CronJob"),
         ),
         migrations.AddField(
             model_name="schedule",

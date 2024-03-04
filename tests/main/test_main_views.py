@@ -49,9 +49,7 @@ class TestItemListView:
         """
         url = reverse("item_list")
         factory = RequestFactory()
-        user = User.objects.create_user(
-            username="testuser", email="testuser@test.com", password="testpassword"
-        )
+        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
         request = factory.get(url)
         request.user = user
         request.session = {}
@@ -60,9 +58,7 @@ class TestItemListView:
 
     # https://docs.djangoproject.com/en/4.2/topics/testing/advanced/#testing-class-based-views
     @pytest.mark.parametrize("expected_context_item", context_object_list)
-    def test_item_present_in_context(
-        self, request_with_user: WSGIRequest, expected_context_item: str
-    ) -> None:
+    def test_item_present_in_context(self, request_with_user: WSGIRequest, expected_context_item: str) -> None:
         request = request_with_user
 
         view = ItemListView()
@@ -79,9 +75,7 @@ class TestItemListView:
         assert expected_context_item in context
 
     # https://docs.djangoproject.com/en/4.2/topics/testing/advanced/#example
-    def test_item_list_page_renders_correctly(
-        self, request_with_user: WSGIRequest
-    ) -> None:
+    def test_item_list_page_renders_correctly(self, request_with_user: WSGIRequest) -> None:
         request = request_with_user
         response = ItemListView.as_view()(request)
         logger.info("Checking that the response status code is 200")
@@ -120,9 +114,7 @@ class TestItemDetailView:
         """
         url = reverse("item_list")
         factory = RequestFactory()
-        user = User.objects.create_user(
-            username="testuser", email="testuser@test.com", password="testpassword"
-        )
+        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
         request = factory.get(url)
         request.user = user
         request.session = {}
@@ -135,9 +127,7 @@ class TestItemDetailView:
 
     @pytest.fixture
     def logged_in_user(self, client: Client) -> User:
-        user = User.objects.create_user(
-            username="loggedin", email="loggedin@test.com", password="testpassword"
-        )
+        user = User.objects.create_user(username="loggedin", email="loggedin@test.com", password="testpassword")
         client.login(username="loggedin", password="testpassword")
         return user
 
@@ -176,16 +166,12 @@ class TestItemDetailView:
         invalid_url = reverse("item_detail", kwargs={"slug": "invalid-sku"})
         logger.info("Attempting to access a non-existent item with at %s", invalid_url)
         response = client.get(invalid_url)
-        assert (
-            response.status_code == 404
-        ), f"Expected status code 404 but got {response.status_code}"
+        assert response.status_code == 404, f"Expected status code 404 but got {response.status_code}"
 
         valid_url = reverse("item_detail", kwargs={"slug": item.sku})
         logger.info("Attempting to access an existing item with at %s", valid_url)
         response = client.get(valid_url)
-        assert (
-            response.status_code != 404
-        ), f"Expected status code not 404 but got {response.status_code}"
+        assert response.status_code != 404, f"Expected status code not 404 but got {response.status_code}"
 
 
 class TestScrapeItemsView:
@@ -268,9 +254,7 @@ class TestScrapeItemsView:
     @pytest.fixture
     def post_request_with_user(self) -> WSGIRequest:
         skus = f"{self.sku1}, {self.sku2}"
-        user = User.objects.create_user(
-            username="testuser", email="testuser@test.com", password="testpassword"
-        )
+        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
         factory = RequestFactory()
         url = reverse("scrape_item", kwargs={"skus": skus})
         request = factory.post(url, {"skus": skus})
@@ -281,9 +265,7 @@ class TestScrapeItemsView:
     @pytest.fixture
     def update_post_request_with_user(self) -> WSGIRequest:
         skus = f"{self.sku1}, {self.sku2}"
-        user = User.objects.create_user(
-            username="testuser", email="testuser@test.com", password="testpassword"
-        )
+        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
         factory = RequestFactory()
         url = reverse("update_items")
         request = factory.post(url, {"selected_items": skus})
@@ -291,19 +273,13 @@ class TestScrapeItemsView:
 
         return request
 
-    def test_post_valid_form_redirects(
-        self, post_request_with_user: WSGIRequest, mocker
-    ) -> None:  # type: ignore
+    def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user
         mocker.patch("main.utils.scrape_live_price", return_value=100)
         response = scrape_items(request, f"{self.sku1}, {self.sku2}")
-        assert (
-            response.status_code == 302
-        ), f"Expected status code 302, but got {response.status_code}."
+        assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
 
-    def test_post_valid_form_updates_items(
-        self, post_request_with_user: WSGIRequest, mocker
-    ) -> None:  # type: ignore
+    def test_post_valid_form_updates_items(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user
         mocker.patch("main.utils.scrape_live_price", return_value=100)
 
@@ -313,13 +289,9 @@ class TestScrapeItemsView:
         number_of_items = Item.objects.filter(sku__in=[self.sku1, self.sku2]).count()
 
         logger.info("Checking if the items were updated in the database as expected")
-        assert (
-            number_of_items == 2
-        ), f"Number of items should be 2, but it is {number_of_items}"
+        assert number_of_items == 2, f"Number of items should be 2, but it is {number_of_items}"
 
-    def test_update_items_view(
-        self, update_post_request_with_user: WSGIRequest, mocker
-    ) -> None:  # type: ignore
+    def test_update_items_view(self, update_post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = update_post_request_with_user
         mocker.patch(
             "main.views.scrape_items_from_skus",
@@ -335,9 +307,7 @@ class TestScrapeItemsView:
         number_of_items = Item.objects.filter(sku__in=[self.sku1, self.sku2]).count()
 
         logger.info("Checking if the items were updated in the database as expected")
-        assert (
-            number_of_items == 2
-        ), f"Number of items should be 2, but it is {number_of_items}"
+        assert number_of_items == 2, f"Number of items should be 2, but it is {number_of_items}"
 
 
 class TestCreateScrapeIntervalTaskView:
@@ -413,9 +383,7 @@ class TestCreateScrapeIntervalTaskView:
 
     @pytest.fixture
     def logged_in_user(self, client: Client) -> User:
-        user = User.objects.create_user(
-            username="testuser", email="testuser@test.com", password="testpassword"
-        )
+        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
         client.login(username="testuser", password="testpassword")
         return user
 
@@ -427,31 +395,23 @@ class TestCreateScrapeIntervalTaskView:
         }
 
     @pytest.mark.skip
-    def test_task_created(
-        self, client: Client, logged_in_user: User, valid_form_data: dict, mocker
-    ):
+    def test_task_created(self, client: Client, logged_in_user: User, valid_form_data: dict, mocker):
         mocker.patch("django.contrib.messages.error")
         client.post(reverse("create_scrape_interval"), data=valid_form_data)
         assert (
             PeriodicTask.objects.all().count() == 1
         ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
 
-    def test_redirect_if_valid_form_data(
-        self, client: Client, logged_in_user: User, valid_form_data: dict
-    ) -> None:
+    def test_redirect_if_valid_form_data(self, client: Client, logged_in_user: User, valid_form_data: dict) -> None:
         logger.info("Sending a POST request to the view with valid form data")
         response = client.post(reverse("create_scrape_interval"), data=valid_form_data)
 
         # Check if the response status code is 302, indicating a successful redirect
-        assert (
-            response.status_code == 302
-        ), f"Expected status code 302, but got {response.status_code}."
+        assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
         logger.debug("Successfully redirected to %s", response.url)
 
     @pytest.mark.skip(reason="Skip until adjusted to the new interval behavior")
-    def test_interval_task_exists_in_session(
-        self, client: Client, logged_in_user: User, valid_form_data: dict
-    ) -> None:
+    def test_interval_task_exists_in_session(self, client: Client, logged_in_user: User, valid_form_data: dict) -> None:
         logger.info("Sending a POST request to the view with valid form data")
         client.post(reverse("create_scrape_interval"), data=valid_form_data)
 
@@ -483,9 +443,7 @@ class TestCreateScrapeIntervalTaskView:
     def test_invalid_form_data_does_not_create_task(self, client: Client) -> None:
         invalid_form_data = {"invalid_field_name": 60}
         with pytest.raises(NoReverseMatch):
-            logger.info(
-                "Sending a POST request to the view with invalid form data and expecting error"
-            )
+            logger.info("Sending a POST request to the view with invalid form data and expecting error")
             client.post(reverse("create_scrape_interval"), data=invalid_form_data)
 
         logger.debug("Periodic tasks: %s", PeriodicTask.objects.all())
@@ -494,9 +452,7 @@ class TestCreateScrapeIntervalTaskView:
         ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
 
     @pytest.mark.skip(reason="Skip until adjusted to the new interval behavior")
-    def test_no_items_selected_does_not_create_task(
-        self, client, logged_in_user, mocker
-    ):
+    def test_no_items_selected_does_not_create_task(self, client, logged_in_user, mocker):
         mocker.patch("django.contrib.messages.error")
         no_items_selected = {
             "interval": 60,
@@ -522,9 +478,7 @@ class TestDestroyScrapeIntervalTaskView:
 
     @pytest.fixture
     def post_request_with_user(self, client: Client) -> WSGIRequest:
-        user = User.objects.create_user(
-            username="testuser", email="testuser@test.com", password="testpassword"
-        )
+        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
         factory = RequestFactory()
         url = reverse("destroy_scrape_interval")
         request = factory.post(url)
@@ -545,9 +499,7 @@ class TestDestroyScrapeIntervalTaskView:
         redirect_destination_url = reverse("item_list")
         response = destroy_scrape_interval_task(request)
 
-        assert (
-            response.status_code == 302
-        ), f"Expected status code 302, but got {response.status_code}."
+        assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
         assert (
             response.url == redirect_destination_url
         ), f"Expected redirect to {redirect_destination_url}, but got {response.url}"

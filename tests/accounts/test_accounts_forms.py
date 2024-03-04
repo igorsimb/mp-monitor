@@ -60,9 +60,7 @@ class TestCustomUserCreationForm:
         }
         form = CustomUserCreationForm(data=form_data)
 
-        logger.info(
-            "Making sure form still looks valid and duplicate email is not revealed..."
-        )
+        logger.info("Making sure form still looks valid and duplicate email is not revealed...")
         assert form.is_valid()
         assert not form.errors, form.errors
 
@@ -82,6 +80,4 @@ class TestCustomUserCreationForm:
         assert not form.is_valid()
         assert "password2" in form.errors
         error_messages = form.errors.get("password2", [])
-        assert any(
-            "Введённый пароль слишком короткий" in error for error in error_messages
-        ), form.errors
+        assert any("Введённый пароль слишком короткий" in error for error in error_messages), form.errors
