@@ -298,13 +298,8 @@ class TestScrapeItem:
         non_existing_sku = "11111"
         mock_empty_response = self.mock_response.json()
 
-        logger.info("Making sure request returns an empty list for item..")
+        logger.info("Mocking the request to return an empty list for item..")
         mock_empty_response["data"]["products"] = []
-
-        logger.info(
-            "Returning the modified mock_empty_response dictionary: %s",
-            mock_empty_response,
-        )
         self.mock_response.json = lambda: mock_empty_response
 
         logger.info("Calling scrape_item() with a non-existing SKU (%s)", non_existing_sku)

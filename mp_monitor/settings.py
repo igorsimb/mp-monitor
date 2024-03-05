@@ -10,14 +10,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = Env()
 env.read_env()
 
+ALLOWED_HOSTS = ["*"]
 
-SECRET_KEY = env("SECRET_KEY", default="CHANGEME")
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
 LOCAL_DEVELOPMENT = env.bool("LOCAL_DEVELOPMENT", default=False)
+SECRET_KEY = env("SECRET_KEY", default="CHANGEME")
 
-ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -39,6 +37,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "guardian",
     "django_celery_beat",
+    "sentry",
     # Local
     "main.apps.MainConfig",
     "accounts.apps.AccountsConfig",
@@ -260,3 +259,7 @@ LOGGING = {
 # Instead of "error" we use "danger" to indicate a bootstrap class
 # Source: https://docs.djangoproject.com/en/4.2/ref/settings/#message-tags
 MESSAGE_TAGS = {message_constants.ERROR: "danger"}
+
+# sentry-sdk
+SENTRY_ENABLED = env.bool("SENTRY_ENABLED", default=True)
+SENTRY_DSN = env("SENTRY_DSN")

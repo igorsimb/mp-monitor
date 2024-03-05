@@ -30,9 +30,16 @@ jobs:
         run: |
           python manage.py makemigrations
           python manage.py migrate
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          EVENTLET_NO_GREENDNS: yes  # https://github.com/aiwaves-cn/agents/issues/94
 
       - name: Run tests with coverage info
         run: pytest -n 4 --migrations --cov-config=.coveragerc --cov=. tests/
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENABLED: 'off'
+          EVENTLET_NO_GREENDNS: yes
 
 #        Uncomment it for deployment checks (https://github.com/igorsimb/mp-monitor/issues/63)
 #      - name: Check deploy configuration
