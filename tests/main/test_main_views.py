@@ -295,10 +295,7 @@ class TestScrapeItemsView:
         request = update_post_request_with_user
         mocker.patch(
             "main.views.scrape_items_from_skus",
-            return_value=[
-                {"sku": "12345", "name": "Test Item 1"},
-                {"sku": "67890", "name": "Test Item 2"},
-            ],
+            return_value=([{"sku": "12345", "name": "Test Item 1"}, {"sku": "67890", "name": "Test Item 2"}], []),
         )
 
         logger.info("Updating items...")
