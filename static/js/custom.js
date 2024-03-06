@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectAllCheckbox.addEventListener('click', toggleAllCheckboxes);
     });
 
-    // For each tab, listen for changes on individual checkboxes to update the "Select All" state
+    // For each tab listen for changes on individual checkboxes to update the "Select All" state
     document.querySelectorAll('.tab-pane').forEach(tabPane => {
         const individualCheckboxes = tabPane.querySelectorAll('input[type="checkbox"]:not([data-select-all="true"])');
         const selectAllCheckbox = tabPane.querySelector('[data-select-all="true"]');
