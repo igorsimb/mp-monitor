@@ -135,7 +135,8 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
 
             uncheck_all_boxes(request)
 
-            items_data = scrape_items_from_skus(skus)
+            # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items
+            items_data, _ = scrape_items_from_skus(skus)
             update_or_create_items(request, items_data)
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
