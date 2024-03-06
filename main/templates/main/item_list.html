@@ -8,6 +8,16 @@
 {% block content %}
 
     <main class="flex-shrink-0 container mt-5">
+
+{#    <div x-data="{ tab: 'foo' }">#}
+{#    <button :class="{ 'active': tab === 'foo' }" :class="{ 'hide': tab === 'bar' }" @click="tab = 'foo'">Foo</button>#}
+{#    <button :class="{ 'active': tab === 'bar' }" :class="{ 'hide': tab === 'foo' }" @click="tab = 'bar'">Bar</button>#}
+{##}
+{#    <div x-show="tab === 'foo'">Foo Content</div>#}
+{#    <div x-show="tab === 'bar'">Bar Content</div>#}
+{#    </div>#}
+
+
         <div>
             {% if messages %}
                 {% for message in messages %}
@@ -77,7 +87,7 @@
         <!-- END Add items collapse -->
 
 
-        <!-- Nav tabs -->
+        <!-- Manual/Schedule tabs -->
         <ul class="nav nav-tabs nav-fill bg-gradient mt-4" id="updateTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="manual-update-tab" data-bs-toggle="tab" type="button"
