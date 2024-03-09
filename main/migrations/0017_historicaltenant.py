@@ -18,9 +18,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.BigIntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID"
-                    ),
+                    models.BigIntegerField(auto_created=True, blank=True, db_index=True, verbose_name="ID"),
                 ),
                 ("name", models.CharField(db_index=True, max_length=255)),
                 (
