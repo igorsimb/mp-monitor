@@ -1,6 +1,15 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from main.models import Tenant, Item, Price
+
+
+@admin.register(Tenant)
+class TenantAdmin(SimpleHistoryAdmin):
+    history_list_display = ["tenant_status"]
+
+    def tenant_status(self, obj):
+        return obj.get_status_display()
 
 
 @admin.register(Item)
@@ -22,6 +31,3 @@ class PriceAdmin(admin.ModelAdmin):
     @admin.display(description="Товар")
     def get_item_name(self, obj) -> str:  # type: ignore
         return obj.item.name
-
-
-admin.site.register(Tenant)
