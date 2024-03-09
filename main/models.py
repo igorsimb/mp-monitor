@@ -11,6 +11,8 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
+from simple_history.models import HistoricalRecords
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,7 @@ class Tenant(models.Model):
     status = models.IntegerField(choices=Status.choices, default=Status.TRIALING)
 
     objects = TenantManager()
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Организация"
