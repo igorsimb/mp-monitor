@@ -33,6 +33,7 @@ dj-database-url==2.1.0
 dj-email-url==1.0.6
 Django==4.2.10
 django-allauth==0.61.1
+django-anymail==10.2
 django-cache-url==3.4.5
 django-celery-beat==2.5.0
 django-debug-toolbar==4.3.0
