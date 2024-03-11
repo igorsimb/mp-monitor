@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    "anymail",
     "debug_toolbar",
     "django_celery_beat",
     "django_extensions",
@@ -135,51 +136,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
-# django-debug-toolbar
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
+# Email
 
-# django-allauth config
-SITE_ID = 1
-LOGIN_REDIRECT_URL = "item_list"
-ACCOUNT_LOGOUT_REDIRECT = "item_list"
-# point to a custom sign up form
-# ACCOUNT_FORMS = {'signup': 'accounts.forms.CustomUserCreationForm'}
-AUTHENTICATION_BACKENDS = (
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
-    "guardian.backends.ObjectPermissionBackend",
-)
-# EMAIL_BACKEND = "django.main.mail.backends.console.EmailBackend"
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-ACCOUNT_SESSION_REMEMBER = None  # True/False/None; None = ask user
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
-
-# REDIS-related settings
-REDIS_HOST = "127.0.0.1"
-REDIS_PORT = "6379"
-CELERY_BROKER_URL = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
-CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timout": 3600}
-CELERY_RESULT_BACKEND = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
-
-# new
-# CELERY_BROKER_URL = "redis://redis:6379"
-# CELERY_RESULT_BACKEND = "redis://redis:6379"
-# end new
-
-CELERY_ACCEPT_CONTENT = ["application/json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-
-# let celery know to use our new scheduler when running celery beat
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="anymail.backends.sendgrid.EmailBackend")
+DEFAULT_FROM_FIELD = "noreply@mpmonitor.ru"
+SERVER_EMAIL = "noreply@mpmonitor.ru"
 
 
-# LOGGING settings
+# LOGGING
 
 
 # Generate log file paths based on year and month
@@ -260,6 +224,57 @@ LOGGING = {
 # Instead of "error" we use "danger" to indicate a bootstrap class
 # Source: https://docs.djangoproject.com/en/4.2/ref/settings/#message-tags
 MESSAGE_TAGS = {message_constants.ERROR: "danger"}
+
+# django-debug-toolbar
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+# django-allauth
+
+SITE_ID = 1
+LOGIN_REDIRECT_URL = "item_list"
+ACCOUNT_LOGOUT_REDIRECT = "item_list"
+# point to a custom sign up form
+# ACCOUNT_FORMS = {'signup': 'accounts.forms.CustomUserCreationForm'}
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+    "guardian.backends.ObjectPermissionBackend",
+)
+
+ACCOUNT_SESSION_REMEMBER = None  # True/False/None; None = ask user
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+
+# REDIS-related settings
+REDIS_HOST = "127.0.0.1"
+REDIS_PORT = "6379"
+CELERY_BROKER_URL = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
+CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timout": 3600}
+CELERY_RESULT_BACKEND = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
+
+# new
+# CELERY_BROKER_URL = "redis://redis:6379"
+# CELERY_RESULT_BACKEND = "redis://redis:6379"
+# end new
+
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+# let celery know to use our new scheduler when running celery beat
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+
+# django-anymail
+ANYMAIL = {
+    "SENDGRID_API_KEY": env("SENDGRID_API_KEY"),
+}
+EMAIL_SENDGRID_REPLY_TO = env("EMAIL_SENDGRID_REPLY_TO")
+
 
 # sentry-sdk
 SENTRY_ENABLED = env.bool("SENTRY_ENABLED", default=True)

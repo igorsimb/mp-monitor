@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SENDGRID_API_KEY: 'fake_api_key'
+      EMAIL_SENDGRID_REPLY_TO: 'reply-to@fakesendgrid.com'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
