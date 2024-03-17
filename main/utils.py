@@ -196,6 +196,8 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
 
     logger.info("Starting while loop...")
     # in case of a server error, retry the request up to MAX_RETRIES times
+    # TODO: check if we can use a separate function connect() with a @retry decorator like so
+    # https://github.com/federicoazzu/five_decorators/tree/main/decorators
     while retry_count < MAX_RETRIES:
         try:
             response = httpx.get(url, headers=headers, timeout=60)

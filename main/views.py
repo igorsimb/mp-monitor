@@ -279,22 +279,29 @@ def create_scrape_interval_task(
                     schedule.period,
                 )
 
-            scrape_interval_task = PeriodicTask.objects.create(
-                interval=schedule,
+            scrape_interval_task, created = PeriodicTask.objects.update_or_create(
                 name=f"scrape_interval_task_{request.user}",
-                task="main.tasks.update_or_create_items_task",
-                # start_time=timezone.now(),  # trigger once right away and then keep the interval
-                args=[
-                    request.user.tenant.id,
-                    skus_list,
-                ],  # prolly don't need request, just skus_list
+                defaults={
+                    "interval": schedule,
+                    "task": "main.tasks.update_or_create_items_task",
+                    # "start_time": timezone.now(),
+                    "args": [request.user.tenant.id, skus_list],
+                },
             )
-            logger.info(
-                "Interval task '%s' was successfully created for '%s'\nargs: %s",
-                scrape_interval_task.name,
-                request.user,
-                scrape_interval_task.args,
-            )
+            if created:
+                logger.info(
+                    "Interval task '%s' was successfully created for '%s'\nargs: %s",
+                    scrape_interval_task.name,
+                    request.user,
+                    scrape_interval_task.args,
+                )
+            else:
+                logger.info(
+                    "Interval task '%s' was successfully updated for '%s'\nargs: %s",
+                    scrape_interval_task.name,
+                    request.user,
+                    scrape_interval_task.args,
+                )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
             request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"

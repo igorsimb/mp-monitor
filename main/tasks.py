@@ -54,5 +54,6 @@ def update_or_create_items_task(self, tenant_id, skus_list):
         return ",".join([str(integer) for integer in input_list])
 
     skus = convert_list_to_string(skus_list)
-    items_data = scrape_items_from_skus(skus, is_parser_active=True)
+    # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items_interval
+    items_data, _ = scrape_items_from_skus(skus, is_parser_active=True)
     update_or_create_items_interval(tenant_id, items_data)
