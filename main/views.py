@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import user_passes_test
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
+from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
@@ -262,10 +263,17 @@ def create_scrape_interval_task(
             skus_list = [int(sku) for sku in skus_list]
 
             interval = scrape_interval_form.cleaned_data["interval_value"]
-            schedule, created = IntervalSchedule.objects.get_or_create(
-                every=interval,
-                period=IntervalSchedule.SECONDS,
-            )
+            try:
+                schedule, created = IntervalSchedule.objects.get_or_create(
+                    every=interval,
+                    period=IntervalSchedule.SECONDS,
+                )
+            except IntegrityError:
+                messages.error(
+                    request,
+                    "Ошибка создания расписания. Убедитесь, что поле интервала заполнено.",
+                )
+                return redirect("item_list")
             if created:
                 logger.info(
                     "Interval created with schedule: every %s %s",
