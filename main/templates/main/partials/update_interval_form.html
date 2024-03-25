@@ -1,0 +1,32 @@
+{% load widget_tweaks %}
+
+<h2 class="my-4">Изменить текущее расписание</h2>
+<div>
+    Здесь можно изменить, какие товары входят в текущее расписание парсинга, или полностью удалить расписание.<br>
+    Для изменения выберите необходимые товары и нажмите на "Обновить расписание".
+</div>
+<form method="POST" action="{% url 'update_scrape_interval' %}">
+    {% csrf_token %}
+
+    <div class=mb-2">
+        {% if scrape_interval_task %}
+            <strong>Текущее расписание:</strong> {{ scrape_interval_task }}
+        {% else %}
+            <small class="text-body-secondary">Нет активных расписаний</small>
+        {% endif %}
+    </div>
+
+    <div class="my-2 mt-4">
+        <button type="submit" class="btn btn-primary rounded-pill me-2">
+            <span class="material-symbols-sharp">update</span>
+            Обновить расписание
+        </button>
+        <a href="{% url 'destroy_scrape_interval' %}"
+           class="btn btn-danger rounded-pill">
+            <span class="material-symbols-sharp">delete</span>
+            Удалить текущее
+        </a>
+    </div>
+    {% include "main/partials/items_table.html" %}
+
+</form>

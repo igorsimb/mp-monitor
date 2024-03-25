@@ -361,6 +361,12 @@ def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[
 
 
 def uncheck_all_boxes(request: HttpRequest) -> None:
+    """Unchecks all boxes in the item list page.
+
+    Since HTML checkboxes don't inherently signal when unchecked,
+     we uncheck everything so that later on an **updated** items list can be checked
+    """
+    logger.info("Unchecking all boxes in the item list page.")
     Item.objects.filter(tenant=request.user.tenant.id).update(is_parser_active=False)  # type: ignore
     logger.info("All boxes unchecked.")
 

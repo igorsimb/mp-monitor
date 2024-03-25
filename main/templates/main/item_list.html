@@ -107,10 +107,14 @@
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane show active" id="manual-tab-pane" role="tabpanel" aria-labelledby="manual-update-tab"
                  tabindex="0">
-                {% include "main/partials/update_items_form.html" %}
+                {% include "main/partials/manual_update_items.html" %}
             </div>
             <div class="tab-pane" id="schedule-tab-pane" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
-                {% include "main/partials/create_interval_form.html" %}
+                {% if scrape_interval_task %}
+                    {% include "main/partials/update_interval_form.html" %}
+                {% else %}
+                    {% include "main/partials/create_interval_form.html" %}
+                {% endif %}
             </div>
         </div>
 

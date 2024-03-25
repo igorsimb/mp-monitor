@@ -10,7 +10,8 @@
             <ol class="breadcrumb p-3 bg-body-tertiary rounded-3">
                 <li class="breadcrumb-item">
                     <a class="link-body-emphasis fw-semibold text-decoration-none" href="{% url 'item_list' %}">
-                        Назад к товарам
+                        <span class="material-symbols-sharp">arrow_back_ios_new</span>
+                        К товарам
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
@@ -108,7 +109,9 @@
 
                 {% if prices.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1">Первая</a>
+                        <a class="page-link" href="?page=1" title="Первая страница">
+                            <span class="material-symbols-sharp">first_page</span>
+                        </a>
                     </li>
                     <li class="page-item">
                         <a class="page-link" href="?page={{ prices.previous_page_number }}">&laquo;</a>
@@ -132,7 +135,9 @@
                         <a class="page-link" href="?page={{ prices.next_page_number }}">&raquo;</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ prices.paginator.num_pages }}">Последняя</a>
+                        <a class="page-link" href="?page={{ prices.paginator.num_pages }}" title="Последняя страница">
+                            <span class="material-symbols-sharp">last_page</span>
+                        </a>
                     </li>
                 {% endif %}
             </ul>

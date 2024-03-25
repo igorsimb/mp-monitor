@@ -5,6 +5,7 @@ from .views import (
     ItemListView,
     ItemDetailView,
     create_scrape_interval_task,
+    update_scrape_interval,
     destroy_scrape_interval_task,
     scrape_items,
     update_items,
@@ -14,6 +15,7 @@ urlpatterns = [
     path("", IndexView.as_view(), name="index"),
     path("item_list/", ItemListView.as_view(), name="item_list"),
     path("scrape_interval/", create_scrape_interval_task, name="create_scrape_interval"),
+    path("update_scrape_interval/", update_scrape_interval, name="update_scrape_interval"),
     path(
         "destroy_scrape_interval/",
         destroy_scrape_interval_task,
