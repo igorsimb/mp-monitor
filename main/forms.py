@@ -34,3 +34,8 @@ class ScrapeIntervalForm(ModelForm):
     class Meta:
         model = Schedule
         fields = ["interval_value", "period"]
+
+
+# class ScrapeIntervalUpdateForm(ModelForm):
+#     class Meta:
+#         model = Schedule

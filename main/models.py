@@ -13,7 +13,6 @@ from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
 from simple_history.models import HistoricalRecords
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -195,11 +194,9 @@ class Schedule(models.Model):
         default="interval",
         choices=[("interval", "Интервал"), ("cronjob", "CronJob")],
     )
-    interval_value = models.IntegerField(
-        verbose_name="Каждые", validators=[MinValueValidator(1)], null=True, blank=True
-    )
+    interval_value = models.IntegerField(verbose_name="Каждые", validators=[MinValueValidator(1)], blank=True)
     cronjob_value = models.CharField(max_length=100, verbose_name="CronJob", blank=True, null=True)
-    period = models.CharField(max_length=100, choices=Period.choices, default=Period.HOURS)
+    period = models.CharField(max_length=100, choices=Period.choices, default=Period.HOURS, blank=True)
 
 
 class ItemSchedule(models.Model):

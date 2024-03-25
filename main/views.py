@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, TemplateView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
@@ -263,11 +263,16 @@ def create_scrape_interval_task(
             skus_list = [int(sku) for sku in skus_list]
 
             interval = scrape_interval_form.cleaned_data["interval_value"]
+            period = scrape_interval_form.cleaned_data["period"].upper()
+
             try:
                 schedule, created = IntervalSchedule.objects.get_or_create(
                     every=interval,
-                    period=IntervalSchedule.SECONDS,
+                    period=getattr(IntervalSchedule, period),  # IntervalSchedule.SECONDS, MINUTES, HOURS, etc
                 )
+
+            # This occurs when no interval value is set in the form, but we should never get to this error
+            # because interval_value in models does not allow for blank or null values (see issue #95).
             except IntegrityError:
                 messages.error(
                     request,
@@ -312,7 +317,7 @@ def create_scrape_interval_task(
                 )
 
             # store 'scrape_interval_task' in session to display as context in item_list.html
-            request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
+            request.session["scrape_interval_task"] = f"{scrape_interval_task.interval}"
 
             # Set the selected items' field "is_parser_active" to True
             items = Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list))
@@ -322,6 +327,8 @@ def create_scrape_interval_task(
                 items_bulk_update_list.append(item)
             Item.objects.bulk_update(items_bulk_update_list, ["is_parser_active"])
 
+            # the line below may be a better solution than having session variable
+            #  redirect(reverse('item_list', kwargs={ 'scrape_interval_task': scrape_interval_task }))
             return redirect("item_list")
 
     else:
@@ -333,9 +340,61 @@ def create_scrape_interval_task(
 
     context = {
         "scrape_interval_form": scrape_interval_form,
+        # the line below may be a better solution than having session variable
+        # "scrape_interval_task": scrape_interval_task,
         "scrape_interval_task": request.session.get("scrape_interval_task"),
     }
     return render(request, "main/item_list.html", context)
+
+
+def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
+    """Updates existing scrape interval for user's tenant and activates scraping for selected items.
+
+    - Updates scrape interval based on form data.
+    - Activates scraping for selected items (unchecks all first due to limitations).
+
+    Args:
+        request: The WSGI request object containing user and form data.
+
+    Returns:
+        - Redirects to item list on success.
+        - Shows error message and re-renders form on failure.
+    """
+    existing_task = get_object_or_404(PeriodicTask, name=f"scrape_interval_task_{request.user}")
+    if request.method == "POST":
+        form = ScrapeIntervalForm(request.POST or None, instance=existing_task)
+
+        if form.is_valid():
+            skus = request.POST.getlist("selected_items")
+            print(f"New Step 1: {skus}")
+            skus_list = [int(sku) for sku in skus]
+            print(f"New Step 4 (final): {skus_list}")
+
+            uncheck_all_boxes(request)
+
+            existing_task.args = [request.user.tenant.id, skus_list]
+            existing_task.save()
+            form.save()
+
+            items = Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list))
+            items_bulk_update_list = []
+            for item in items:
+                item.is_parser_active = True
+                items_bulk_update_list.append(item)
+            Item.objects.bulk_update(items_bulk_update_list, ["is_parser_active"])
+
+            return redirect("item_list")
+        else:
+            messages.error(
+                request,
+                "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.",
+            )
+            scrape_interval_form = ScrapeIntervalForm()
+
+        context = {
+            "scrape_interval_form": scrape_interval_form,
+        }
+        return render(request, "main/item_list.html", context)
 
 
 @user_passes_test(periodic_task_exists, redirect_field_name=None)
