@@ -5,10 +5,12 @@ import httpx
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import Http404
 from django.test import RequestFactory, Client
-from django.urls import reverse, NoReverseMatch
+from django.urls import reverse
 from django_celery_beat.models import PeriodicTask
 
+from factories import IntervalScheduleFactory, PeriodicTaskFactory, UserFactory
 from main.forms import ScrapeForm, ScrapeIntervalForm
 from main.models import Item
 from main.views import (
@@ -17,11 +19,13 @@ from main.views import (
     scrape_items,
     destroy_scrape_interval_task,
     update_items,
+    update_scrape_interval,
 )
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+client = Client()
 
 
 class TestIndex:
@@ -306,6 +310,17 @@ class TestScrapeItemsView:
         logger.info("Checking if the items were updated in the database as expected")
         assert number_of_items == 2, f"Number of items should be 2, but it is {number_of_items}"
 
+    def test_redirect_if_no_items_selected(self, mocker):
+        factory = RequestFactory()
+        item_list_url = reverse("item_list")
+        mocker.patch("main.views.is_at_least_one_item_selected", return_value=False)
+        request = factory.post(item_list_url, {"selected_items": ["1", "2"]})
+
+        response = update_items(request)
+
+        assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
+        assert response.url == item_list_url
+
 
 class TestCreateScrapeIntervalTaskView:
     # pylint: disable=unused-argument
@@ -439,9 +454,8 @@ class TestCreateScrapeIntervalTaskView:
 
     def test_invalid_form_data_does_not_create_task(self, client: Client) -> None:
         invalid_form_data = {"invalid_field_name": 60}
-        with pytest.raises(NoReverseMatch):
-            logger.info("Sending a POST request to the view with invalid form data and expecting error")
-            client.post(reverse("create_scrape_interval"), data=invalid_form_data)
+        logger.info("Sending a POST request to the view with invalid form data and expecting error")
+        client.post(reverse("create_scrape_interval"), data=invalid_form_data)
 
         logger.debug("Periodic tasks: %s", PeriodicTask.objects.all())
         assert (
@@ -459,6 +473,68 @@ class TestCreateScrapeIntervalTaskView:
         assert (
             PeriodicTask.objects.all().count() == 0
         ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+
+    def test_interval_created(self):
+        interval = IntervalScheduleFactory()
+        assert interval is not None
+
+    def test_interval_fields(self):
+        interval = IntervalScheduleFactory(every=10, period="seconds")
+        assert interval.every == 10
+        assert interval.period == "seconds"
+
+    def test_pediodic_task_created(self):
+        task = PeriodicTaskFactory()
+        assert task is not None
+
+    def test_periodic_task_fields(self):
+        task = PeriodicTaskFactory(interval=IntervalScheduleFactory(every=10, period="seconds"), args=["arg1", 1])
+        assert task.interval.every == 10
+        assert task.interval.period == "seconds"
+        assert task.args == ["arg1", 1]
+
+
+class TestUpdateScrapeInterval:
+    def test_update_task_args(self):
+        task = PeriodicTaskFactory(
+            interval=IntervalScheduleFactory(every=10, period="seconds"), args=["tenant_1", ["item_1", "item_2"]]
+        )
+        task.args = ["tenant_1", ["item_1", "item_2", "item_3"]]
+        task.save()
+        assert task.args == ["tenant_1", ["item_1", "item_2", "item_3"]]
+
+    def test_update_scrape_interval_post_success(self):
+        user = UserFactory()
+        PeriodicTaskFactory(name=f"scrape_interval_task_{user}")
+        data = {"selected_items": ["1", "2"]}
+        request = RequestFactory().post(reverse("update_scrape_interval"), data)
+        request.user = user
+
+        response = update_scrape_interval(request)
+
+        assert response.status_code == 302
+        assert response.url == reverse("item_list")
+
+    def test_invalid_form_invokes_error_message(self, mocker):
+        message = mocker.patch("django.contrib.messages.error")
+        user = UserFactory()
+        PeriodicTaskFactory(name=f"scrape_interval_task_{user}")
+        request = RequestFactory().post(reverse("update_scrape_interval"), {"invalid_key": "invalid_value"})
+        request.user = user
+
+        response = update_scrape_interval(request)
+        assert (
+            message.call_count == 1
+        ), f"Expected 1 message to be displayed, but {message.call_count} were displayed instead"
+        assert response.status_code == 302
+
+    def test_update_scrape_interval_no_task_found(self):
+        user = UserFactory()
+        request = RequestFactory().post(reverse("update_scrape_interval"), {})
+        request.user = user
+
+        with pytest.raises(Http404):
+            update_scrape_interval(request)
 
 
 class TestDestroyScrapeIntervalTaskView:

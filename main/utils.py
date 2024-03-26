@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Page
+from django.db.models import Q
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
 from django_celery_beat.models import PeriodicTask
@@ -369,6 +370,14 @@ def uncheck_all_boxes(request: HttpRequest) -> None:
     logger.info("Unchecking all boxes in the item list page.")
     Item.objects.filter(tenant=request.user.tenant.id).update(is_parser_active=False)  # type: ignore
     logger.info("All boxes unchecked.")
+
+
+def activate_parsing_for_selected_items(request: WSGIRequest, skus_list: list[int]) -> None:
+    """Activates parsing for the specified items by setting their `is_parser_active` field to True.
+    Performs a single update operation to the database while making sure this operation is atomic and
+    no other operations run while this is in progress.
+    """
+    Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list)).update(is_parser_active=True)
 
 
 def show_successful_scrape_message(

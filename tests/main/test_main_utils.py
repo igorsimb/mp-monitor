@@ -6,9 +6,11 @@ import pytest
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
+from django.test import RequestFactory
 from django.utils.safestring import mark_safe
 from pytest_mock import MockerFixture
 
+from factories import ItemFactory, UserFactory
 from main.exceptions import InvalidSKUException
 from main.models import Item, Tenant
 from main.utils import (
@@ -21,8 +23,8 @@ from main.utils import (
     update_or_create_items,
     is_sku_format_valid,
     show_invalid_skus_message,
+    activate_parsing_for_selected_items,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -523,3 +525,29 @@ class TestUpdateOrCreateItems:
 
         logger.info("Checking that a new item was created")
         assert item2.name == "Item 2"
+
+
+class TestActivateParsingForSelectedItems:
+    def test_only_affected_items_updated(self):
+        user = UserFactory()
+        items_to_activate = ItemFactory.create_batch(3, tenant=user.tenant)
+        other_items = ItemFactory.create_batch(2, tenant=user.tenant)
+
+        request = RequestFactory()
+        request.user = user
+
+        skus_list = [item.sku for item in items_to_activate]
+
+        logger.info("Checking that parser is False by default")
+        for sku in skus_list:
+            assert not Item.objects.get(sku=sku).is_parser_active
+
+        activate_parsing_for_selected_items(request, skus_list)
+
+        logger.info("Checking that parser is True after calling activate_parsing_for_selected_items()")
+        for sku in skus_list:
+            assert Item.objects.get(sku=sku).is_parser_active
+
+        logger.info("Checking that other items are not affected...")
+        for item in other_items:
+            assert not Item.objects.get(sku=item.sku).is_parser_active
