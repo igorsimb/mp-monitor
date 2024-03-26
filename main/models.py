@@ -194,7 +194,9 @@ class Schedule(models.Model):
         default="interval",
         choices=[("interval", "Интервал"), ("cronjob", "CronJob")],
     )
-    interval_value = models.IntegerField(verbose_name="Каждые", validators=[MinValueValidator(1)], blank=True)
+    interval_value = models.IntegerField(
+        verbose_name="Каждые", validators=[MinValueValidator(1)], blank=True, null=True
+    )
     cronjob_value = models.CharField(max_length=100, verbose_name="CronJob", blank=True, null=True)
     period = models.CharField(max_length=100, choices=Period.choices, default=Period.HOURS, blank=True)
 

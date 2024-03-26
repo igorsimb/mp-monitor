@@ -13,8 +13,10 @@ class ScrapeForm(forms.Form):
     skus = forms.CharField(
         label="SKUs",
         widget=forms.Textarea,
-        help_text="Введите один или несколько артикулов через запятую, пробел или с новой строки.\n"
-        "Например: 101231520, 109670641, 31299196",
+        help_text=(
+            "Введите один или несколько артикулов через запятую, пробел или с новой строки.\n"
+            "Например: 101231520, 109670641, 31299196"
+        ),
     )
 
 
@@ -34,8 +36,3 @@ class ScrapeIntervalForm(ModelForm):
     class Meta:
         model = Schedule
         fields = ["interval_value", "period"]
-
-
-# class ScrapeIntervalUpdateForm(ModelForm):
-#     class Meta:
-#         model = Schedule

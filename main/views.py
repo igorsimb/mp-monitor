@@ -6,7 +6,6 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -27,6 +26,7 @@ from .utils import (
     add_price_trend_indicator,
     periodic_task_exists,
     show_invalid_skus_message,
+    activate_parsing_for_selected_items,
 )
 
 user = get_user_model()
@@ -113,7 +113,7 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
             if invalid_skus:  # check if there are invalid SKUs
-                show_invalid_skus_message(request, invalid_skus)
+                show_invalid_skus_message(request, invalid_skus)  # pragma: no cover
 
             return redirect("item_list")
     else:
@@ -185,8 +185,6 @@ def create_scrape_interval_task_old(
             selected_item_ids = [int(item) for item in selected_item_ids]
 
             interval = scrape_interval_form.cleaned_data["interval"]
-            print(f"{interval=}")
-            print(f'"{request.user.tenant.id=}"')
             schedule, created = IntervalSchedule.objects.get_or_create(
                 every=interval,
                 period=IntervalSchedule.SECONDS,
@@ -319,13 +317,7 @@ def create_scrape_interval_task(
             # store 'scrape_interval_task' in session to display as context in item_list.html
             request.session["scrape_interval_task"] = f"{scrape_interval_task.interval}"
 
-            # Set the selected items' field "is_parser_active" to True
-            items = Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list))
-            items_bulk_update_list = []
-            for item in items:
-                item.is_parser_active = True
-                items_bulk_update_list.append(item)
-            Item.objects.bulk_update(items_bulk_update_list, ["is_parser_active"])
+            activate_parsing_for_selected_items(request, skus_list)
 
             # the line below may be a better solution than having session variable
             #  redirect(reverse('item_list', kwargs={ 'scrape_interval_task': scrape_interval_task }))
@@ -366,22 +358,22 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
 
         if form.is_valid():
             skus = request.POST.getlist("selected_items")
-            print(f"New Step 1: {skus}")
+            if not skus:
+                messages.error(
+                    request,
+                    'Не выбран ни один товар. Для удаления расписания кликните на "Удалить текущее"',
+                )
+                return redirect("item_list")
             skus_list = [int(sku) for sku in skus]
-            print(f"New Step 4 (final): {skus_list}")
 
             uncheck_all_boxes(request)
 
+            logger.info("Updating the checked items list for existing task...")
             existing_task.args = [request.user.tenant.id, skus_list]
             existing_task.save()
             form.save()
 
-            items = Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list))
-            items_bulk_update_list = []
-            for item in items:
-                item.is_parser_active = True
-                items_bulk_update_list.append(item)
-            Item.objects.bulk_update(items_bulk_update_list, ["is_parser_active"])
+            activate_parsing_for_selected_items(request, skus_list)
 
             return redirect("item_list")
         else:
@@ -389,12 +381,12 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
                 request,
                 "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.",
             )
-            scrape_interval_form = ScrapeIntervalForm()
+            form = ScrapeIntervalForm()
+    else:
+        form = ScrapeIntervalForm()
 
-        context = {
-            "scrape_interval_form": scrape_interval_form,
-        }
-        return render(request, "main/item_list.html", context)
+    context = {"scrape_interval_form": form}
+    return render(request, "main/item_list.html", context)
 
 
 @user_passes_test(periodic_task_exists, redirect_field_name=None)
