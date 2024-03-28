@@ -32,7 +32,7 @@ class TestMainTemplates:
             price=100,
         )
 
-    def test_item_list_template(self, client: Client) -> None:
+    def test_item_list_template(self, client: Client, logged_in_user: User) -> None:
         response = client.get(reverse("item_list"))
         logger.debug("Main page response: %s", response)
         assert response.status_code == 200

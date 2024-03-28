@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
 from django.db import IntegrityError
+from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -60,6 +61,10 @@ class ItemListView(PermissionListMixin, ListView):
         context["scrape_interval_task"] = self.request.session.get("scrape_interval_task")
         return context
 
+    def get_queryset(self) -> QuerySet[Item]:
+        queryset = super().get_queryset()
+        return queryset.filter(tenant=self.request.user.tenant)
+
     def get(self, request, *args, **kwargs):
         logger.info("Going to Item List page")
         return super().get(request, *args, **kwargs)
@@ -92,6 +97,10 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         context["item_updated_at"] = item_updated_at
         context["price_created_at"] = price_created_at
         return context
+
+    def get_queryset(self) -> QuerySet[Item]:
+        queryset = super().get_queryset()
+        return queryset.filter(tenant=self.request.user.tenant)
 
     def get(self, request, *args, **kwargs):
         logger.info(
