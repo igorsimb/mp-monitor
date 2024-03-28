@@ -1,3 +1,11 @@
 # MP Monitor
 
-#### Django scraping app for Wildberries
+#### Парсер товаров маркетплейсов
+
+Стэк:
+- Бэкенд: Джанго 4.2
+- Фронтенд: Bootstrap, HTMX
+- Очереди задач: Celery
+- Мониторнг ошибок: Sentry
+- Тесты: Pytest
+- CI: асинхронный запуск тестов (с выводом покрытия), pre-commit, линтер&форматтер (Ruff).
