@@ -2,19 +2,29 @@ import os
 from pathlib import Path
 from django.contrib.messages import constants as message_constants
 from django.utils import timezone
-from environs import Env
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = Env()
-env.read_env()
+# defaults
+env = environ.Env(
+    ALLOWED_HOSTS=(list, []),
+    DEBUG=(bool, False),
+    CSRF_COOKIE_SECURE=(bool, True),
+    LOCAL_DEVELOPMENT=(bool, False),
+    SECURE_HSTS_SECONDS=(int, 60 * 60 * 24 * 365),  # 1 year
+    SECURE_SSL_REDIRECT=(bool, True),
+    SESSION_COOKIE_SECURE=(bool, True),
+    SENTRY_ENABLED=(bool, True),
+)
+environ.Env.read_env(BASE_DIR / ".env")
 
-ALLOWED_HOSTS = ["*"]
 
-DEBUG = env.bool("DEBUG", default=False)
-LOCAL_DEVELOPMENT = env.bool("LOCAL_DEVELOPMENT", default=False)
-SECRET_KEY = env("SECRET_KEY", default="CHANGEME")
+SECRET_KEY = env("SECRET_KEY")
+DEBUG = env("DEBUG")
+ALLOWED_HOSTS: list[str] = env("ALLOWED_HOSTS")
+LOCAL_DEVELOPMENT = env("LOCAL_DEVELOPMENT")
 
 
 # Application definition
@@ -37,12 +47,12 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "django_extensions",
     "guardian",
-    "sentry",
     "simple_history",
     "widget_tweaks",
     # Local
     "accounts.apps.AccountsConfig",
     "main.apps.MainConfig",
+    "sentry",
 ]
 
 MIDDLEWARE = [
@@ -276,6 +286,18 @@ ANYMAIL = {
 EMAIL_SENDGRID_REPLY_TO = env("EMAIL_SENDGRID_REPLY_TO")
 
 
+# Security
+CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE")
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_HSTS_SECONDS = env("SECURE_HSTS_SECONDS")
+SECURE_SSL_REDIRECT = env("SECURE_SSL_REDIRECT")
+SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE")
+
+#  django deploy check is not recognizing the correct SECRET_KEY from .env, silencing this warning
+SILENCED_SYSTEM_CHECKS: list[str] = ["security.W009"]
+
+
 # sentry-sdk
-SENTRY_ENABLED = env.bool("SENTRY_ENABLED", default=True)
+SENTRY_ENABLED = env("SENTRY_ENABLED")
 SENTRY_DSN = env("SENTRY_DSN")
