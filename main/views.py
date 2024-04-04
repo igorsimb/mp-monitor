@@ -9,7 +9,6 @@ from django.db import IntegrityError
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.utils import timezone
 from django.views.generic import ListView, DetailView, TemplateView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
@@ -28,6 +27,7 @@ from .utils import (
     periodic_task_exists,
     show_invalid_skus_message,
     activate_parsing_for_selected_items,
+    task_name,
 )
 
 user = get_user_model()
@@ -163,82 +163,6 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
     return render(request, "main/item_list.html", {"update_items_form": form})
 
 
-# TODO: remove this if the new create_scrape_interval_task view works fine
-def create_scrape_interval_task_old(
-    request: WSGIRequest,
-) -> HttpResponse | HttpResponseRedirect:
-    """Takes interval from the form data (in seconds) and triggers main.tasks.scrape_interval_task
-
-    The task itself prints all items belonging to this tenant every {{ interval }} seconds.
-    """
-
-    if request.method == "POST":
-        scrape_interval_form = ScrapeIntervalForm(request.POST)
-
-        if scrape_interval_form.is_valid():
-            logger.info("Starting the task")
-            selected_item_ids = request.POST.getlist("selected_items")
-
-            if not is_at_least_one_item_selected(request, selected_item_ids):
-                return redirect("item_list")
-
-            uncheck_all_boxes(request)
-
-            # Update the database for checked boxes
-            for item_id in selected_item_ids:
-                logger.info("Updating db with item with id=%s", item_id)
-                Item.objects.filter(id=int(item_id)).update(is_parser_active=True)
-
-            # Convert the list of stringified numbers to a list of integers to avoid the following error:
-            # json.decoder.JSONDecodeError: Expecting value: line 1 column 6 (char 5)
-            selected_item_ids = [int(item) for item in selected_item_ids]
-
-            interval = scrape_interval_form.cleaned_data["interval"]
-            schedule, created = IntervalSchedule.objects.get_or_create(
-                every=interval,
-                period=IntervalSchedule.SECONDS,
-            )
-            if created:
-                logger.debug(
-                    "Interval created with schedule: every %s %s",
-                    schedule.every,
-                    schedule.period,
-                )
-            else:
-                logger.debug(
-                    "Existing Interval started: every %s %s",
-                    schedule.every,
-                    schedule.period,
-                )
-
-            scrape_interval_task = PeriodicTask.objects.create(
-                interval=schedule,
-                name=f"scrape_interval_task_{request.user}",
-                task="main.tasks.scrape_interval_task",
-                start_time=timezone.now(),  # trigger once right away and then keep the interval
-                args=[request.user.tenant.id, selected_item_ids],
-            )
-            logger.debug(
-                "Interval task '%s' was successfully created for '%s'",
-                scrape_interval_task.name,
-                request.user,
-            )
-
-            # store 'scrape_interval_task' in session to display as context in item_list.html
-            request.session["scrape_interval_task"] = f"{scrape_interval_task.name} - {scrape_interval_task.interval}"
-
-            return redirect("item_list")
-
-    else:
-        scrape_interval_form = ScrapeIntervalForm()
-
-    context = {
-        "scrape_interval_form": scrape_interval_form,
-        "scrape_interval_task": request.session.get("scrape_interval_task"),
-    }
-    return render(request, "main/item_list.html", context)
-
-
 def create_scrape_interval_task(
     request: WSGIRequest,
 ) -> HttpResponse | HttpResponseRedirect:
@@ -300,7 +224,7 @@ def create_scrape_interval_task(
                 )
 
             scrape_interval_task, created = PeriodicTask.objects.update_or_create(
-                name=f"scrape_interval_task_{request.user}",
+                name=task_name(request.user),
                 defaults={
                     "interval": schedule,
                     "task": "main.tasks.update_or_create_items_task",
@@ -361,7 +285,7 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
         - Redirects to item list on success.
         - Shows error message and re-renders form on failure.
     """
-    existing_task = get_object_or_404(PeriodicTask, name=f"scrape_interval_task_{request.user}")
+    existing_task = get_object_or_404(PeriodicTask, name=task_name(request.user))
     if request.method == "POST":
         form = ScrapeIntervalForm(request.POST or None, instance=existing_task)
 
@@ -402,7 +326,9 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
 def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     uncheck_all_boxes(request)
 
-    periodic_task = PeriodicTask.objects.get(name=f"scrape_interval_task_{request.user}")
+    periodic_task = PeriodicTask.objects.get(
+        name=task_name(request.user),
+    )
     periodic_task.delete()
     print(f"{periodic_task} has been deleted!")
 

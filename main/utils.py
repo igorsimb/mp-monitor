@@ -544,11 +544,17 @@ def add_price_trend_indicator(prices: Page) -> None:
             logger.warning("Can't compare price to NoneType")
 
 
+def task_name(user: User) -> str:
+    return f"task_{user.tenant}"
+
+
 def periodic_task_exists(request: WSGIRequest) -> bool:
     """Checks for the existence of a periodic task with the given name."""
 
     try:
-        PeriodicTask.objects.get(name=f"scrape_interval_task_{request.username}")
+        PeriodicTask.objects.get(
+            name=task_name(request),
+        )
         return True
     except PeriodicTask.DoesNotExist:
         return False

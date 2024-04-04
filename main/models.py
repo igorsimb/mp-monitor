@@ -181,6 +181,7 @@ def add_perms_to_group(sender, instance, created, **kwargs) -> None:  # type: ig
             )
 
 
+# TODO: creation in view and connecting to tenant and items to be implemented in future
 class Schedule(models.Model):
     class Period(models.TextChoices):
         SECONDS = "seconds", _("Секунд")
@@ -199,11 +200,6 @@ class Schedule(models.Model):
     )
     cronjob_value = models.CharField(max_length=100, verbose_name="CronJob", blank=True, null=True)
     period = models.CharField(max_length=100, choices=Period.choices, default=Period.HOURS, blank=True)
-
-
-class ItemSchedule(models.Model):
-    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
 
 
 class Price(models.Model):

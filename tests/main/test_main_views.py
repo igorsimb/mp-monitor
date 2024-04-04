@@ -13,6 +13,7 @@ from django_celery_beat.models import PeriodicTask
 from factories import IntervalScheduleFactory, PeriodicTaskFactory, UserFactory
 from main.forms import ScrapeForm, ScrapeIntervalForm
 from main.models import Item
+from main.utils import task_name
 from main.views import (
     ItemListView,
     ItemDetailView,
@@ -505,7 +506,9 @@ class TestUpdateScrapeInterval:
 
     def test_update_scrape_interval_post_success(self):
         user = UserFactory()
-        PeriodicTaskFactory(name=f"scrape_interval_task_{user}")
+        PeriodicTaskFactory(
+            name=task_name(user),
+        )
         data = {"selected_items": ["1", "2"]}
         request = RequestFactory().post(reverse("update_scrape_interval"), data)
         request.user = user
@@ -518,7 +521,7 @@ class TestUpdateScrapeInterval:
     def test_invalid_form_invokes_error_message(self, mocker):
         message = mocker.patch("django.contrib.messages.error")
         user = UserFactory()
-        PeriodicTaskFactory(name=f"scrape_interval_task_{user}")
+        PeriodicTaskFactory(name=task_name(user))
         request = RequestFactory().post(reverse("update_scrape_interval"), {"invalid_key": "invalid_value"})
         request.user = user
 
