@@ -133,6 +133,7 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
 
 
 def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
+    """Scrape items manually"""
     if request.method == "POST":
         form = UpdateItemsForm(request.POST)
         if form.is_valid():
@@ -142,8 +143,6 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             logger.info("Beginning to update items info...")
             if not is_at_least_one_item_selected(request, skus):
                 return redirect("item_list")
-
-            uncheck_all_boxes(request)
 
             # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items
             items_data, _ = scrape_items_from_skus(skus)

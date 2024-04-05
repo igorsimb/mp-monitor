@@ -11,13 +11,6 @@
                         Здесь вы можете обновить информацию о товарах вне зависимости от текущего расписания.
                         Для этого выберите товары и нажмите на "Обновить вручную". Это никак не повлияет на расписание.
                     </div>
-                    <div class=mb-2">
-                        {% if scrape_interval_task %}
-                            <strong>Текущее расписание:</strong> {{ scrape_interval_task }}
-                        {% else %}
-                            <small class="text-body-secondary">Нет активных расписаний</small>
-                        {% endif %}
-                    </div>
                     <button type="submit" class="btn btn-outline-primary rounded-pill mt-4">
                         <span class="material-symbols-sharp">touch_app</span>
                         Обновить вручную

@@ -21,17 +21,26 @@
         {% for item in items %}
             <tr>
                 <td class="text-center">
+                {% if item.is_parser_active %}
+                    <a title="Для этого товара включен автоматический парсинг" style="cursor: default">
+                        <span class="material-symbols-sharp text-danger">schedule</span>
+                    </a>
+
+                    {% endif %}
                     <input
-                            class="form-check-input mt-0"
+                            class="form-check-input mt-0 custom-material-icon"
                             type="checkbox"
                             value="{{ item.sku }}"
                             name="selected_items"
                             id="selected_items"
                             aria-label="Выбрать {{ item.sku }}"
+                            {% if item.is_parser_active %}
+                                checked
+                            {% endif %}
                     >
                 </td>
                 <td><a href="{{ item.get_absolute_url }}">{{ item.sku }}</a></td>
-                <td>({{ item.prices.count }}) {{ item.name }} | parser={{ item.is_parser_active }}</td>
+                <td>{{ item.name }}</td>
                 {#                    <td class="text-center">{{ item.spp }}%</td>#}
                 <td class="text-center">
                                     <span class="position-relative">
