@@ -34,7 +34,7 @@
                             name="selected_items"
                             id="selected_items"
                             aria-label="Выбрать {{ item.sku }}"
-                            {% if item.is_parser_active %}
+                            {% if item.is_parser_active and tab != "manual" %}
                                 checked
                             {% endif %}
                     >
