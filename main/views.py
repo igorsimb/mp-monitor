@@ -53,12 +53,19 @@ class ItemListView(PermissionListMixin, ListView):
         form = ScrapeForm()
         update_items_form = UpdateItemsForm()
         scrape_interval_form = ScrapeIntervalForm()
+
+        try:
+            periodic_task = PeriodicTask.objects.get(name=task_name(self.request.user))
+        except PeriodicTask.DoesNotExist:
+            periodic_task = None
+
         sku = None
         context["sku"] = sku
         context["form"] = form
         context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
-        context["scrape_interval_task"] = self.request.session.get("scrape_interval_task")
+        if periodic_task:
+            context["scrape_interval_task"] = periodic_task.interval
         return context
 
     def get_queryset(self) -> QuerySet[Item]:
@@ -201,8 +208,7 @@ def create_scrape_interval_task(
                     period=getattr(IntervalSchedule, period),  # IntervalSchedule.SECONDS, MINUTES, HOURS, etc
                 )
 
-            # This occurs when no interval value is set in the form, but we should never get to this error
-            # because interval_value in models does not allow for blank or null values (see issue #95).
+            # This occurs when no interval value is set in the form
             except IntegrityError:
                 messages.error(
                     request,
@@ -246,13 +252,8 @@ def create_scrape_interval_task(
                     scrape_interval_task.args,
                 )
 
-            # store 'scrape_interval_task' in session to display as context in item_list.html
-            request.session["scrape_interval_task"] = f"{scrape_interval_task.interval}"
-
             activate_parsing_for_selected_items(request, skus_list)
 
-            # the line below may be a better solution than having session variable
-            #  redirect(reverse('item_list', kwargs={ 'scrape_interval_task': scrape_interval_task }))
             return redirect("item_list")
 
     else:
@@ -262,12 +263,7 @@ def create_scrape_interval_task(
         )
         scrape_interval_form = ScrapeIntervalForm()
 
-    context = {
-        "scrape_interval_form": scrape_interval_form,
-        # the line below may be a better solution than having session variable
-        # "scrape_interval_task": scrape_interval_task,
-        "scrape_interval_task": request.session.get("scrape_interval_task"),
-    }
+    context = {"scrape_interval_form": scrape_interval_form}
     return render(request, "main/item_list.html", context)
 
 
@@ -330,9 +326,5 @@ def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     )
     periodic_task.delete()
     print(f"{periodic_task} has been deleted!")
-
-    # delete 'scrape_interval_task' from session
-    if "scrape_interval_task" in request.session:
-        del request.session["scrape_interval_task"]
 
     return redirect("item_list")

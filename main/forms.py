@@ -4,6 +4,7 @@ from django.forms import ModelForm
 from main.models import Schedule
 
 
+# Currently not used because sku format validation is done by is_sku_format_valid utility function
 def validate_sku_format(value: str) -> None:
     if not value.isdigit() or len(value) < 5:
         raise forms.ValidationError("Неверный формат SKU.")

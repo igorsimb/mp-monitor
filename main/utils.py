@@ -545,7 +545,7 @@ def add_price_trend_indicator(prices: Page) -> None:
 
 
 def task_name(user: User) -> str:
-    return f"task_{user.tenant}"
+    return f"task_tenant_{user.tenant.id}"
 
 
 def periodic_task_exists(request: WSGIRequest) -> bool:
