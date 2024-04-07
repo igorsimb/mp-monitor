@@ -43,7 +43,6 @@ class TestItemListView:
         "sku",
         "form",
         "scrape_interval_form",
-        "scrape_interval_task",
     ]
 
     @pytest.fixture
@@ -63,7 +62,7 @@ class TestItemListView:
 
     # https://docs.djangoproject.com/en/4.2/topics/testing/advanced/#testing-class-based-views
     @pytest.mark.parametrize("expected_context_item", context_object_list)
-    def test_item_present_in_context(self, request_with_user: WSGIRequest, expected_context_item: str) -> None:
+    def test_no_task_present_in_context(self, request_with_user: WSGIRequest, expected_context_item: str) -> None:
         request = request_with_user
 
         view = ItemListView()
