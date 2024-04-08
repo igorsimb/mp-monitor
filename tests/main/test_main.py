@@ -1,7 +1,7 @@
 from django.test import TransactionTestCase
 from django.urls import reverse, resolve
 
-from main.views import ItemListView
+from main.views import index
 
 
 class IndexPageTests(TransactionTestCase):
@@ -23,4 +23,4 @@ class IndexPageTests(TransactionTestCase):
 
     def test_index_page_url_resolves_index_view(self):
         view = resolve("/")
-        self.assertEqual(view.func.__name__, ItemListView.as_view().__name__)
+        self.assertEqual(view.func.__name__, index.__name__)

@@ -9,7 +9,7 @@ from django.db import IntegrityError
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic import ListView, DetailView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
@@ -34,10 +34,11 @@ user = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-class IndexView(TemplateView):
+def index(request):
     """The entry point for the website."""
-
-    template_name = "main/index.html"
+    if request.user.is_authenticated:
+        return redirect("item_list")
+    return render(request, "main/index.html")
 
 
 class ItemListView(PermissionListMixin, ListView):
