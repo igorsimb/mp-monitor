@@ -253,7 +253,7 @@ AUTHENTICATION_BACKENDS = (
     "guardian.backends.ObjectPermissionBackend",
 )
 
-ACCOUNT_SESSION_REMEMBER = None  # True/False/None; None = ask user
+ACCOUNT_SESSION_REMEMBER = True  # True/False/None; None = ask user
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
