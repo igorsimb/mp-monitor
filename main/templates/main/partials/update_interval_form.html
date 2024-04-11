@@ -5,14 +5,15 @@
 <ul>
     <li>Чтобы поменять, какие товары входят в расписание, выберите необходимые товары и нажмите на "Обновить расписание".</li>
     <li>Для удаления расписания нажмите на соответствующую кнопку.</li>
-    <li>На данный момент можно создать только одно расписание.</li>
+    <li>Можно создать только одно расписание.</li>
 </ul>
 <form method="POST" action="{% url 'update_scrape_interval' %}">
     {% csrf_token %}
 
     <div class=mb-2">
         {% if scrape_interval_task %}
-            <strong>Текущее расписание:</strong> {{ scrape_interval_task }}
+            <span class="fw-bold">Текущее расписание:</span> {{ scrape_interval_task.interval }}<br>
+            <span class="fw-bold">Следующий парсинг:</span> {{ next_interval_run_at }}
         {% else %}
             <small class="text-body-secondary">Нет активных расписаний</small>
         {% endif %}

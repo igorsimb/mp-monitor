@@ -8,7 +8,7 @@
         <div class="col-auto pt-1">Обновлять информацию с Wildberries каждые</div>
         <div class="col-auto">
             {# Since maxlength does not work with "number" type, using JS to truncate anything beyond maxlength #}
-            {% render_field scrape_interval_form.interval_value min="1" maxlength="6" class="form-control" style="max-width: 6rem" oninput="limitMaxLength(this)" %}
+            {% render_field scrape_interval_form.interval_value min="2" maxlength="6" class="form-control" style="max-width: 6rem" oninput="limitMaxLength(this)" %}
         </div>
         <div class="col-auto">
             {% render_field scrape_interval_form.period class="form-select" %}
