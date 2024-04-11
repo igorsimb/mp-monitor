@@ -66,7 +66,17 @@ class ItemListView(PermissionListMixin, ListView):
         context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
         if periodic_task:
-            context["scrape_interval_task"] = periodic_task.interval
+            schedule_interval = periodic_task.schedule.run_every
+
+            # django-celery-beat translation problem: https://github.com/igorsimb/mp-monitor/issues/115
+            # temporal workaround for singular intervals: I set min="2" into the input field
+            # context["scrape_interval_task"] = f"каждые {periodic_task.interval.every} {periodic_task.interval.period}"  # каждые 24 hours
+            context["scrape_interval_task"] = periodic_task  # каждые 24 часы
+            if periodic_task.last_run_at:
+                # covered in TestItemListView.test_next_interval_run_is_calculated_correctly_in_context
+                context["next_interval_run_at"] = periodic_task.last_run_at + schedule_interval  # pragma: no cover
+            else:
+                context["next_interval_run_at"] = periodic_task.date_changed + schedule_interval
         return context
 
     def get_queryset(self) -> QuerySet[Item]:
@@ -201,14 +211,13 @@ def create_scrape_interval_task(
             skus_list = [int(sku) for sku in skus_list]
 
             interval = scrape_interval_form.cleaned_data["interval_value"]
-            period = scrape_interval_form.cleaned_data["period"].upper()
+            period = scrape_interval_form.cleaned_data["period"]
 
             try:
                 schedule, created = IntervalSchedule.objects.get_or_create(
                     every=interval,
-                    period=getattr(IntervalSchedule, period),  # IntervalSchedule.SECONDS, MINUTES, HOURS, etc
+                    period=getattr(IntervalSchedule, period.upper()),  # IntervalSchedule.SECONDS, MINUTES, HOURS, etc
                 )
-
             # This occurs when no interval value is set in the form
             except IntegrityError:
                 messages.error(

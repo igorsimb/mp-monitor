@@ -1,7 +1,10 @@
 import logging
+from datetime import datetime
 
 from celery import shared_task
+from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django_celery_beat.models import PeriodicTask
 
 from .models import Item, Tenant
 from .utils import scrape_item, scrape_items_from_skus, update_or_create_items_interval
@@ -10,6 +13,7 @@ logger = logging.getLogger(__name__)
 user = get_user_model()
 
 
+# Currently not used, see: https://github.com/igorsimb/mp-monitor/issues/114
 @shared_task(bind=True)
 def scrape_interval_task(self, tenant_id: int, selected_item_ids: list[int]) -> None:  # pylint: disable=[unused-argument]
     items = Item.objects.filter(id__in=selected_item_ids)
@@ -57,3 +61,13 @@ def update_or_create_items_task(self, tenant_id, skus_list):
     # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items_interval
     items_data, _ = scrape_items_from_skus(skus, is_parser_active=True)
     update_or_create_items_interval(tenant_id, items_data)
+
+    task_name = self.request.properties["periodic_task_name"]
+    task_obj = PeriodicTask.objects.get(name=task_name)
+    if not task_obj:
+        logger.error("Task with name %s not found.", task_name)
+        messages.error(self.request, "Расписание не найдено. Попробуйте еще раз или обратитесь в службу поддержки.")
+        return
+
+    task_obj.last_run_at = datetime.now()
+    task_obj.save()

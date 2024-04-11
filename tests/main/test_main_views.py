@@ -1,8 +1,10 @@
 import logging
+from datetime import datetime
 from typing import Type, Any
 
 import httpx
 import pytest
+import pytz
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import Http404
@@ -36,6 +38,20 @@ class TestIndex:
 
         assert response.status_code == 200
 
+    def test_authenticated_user_is_redirected(self, client: Client) -> None:
+        """An authenticated user is redirected to a correct destination"""
+        user = UserFactory()
+        client.force_login(user)
+
+        logger.info("Checking that authenticated user gets redirected...")
+        response = client.get(reverse("index"))
+        assert response.status_code == 302
+
+        redirect_url_name = "item_list"
+        destination = client.get(reverse(redirect_url_name))
+        logger.info("Checking that authenticated user is redirected to '%s' url...", redirect_url_name)
+        assert destination.status_code == 200
+
 
 class TestItemListView:
     context_object_list = [
@@ -62,7 +78,9 @@ class TestItemListView:
 
     # https://docs.djangoproject.com/en/4.2/topics/testing/advanced/#testing-class-based-views
     @pytest.mark.parametrize("expected_context_item", context_object_list)
-    def test_no_task_present_in_context(self, request_with_user: WSGIRequest, expected_context_item: str) -> None:
+    def test_non_existing_task_not_present_in_context(
+        self, request_with_user: WSGIRequest, expected_context_item: str
+    ) -> None:
         request = request_with_user
 
         view = ItemListView()
@@ -77,6 +95,76 @@ class TestItemListView:
 
         context = view.get_context_data()
         assert expected_context_item in context
+
+    def test_existing_task_present_in_context(self, request_with_user: WSGIRequest) -> None:
+        user = request_with_user.user
+        expected_context_items = ["scrape_interval_task", "next_interval_run_at"]
+
+        PeriodicTaskFactory(
+            name=task_name(user), interval=IntervalScheduleFactory(every=10, period="minutes"), args=["arg1", 1]
+        )
+
+        request = request_with_user
+        view = ItemListView()
+        view.setup(request)
+
+        logger.info(
+            "Initializing 'object_list' attribute for '%s' view to access its get_context_data()",
+            view.__class__.__name__,
+        )
+        view.object_list = view.get_queryset()
+        logger.debug("view.object_list = %s", view.object_list)
+
+        context = view.get_context_data()
+        for item in expected_context_items:
+            logger.info("Checking that '%s' is in context", item)
+            assert item in context
+
+    def test_next_interval_run_is_calculated_correctly_in_context(self, request_with_user: WSGIRequest) -> None:
+        """
+        Tests that the `next_interval_run_at` value in the view context is calculated correctly for periodic tasks
+        with a previously run time (`last_run_at` not None).
+
+        This test simulates a scenario where a view (`ItemListView` in this case) has a periodic task associated with it.
+        It verifies that the calculated `next_interval_run_at` based on the task's schedule (`run_every` and `period`)
+        matches the corresponding value stored in the view's context data.
+
+        **Key points:**
+
+        - The test creates a sample periodic task with a schedule and sets its `last_run_at` to the current time.
+        - It retrieves the context data from the view after setting up the object list.
+        - Both the calculated `next_interval_run_at` and the one from the context are converted to UTC and adjusted
+          to remove seconds and microseconds for tolerance in the assertion (1-minute tolerance).
+        - Finally, the test asserts that the two `next_interval_run_at` values are equal.
+        """
+        user = request_with_user.user
+
+        task = PeriodicTaskFactory(
+            name=task_name(user), interval=IntervalScheduleFactory(every=10, period="minutes"), args=["arg1", 1]
+        )
+
+        task.last_run_at = datetime.now()
+        request = request_with_user
+        view = ItemListView()
+        view.setup(request)
+
+        logger.info(
+            "Initializing 'object_list' attribute for '%s' view to access its get_context_data()",
+            view.__class__.__name__,
+        )
+        view.object_list = view.get_queryset()
+        logger.debug("view.object_list = %s", view.object_list)
+
+        context = view.get_context_data()
+
+        next_interval_run_at = task.last_run_at + task.schedule.run_every
+        logger.info("Removing seconds and microseconds to establish assert tolerance to minutes...")
+        next_interval_run_at = next_interval_run_at.astimezone(pytz.utc).replace(microsecond=0).replace(second=0)
+        context_next_interval_run_at = (
+            context["next_interval_run_at"].astimezone(pytz.utc).replace(microsecond=0).replace(second=0)
+        )
+
+        assert next_interval_run_at == context_next_interval_run_at
 
     # https://docs.djangoproject.com/en/4.2/topics/testing/advanced/#example
     def test_item_list_page_renders_correctly(self, request_with_user: WSGIRequest) -> None:

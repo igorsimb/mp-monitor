@@ -57,37 +57,37 @@
                     {% render_field form.email class="form-control border-secondary-subtle shadow shadow-sm" id="email" placeholder="example@site.com" %}
                     <label for="email" class="ms-2">Почта</label>
                 </div>
-            {% if form.email.errors %}
-                        <ul class="ms-3">
-                            {% for error in form.email.errors %}
-                                <li><small class="text-danger">{{ error|escape }}</small></li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                {% if form.email.errors %}
+                    <ul class="ms-3">
+                        {% for error in form.email.errors %}
+                            <li><small class="text-danger">{{ error|escape }}</small></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
 
                 <div class="col-12 form-floating">
                     {% render_field form.password1 class="form-control border-secondary-subtle shadow shadow-sm" id="password1" placeholder="Пароль" %}
                     <label for="password1" class="ms-2">Пароль</label>
                 </div>
-                 {% if form.password1.errors %}
-                        <ul class="ms-3">
-                            {% for error in form.password1.errors %}
-                                <li><small class="text-danger">{{ error|escape }}</small></li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                {% if form.password1.errors %}
+                    <ul class="ms-3">
+                        {% for error in form.password1.errors %}
+                            <li><small class="text-danger">{{ error|escape }}</small></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
 
                 <div class="col-12 form-floating overflow-hidden">
                     {% render_field form.password2 class="form-control border-secondary-subtle shadow shadow-sm" id="password2" placeholder="Подтвердите пароль" %}
                     <label for="password2" class="ms-2">Подтвердите пароль</label>
                 </div>
-            {% if form.password2.errors %}
-                        <ul class="ms-3">
-                            {% for error in form.password2.errors %}
-                                <li><small class="text-danger">{{ error|escape }}</small></li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                {% if form.password2.errors %}
+                    <ul class="ms-3">
+                        {% for error in form.password2.errors %}
+                            <li><small class="text-danger">{{ error|escape }}</small></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
 
                 <div class="col-12 mt-5">
                     <button type="submit"
