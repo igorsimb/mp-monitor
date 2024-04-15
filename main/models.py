@@ -184,10 +184,10 @@ def add_perms_to_group(sender, instance, created, **kwargs) -> None:  # type: ig
 # TODO: creation in view and connecting to tenant and items to be implemented in future
 class Schedule(models.Model):
     class Period(models.TextChoices):
-        SECONDS = "seconds", _("Секунд")
-        MINUTES = "minutes", _("Минут")
-        HOURS = "hours", _("Часов")
-        DAYS = "days", _("Дней")
+        SECONDS = "seconds", _("Секунды")
+        MINUTES = "minutes", _("Минуты")
+        HOURS = "hours", _("Часы")
+        DAYS = "days", _("Дни")
 
     type = models.CharField(
         max_length=50,

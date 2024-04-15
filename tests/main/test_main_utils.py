@@ -10,7 +10,7 @@ from django.test import RequestFactory
 from django.utils.safestring import mark_safe
 from pytest_mock import MockerFixture
 
-from factories import ItemFactory, UserFactory
+from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory
 from main.exceptions import InvalidSKUException
 from main.models import Item, Tenant
 from main.utils import (
@@ -24,6 +24,7 @@ from main.utils import (
     is_sku_format_valid,
     show_invalid_skus_message,
     activate_parsing_for_selected_items,
+    get_interval_russian_translation,
 )
 
 logger = logging.getLogger(__name__)
@@ -551,3 +552,39 @@ class TestActivateParsingForSelectedItems:
         logger.info("Checking that other items are not affected...")
         for item in other_items:
             assert not Item.objects.get(sku=item.sku).is_parser_active
+
+
+class TestGetIntervalRussianTranslation:
+    @pytest.mark.parametrize(
+        "every,period,expected",
+        [
+            (1, "seconds", "каждую секунду"),
+            (2, "seconds", "каждые 2 секунды"),
+            (5, "seconds", "каждые 5 секунд"),
+            (21, "seconds", "каждую 21 секунду"),
+            (22, "seconds", "каждые 22 секунды"),
+            (25, "seconds", "каждые 25 секунд"),
+            (1, "minutes", "каждую минуту"),
+            (2, "minutes", "каждые 2 минуты"),
+            (5, "minutes", "каждые 5 минут"),
+            (21, "minutes", "каждую 21 минуту"),
+            (22, "minutes", "каждые 22 минуты"),
+            (25, "minutes", "каждые 25 минут"),
+            (1, "hours", "каждый час"),
+            (2, "hours", "каждые 2 часа"),
+            (5, "hours", "каждые 5 часов"),
+            (21, "hours", "каждый 21 час"),
+            (22, "hours", "каждые 22 часа"),
+            (25, "hours", "каждые 25 часов"),
+            (1, "days", "каждый день"),
+            (2, "days", "каждые 2 дня"),
+            (5, "days", "каждые 5 дней"),
+            (21, "days", "каждый 21 день"),
+            (22, "days", "каждые 22 дня"),
+            (25, "days", "каждые 25 дней"),
+        ],
+    )
+    def test_get_interval_russian_translation(self, every, period, expected):
+        task = PeriodicTaskFactory(interval=IntervalScheduleFactory(every=every, period=period))
+        result = get_interval_russian_translation(task)
+        assert result == expected

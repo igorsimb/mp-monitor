@@ -28,6 +28,7 @@ from .utils import (
     show_invalid_skus_message,
     activate_parsing_for_selected_items,
     task_name,
+    get_interval_russian_translation,
 )
 
 user = get_user_model()
@@ -67,11 +68,7 @@ class ItemListView(PermissionListMixin, ListView):
         context["scrape_interval_form"] = scrape_interval_form
         if periodic_task:
             schedule_interval = periodic_task.schedule.run_every
-
-            # django-celery-beat translation problem: https://github.com/igorsimb/mp-monitor/issues/115
-            # temporal workaround for singular intervals: I set min="2" into the input field
-            # context["scrape_interval_task"] = f"каждые {periodic_task.interval.every} {periodic_task.interval.period}"  # каждые 24 hours
-            context["scrape_interval_task"] = periodic_task  # каждые 24 часы
+            context["scrape_interval_task"] = get_interval_russian_translation(periodic_task)
             if periodic_task.last_run_at:
                 # covered in TestItemListView.test_next_interval_run_is_calculated_correctly_in_context
                 context["next_interval_run_at"] = periodic_task.last_run_at + schedule_interval  # pragma: no cover
@@ -223,6 +220,14 @@ def create_scrape_interval_task(
                 messages.error(
                     request,
                     "Ошибка создания расписания. Убедитесь, что поле интервала заполнено.",
+                )
+                return redirect("item_list")
+
+            # This occurs when no time unit is selected (e.g. minutes, hours, days).
+            except AttributeError:
+                messages.error(
+                    request,
+                    "Ошибка создания расписания. Убедитесь, что выбрана единица времени.",
                 )
                 return redirect("item_list")
             if created:

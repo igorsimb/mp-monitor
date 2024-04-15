@@ -12,7 +12,7 @@
 
     <div class=mb-2">
         {% if scrape_interval_task %}
-            <span class="fw-bold">Текущее расписание:</span> {{ scrape_interval_task.interval }}<br>
+            <span class="fw-bold">Текущее расписание:</span> {{ scrape_interval_task }}<br>
             <span class="fw-bold">Следующий парсинг:</span> {{ next_interval_run_at }}
         {% else %}
             <small class="text-body-secondary">Нет активных расписаний</small>
