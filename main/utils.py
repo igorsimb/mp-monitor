@@ -558,3 +558,47 @@ def periodic_task_exists(request: WSGIRequest) -> bool:
         return True
     except PeriodicTask.DoesNotExist:
         return False
+
+
+def get_interval_russian_translation(periodic_task: PeriodicTask) -> str:
+    """
+    Translates the interval of a periodic task into Russian.
+
+    It takes into account the grammatical rules of the Russian language for numbers and units of time.
+    The function supports translation for seconds, minutes, hours, and days.
+
+    Args:
+        periodic_task (PeriodicTask): The periodic task object which contains the interval to be translated.
+
+    Returns:
+        str: A string in Russian that represents the interval of the periodic task.
+             The string is in the format: "{every} {time_unit_number} {time_unit_name}" (e.g. "каждые 25 минут")
+    """
+    time_unit_number: int = periodic_task.interval.every
+    time_unit_name: str = periodic_task.interval.period
+
+    translations = {
+        "seconds": ["секунду", "секунды", "секунд"],
+        "minutes": ["минуту", "минуты", "минут"],
+        "hours": ["час", "часа", "часов"],
+        "days": ["день", "дня", "дней"],
+    }
+
+    every = "каждые"
+
+    # 1, 21, 31, etc
+    if time_unit_number % 10 == 1 and time_unit_number % 100 != 11:
+        every = "каждую" if time_unit_name in ["seconds", "minutes"] else "каждый"
+        time_unit_name = translations[time_unit_name][0]
+
+    # 2-4, 22-24, 32-34, etc, excluding numbers ending in 12-14 (e.g. 12-14, 112-114, etc)
+    elif 2 <= time_unit_number % 10 <= 4 and (time_unit_number % 100 < 12 or time_unit_number % 100 > 14):
+        time_unit_name = translations[time_unit_name][1]
+
+    else:
+        time_unit_name = translations[time_unit_name][2]
+
+    if time_unit_number == 1:
+        return f"{every} {time_unit_name}"
+    else:
+        return f"{every} {time_unit_number} {time_unit_name}"
