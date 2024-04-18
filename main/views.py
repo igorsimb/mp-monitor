@@ -54,7 +54,7 @@ class ItemListView(PermissionListMixin, ListView):
 
         form = ScrapeForm()
         update_items_form = UpdateItemsForm()
-        scrape_interval_form = ScrapeIntervalForm()
+        scrape_interval_form = ScrapeIntervalForm(user=self.request.user)
 
         try:
             periodic_task = PeriodicTask.objects.get(name=task_name(self.request.user))
@@ -186,7 +186,7 @@ def create_scrape_interval_task(
     """
 
     if request.method == "POST":
-        scrape_interval_form = ScrapeIntervalForm(request.POST)
+        scrape_interval_form = ScrapeIntervalForm(request.POST or None, user=request.user)
 
         if scrape_interval_form.is_valid():
             logger.info("Starting the task")
@@ -276,7 +276,7 @@ def create_scrape_interval_task(
             request,
             "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.",
         )
-        scrape_interval_form = ScrapeIntervalForm()
+        scrape_interval_form = ScrapeIntervalForm(user=request.user)
 
     context = {"scrape_interval_form": scrape_interval_form}
     return render(request, "main/item_list.html", context)
@@ -297,7 +297,7 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
     """
     existing_task = get_object_or_404(PeriodicTask, name=task_name(request.user))
     if request.method == "POST":
-        form = ScrapeIntervalForm(request.POST or None, instance=existing_task)
+        form = ScrapeIntervalForm(request.POST or None, instance=existing_task, user=request.user)
 
         if form.is_valid():
             skus = request.POST.getlist("selected_items")
@@ -324,9 +324,9 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
                 request,
                 "Что-то пошло не так. Попробуйте еще раз или обратитесь к администратору.",
             )
-            form = ScrapeIntervalForm()
+            form = ScrapeIntervalForm(user=request.user)
     else:
-        form = ScrapeIntervalForm()
+        form = ScrapeIntervalForm(user=request.user)
 
     context = {"scrape_interval_form": form}
     return render(request, "main/item_list.html", context)
