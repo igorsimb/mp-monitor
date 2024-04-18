@@ -8,16 +8,6 @@
 {% block content %}
 
     <main class="flex-shrink-0 container mt-5">
-
-{#    <div x-data="{ tab: 'foo' }">#}
-{#    <button :class="{ 'active': tab === 'foo' }" :class="{ 'hide': tab === 'bar' }" @click="tab = 'foo'">Foo</button>#}
-{#    <button :class="{ 'active': tab === 'bar' }" :class="{ 'hide': tab === 'foo' }" @click="tab = 'bar'">Bar</button>#}
-{##}
-{#    <div x-show="tab === 'foo'">Foo Content</div>#}
-{#    <div x-show="tab === 'bar'">Bar Content</div>#}
-{#    </div>#}
-
-
         <div>
             {% if messages %}
                 {% for message in messages %}
@@ -32,32 +22,6 @@
         </div>
 
         <!-- START Add items collapse -->
-        <!-- option for button 1 -->
-        {#        <p class="mt-2">#}
-        {#            <a class="btn btn-sm btn-outline-primary rounded-circle"#}
-        {#               title="Добавить новые товары для парсинга"#}
-        {#               data-bs-toggle="collapse"#}
-        {#               href="#addItems" role="button"#}
-        {#               aria-expanded="false"#}
-        {#               aria-controls="addItems">#}
-        {#                <span class="material-symbols-sharp custom-material-icon">add</span>#}
-        {#            </a>#}
-        {#        </p>#}
-
-        <!-- option for button 2 -->
-        {#        <input type="checkbox"#}
-        {#               data-bs-toggle="collapse"#}
-        {#               href="#addItems" role="button"#}
-        {#               aria-expanded="false"#}
-        {#               aria-controls="addItems"#}
-        {#               class="btn-check" id="btn-check-outlined" autocomplete="off">#}
-        {#        <label class="btn btn-outline-primary" for="btn-check-outlined">#}
-        {#            <span class="material-symbols-sharp custom-material-icon">add</span> Добавить товары#}
-        {#        </label><br>#}
-        {##}
-        {##}
-
-        <!-- option for button 3 -->
         <a class="toggle" title="Добавить новые товары для парсинга">
             <input type="checkbox"
                    data-bs-toggle="collapse"
@@ -87,34 +51,44 @@
         <!-- END Add items collapse -->
 
 
-        <!-- Manual/Schedule tabs -->
-        <ul class="nav nav-tabs nav-fill bg-gradient mt-4" id="updateTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="manual-update-tab" data-bs-toggle="tab" type="button"
-                        data-bs-target="#manual-tab-pane" role="tab" aria-controls="manual-tab-pane"
-                        aria-selected="true">Обновить вручную
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-pane"
-                        type="button" role="tab" aria-controls="schedule-tab-pane" aria-selected="false">
-                    Создать Автоматическое Расписание
-                </button>
-            </li>
-        </ul>
+        <!-- Manual / Schedule tabs -->
+        <div x-data="{ tab: $persist('manual') }">
+            <ul class="nav nav-tabs nav-fill bg-gradient mt-4" id="updateTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button x-on:click="tab='manual'"
+                            {# add class 'active' if 'tab' value in localStorage == 'manual' else remove it #}
+                            x-bind:class="{ 'active': tab=='manual'}"
+                            class="nav-link" id="manual-update-tab" data-bs-toggle="tab" type="button"
+                            data-bs-target="#manual-tab-pane" role="tab" aria-controls="manual-tab-pane"
+                            aria-selected="true">Обновить вручную
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button x-on:click="tab='schedule'"
+                            x-bind:class="{ 'active': tab=='schedule'}"
+                            class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-pane"
+                            type="button" role="tab" aria-controls="schedule-tab-pane" aria-selected="false">
+                        Создать Автоматическое Расписание
+                    </button>
+                </li>
+            </ul>
 
-        <!-- Tab contents -->
-        <div class="tab-content" id="myTabContent">
-            <div class="tab-pane show active" id="manual-tab-pane" role="tabpanel" aria-labelledby="manual-update-tab"
-                 tabindex="0">
-                {% include "main/partials/manual_update_items.html" %}
-            </div>
-            <div class="tab-pane" id="schedule-tab-pane" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
-                {% if scrape_interval_task %}
-                    {% include "main/partials/update_interval_form.html" %}
-                {% else %}
-                    {% include "main/partials/create_interval_form.html" %}
-                {% endif %}
+            <!-- Tab contents -->
+            <div class="tab-content" id="myTabContent">
+                <div x-bind:class="{ 'show active': tab=='manual'}"
+                        class="tab-pane" id="manual-tab-pane" role="tabpanel"
+                     aria-labelledby="manual-update-tab"
+                     tabindex="0">
+                    {% include "main/partials/manual_update_items.html" %}
+                </div>
+                <div x-bind:class="{ 'show active': tab=='schedule'}"
+                     class="tab-pane" id="schedule-tab-pane" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
+                    {% if scrape_interval_task %}
+                        {% include "main/partials/update_interval_form.html" %}
+                    {% else %}
+                        {% include "main/partials/create_interval_form.html" %}
+                    {% endif %}
+                </div>
             </div>
         </div>
 
