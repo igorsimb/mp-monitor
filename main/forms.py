@@ -1,7 +1,10 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.forms import ModelForm
 
 from main.models import Schedule
+
+user = get_user_model()
 
 
 # Currently not used because sku format validation is done by is_sku_format_valid utility function
@@ -37,3 +40,19 @@ class ScrapeIntervalForm(ModelForm):
     class Meta:
         model = Schedule
         fields = ["interval_value", "period"]
+
+    def __init__(self, *args, **kwargs):
+        """
+        Remove seconds and minutes choices for non-staff and non-superusers
+        Make sure to pass `user` when instantiating the form,
+        e.g. form = ScrapeIntervalForm(request.POST or None, user=request.user)
+        """
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        # seconds and minutes choices are only for staff and superusers
+        if user is not None and not user.is_staff and not user.is_superuser:
+            self.fields["period"].choices = [
+                choice
+                for choice in self.fields["period"].choices
+                if choice[0] not in [Schedule.Period.SECONDS, Schedule.Period.MINUTES]
+            ]

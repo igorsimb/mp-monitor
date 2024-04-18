@@ -491,7 +491,7 @@ class TestCreateScrapeIntervalTaskView:
     def valid_form_data(self) -> dict[str, Any]:
         return {
             "interval_value": 60,
-            "period": "seconds",
+            "period": "hours",
         }
 
     @pytest.mark.skip
