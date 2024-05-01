@@ -24,7 +24,7 @@ class TestTenantModel:
         user = UserFactory()
 
         assert user.tenant is not None
-        assert user.tenant.status == user.tenant.Status.TRIALING
+        assert user.tenant.status == user.tenant.Status.ACTIVE
 
     def test_active_tenant(self) -> None:
         """Tests the active() manager method to ensure it correctly returns active tenants."""

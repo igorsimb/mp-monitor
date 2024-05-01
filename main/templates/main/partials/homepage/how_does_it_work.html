@@ -69,12 +69,34 @@
             <p>В поле формы введите необходимое число и выберите из списка нужный период. Например,
                 "Обновлять информацию с Wildberries каждые 12 часов".</p>
 
-            <button class="btn btn-success bg-gradient btn-lg px-4 rounded-pill mt-3" type="button">
-                Демо
-            </button>
-            <button class="btn btn-outline-secondary bg-gradient btn-lg px-4 rounded-pill ms-4 mt-3" type="button">
-                Регистрация
-            </button>
+{#            <a href="{% url 'demo' %}"  class="btn btn-success bg-gradient btn-lg px-4 me-md-2 mt-3 rounded-pill shadow shadow-sm">#}
+{#                Демо одним кликом#}
+{#        </a>#}
+{#            <button class="btn btn-outline-secondary bg-gradient btn-lg px-4 rounded-pill ms-4 mt-3" type="button">#}
+{#                Регистрация#}
+{#            </button>#}
+            <span x-data="{ loading: false, loadingMessage: 'Загружаем . . .' }">
+    <a hx-get="{% url 'demo' %}"
+       hx-push-url="true"
+       hx-target=".main-content"
+       hx-swap="outerHTML transition:true"
+       class="btn btn-success bg-gradient btn-lg px-4 me-md-2 my-3 rounded-pill shadow shadow-sm"
+       @click="loading = true; setTimeout(() => {
+           loadingMessage = 'Создаем демо . . .';
+           setTimeout(() => {
+               loadingMessage = 'Почти готово . . .';
+           }, 2000);
+       }, 2000)"
+       x-show="!loading">
+        <span>Демо одним кликом</span>
+    </a>
+
+    <button x-show="loading"
+            class="btn btn-success bg-gradient btn-lg px-4 me-md-2 my-3 rounded-pill shadow shadow-sm" disabled>
+        <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+        <span role="status" x-text="loadingMessage"></span>
+    </button>
+</span>
         </div>
     </div>
 

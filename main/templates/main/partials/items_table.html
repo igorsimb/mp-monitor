@@ -2,7 +2,7 @@
 {% load humanize %}
 
 
-<div class="table-responsive">
+<div class="table-responsive" id="itemsTable">
     <table class="table table-hover table-bordered border-secondary-subtle mt-4">
         <thead class="table-dark">
         <tr class="text-center">
@@ -10,7 +10,7 @@
                 <input id="select-all" data-select-all="true" class="form-check-input mt-0" type="checkbox" aria-label="Выделить все">
             </th>
             <th>Артикул</th>
-            <th>Наименование товара</th>
+            <th id="itemName">Наименование товара</th>
             {#                <th>СПП</th>#}
             <th>Цена WB</th>
             <th class="fit"><a class="text-decoration-none text-light" title="По сравнению с предыдущим обновлением">Разница %</a></th>

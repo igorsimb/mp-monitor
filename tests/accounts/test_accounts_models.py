@@ -7,7 +7,7 @@ from django.dispatch import Signal
 
 from accounts.models import CustomUser, add_user_to_group
 from accounts.models import Tenant
-from tests.factories import UserFactory
+from tests.factories import UserFactory, UserQuotaFactory
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,11 @@ class TestCustomUserModel:
         assert user.email == "testuser@test.com"
         assert user.password == "testpassword"
         assert user.username == "testuser"
+
+    @pytest.mark.demo_user
+    def test_demo_user_creation(self):
+        user = UserFactory(is_demo_user=True)
+        assert user.is_demo_user is True
 
     def test_tenant_is_created_automatically_from_email(self):
         user = User.objects.create(email="testuser2@test.com", username="testuser2", password="testpassword")
@@ -98,3 +103,17 @@ class TestAddUserToGroup:
         logger.info("New group: %s", new_group)
         assert old_group not in user.groups.all()
         assert new_group in user.groups.all()
+
+
+class TestUserQuotaModel:
+    def test_user_quota_creation(self):
+        user = UserFactory()
+        quota = UserQuotaFactory(user=user)
+        assert quota.user == user
+
+    def test_user_quota_update(self):
+        user = UserFactory()
+        quota = UserQuotaFactory(user=user)
+        quota.user_lifetime_hours = 10
+        quota.save()
+        assert quota.user_lifetime_hours == 10

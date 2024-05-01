@@ -7,14 +7,29 @@
         <div class="row">
             <div class="col-md-10">
                 <div>
-                    <div>
+                    <div class="mb-4">
                         Здесь вы можете обновить информацию о товарах вне зависимости от текущего расписания.
                         Для этого выберите товары и нажмите на "Обновить вручную". Это никак не повлияет на расписание.
                     </div>
-                    <button type="submit" class="btn btn-outline-primary rounded-pill mt-4">
-                        <span class="material-symbols-sharp">touch_app</span>
-                        Обновить вручную
-                    </button>
+
+                    <!-- Disable the button if quota for demo user is reached -->
+                    {% if user.is_demo_user and user_quota.manual_updates <= 0 %}
+                        <button type="submit" class="btn btn-outline-primary rounded-pill disabled">
+                            <span class="material-symbols-sharp">touch_app</span>
+                            Обновить вручную
+                        </button>
+                        <div class="text-danger">Достигнуто максимальное количество обновлений вручную для демо-пользователя.
+                        <a href="{% url 'account_logout' %}?next={% url 'account_signup' %}" class="link-danger">Зарегистрируйтесь</a>, чтобы снять это ограничение.
+                        </div>
+
+                    {% else %}
+                        <button type="submit" class="btn btn-outline-primary rounded-pill mt-4">
+                            <span class="material-symbols-sharp">touch_app</span>
+                            Обновить вручную
+                        </button>
+                    {% endif %}
+
+
                 </div>
             </div>
         </div>

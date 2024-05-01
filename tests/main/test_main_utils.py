@@ -10,14 +10,14 @@ from django.test import RequestFactory
 from django.utils.safestring import mark_safe
 from pytest_mock import MockerFixture
 
+import config
 from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory
-from main.exceptions import InvalidSKUException
+from main.exceptions import InvalidSKUException, QuotaExceededException
 from main.models import Item, Tenant
 from main.utils import (
     uncheck_all_boxes,
     scrape_item,
     show_successful_scrape_message,
-    MAX_ITEMS_ON_SCREEN,
     is_at_least_one_item_selected,
     scrape_items_from_skus,
     update_or_create_items,
@@ -25,6 +25,7 @@ from main.utils import (
     show_invalid_skus_message,
     activate_parsing_for_selected_items,
     get_interval_russian_translation,
+    update_user_quota_for_scheduled_updates,
 )
 
 logger = logging.getLogger(__name__)
@@ -338,8 +339,8 @@ class TestShowSuccessfulScrapeMessage(TestMessages):
         messages.success.assert_called_once_with(mock_success_message_request, expected_message)
 
     def test_message_multiple_items_scraped_max(self, mock_success_message_request: HttpRequest) -> None:
-        logger.info("Creating %s items", MAX_ITEMS_ON_SCREEN)
-        items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN)
+        logger.info("Creating %s items", config.MAX_ITEMS_ON_SCREEN)
+        items_data = self.create_items_data(config.MAX_ITEMS_ON_SCREEN)
 
         show_successful_scrape_message(mock_success_message_request, items_data)
         expected_message = mark_safe(
@@ -351,8 +352,8 @@ class TestShowSuccessfulScrapeMessage(TestMessages):
         messages.success.assert_called_once_with(mock_success_message_request, expected_message)
 
     def test_message_multiple_items_scraped_less_than_max(self, mock_success_message_request: HttpRequest) -> None:
-        logger.info("Creating %s items", (MAX_ITEMS_ON_SCREEN - 1))
-        items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN - 1)
+        logger.info("Creating %s items", (config.MAX_ITEMS_ON_SCREEN - 1))
+        items_data = self.create_items_data(config.MAX_ITEMS_ON_SCREEN - 1)
 
         show_successful_scrape_message(mock_success_message_request, items_data)
         expected_message = mark_safe(
@@ -360,12 +361,12 @@ class TestShowSuccessfulScrapeMessage(TestMessages):
             + "".join([f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data])
             + "</ul>"
         )
-        assert len(items_data) < MAX_ITEMS_ON_SCREEN
+        assert len(items_data) < config.MAX_ITEMS_ON_SCREEN
         messages.success.assert_called_once_with(mock_success_message_request, expected_message)
 
     def test_message_multiple_items_scraped_more_than_max(self, mock_success_message_request: HttpRequest) -> None:
-        logger.info("Creating %s items", (MAX_ITEMS_ON_SCREEN + 1))
-        items_data = self.create_items_data(MAX_ITEMS_ON_SCREEN + 1)
+        logger.info("Creating %s items", (config.MAX_ITEMS_ON_SCREEN + 1))
+        items_data = self.create_items_data(config.MAX_ITEMS_ON_SCREEN + 1)
 
         show_successful_scrape_message(mock_success_message_request, items_data)
         messages.success.assert_called_once_with(
@@ -588,3 +589,27 @@ class TestGetIntervalRussianTranslation:
         task = PeriodicTaskFactory(interval=IntervalScheduleFactory(every=every, period=period))
         result = get_interval_russian_translation(task)
         assert result == expected
+
+
+@pytest.mark.demo_user
+class TestUpdateUserQuotaForScheduledUpdates:
+    def test_exception_raised_if_no_quota(self):
+        """Exception is raised if user has no quota left"""
+        user = UserFactory(is_demo_user=True)
+        user_quota = user.user_quotas.get(user=user)
+
+        assert user_quota.scheduled_updates == 0
+        with pytest.raises(QuotaExceededException):
+            update_user_quota_for_scheduled_updates(user)
+        assert user_quota.scheduled_updates == 0
+
+    def test_exception_not_raised_if_quota(self):
+        user = UserFactory(is_demo_user=True)
+        user_quota = user.user_quotas.get(user=user)
+        user_quota.scheduled_updates = 1
+        user_quota.save()
+
+        assert user_quota.scheduled_updates == 1
+        update_user_quota_for_scheduled_updates(user)
+        user_quota.refresh_from_db()
+        assert user_quota.scheduled_updates == 0

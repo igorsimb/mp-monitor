@@ -7,92 +7,115 @@
 
 {% block content %}
 
-    <main class="flex-shrink-0 container mt-5">
-        <div>
-            {% if messages %}
-                {% for message in messages %}
-                    <div {% if message.tags %}
-                        class="alert alert-{{ message.tags }} alert-dismissible fade show"{% endif %}
-                        role="alert">
-                        {{ message|safe }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<main class="flex-shrink-0 container mt-5 slide-transition">
+    <!-- Offcanvas showing admin panel for demo users -->
+    {% if request.user.is_superuser %}
+        <div class="offcanvas offcanvas-end"
+             style="--bs-offcanvas-height: 100px; --bs-offcanvas-bg: transparent;--bs-offcanvas-border-width: 0;"
+             tabindex="-1" id="offcanvasAdmin"
+             aria-labelledby="offcanvasAdminLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasAdminLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <div class="p-3 mb-3 bg-light rounded border border-secondary shadow shadow-sm"
+                     style="width: fit-content">
+                    <div class="fw-bold">All demo users: {{ demo_users|length }}</div>
+                    <div class="text-secondary">Inactive demo users: {{ inactive_demo_users|length }}</div>
+                    <div class="text-success">Active demo users: {{ non_expired_active_demo_users|length }}</div>
+                    <div class="text-danger">Expired active demo users: {{ expired_active_demo_users|length }}
+                        (delete us)
                     </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-
-        <!-- START Add items collapse -->
-        <a class="toggle" title="Добавить новые товары для парсинга">
-            <input type="checkbox"
-                   data-bs-toggle="collapse"
-                   href="#addItems" role="button"
-                   aria-expanded="false"
-                   aria-controls="addItems">
-            <span class="button"></span>
-            <span class="material-symbols-sharp label text-primary">add</span>
-        </a>
-
-        <div class="collapse" id="addItems">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="mb-3">
-                        <form method="POST" action="{% url 'scrape_item' skus=form.skus.value %}">
-                            {% csrf_token %}
-
-                            <label for="skus" class="form-label h2">Добавить новые товары для парсинга</label>
-                            {% render_field form.skus class="form-control add-items focus-ring focus-ring-remove border-secondary-subtle shadow shadow-sm" id="skus" rows="3" placeholder=form.skus.help_text %}
-                            <button type="submit" class="btn btn-outline-primary rounded-pill mt-2 mb-2">Добавить
-                            </button>
-                        </form>
-                    </div>
+                    <form method="POST" action="{% url 'check_expired_demo_users' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger mt-3">Delete expired active demo users</button>
+                    </form>
                 </div>
             </div>
         </div>
-        <!-- END Add items collapse -->
+    {% endif %}
 
-
-        <!-- Manual / Schedule tabs -->
-        <div x-data="{ tab: $persist('manual') }">
-            <ul class="nav nav-tabs nav-fill bg-gradient mt-4" id="updateTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button x-on:click="tab='manual'"
-                            {# add class 'active' if 'tab' value in localStorage == 'manual' else remove it #}
-                            x-bind:class="{ 'active': tab=='manual'}"
-                            class="nav-link" id="manual-update-tab" data-bs-toggle="tab" type="button"
-                            data-bs-target="#manual-tab-pane" role="tab" aria-controls="manual-tab-pane"
-                            aria-selected="true">Обновить вручную
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button x-on:click="tab='schedule'"
-                            x-bind:class="{ 'active': tab=='schedule'}"
-                            class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-pane"
-                            type="button" role="tab" aria-controls="schedule-tab-pane" aria-selected="false">
-                        Создать Автоматическое Расписание
-                    </button>
-                </li>
-            </ul>
-
-            <!-- Tab contents -->
-            <div class="tab-content" id="myTabContent">
-                <div x-bind:class="{ 'show active': tab=='manual'}"
-                        class="tab-pane" id="manual-tab-pane" role="tabpanel"
-                     aria-labelledby="manual-update-tab"
-                     tabindex="0">
-                    {% include "main/partials/manual_update_items.html" %}
-                </div>
-                <div x-bind:class="{ 'show active': tab=='schedule'}"
-                     class="tab-pane" id="schedule-tab-pane" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
-                    {% if scrape_interval_task %}
-                        {% include "main/partials/update_interval_form.html" %}
-                    {% else %}
-                        {% include "main/partials/create_interval_form.html" %}
-                    {% endif %}
-                </div>
-            </div>
+    {% if request.user.is_active_demo_user %}
+        <div class="text-center text-danger mb-3">
+            <h2 class="h2 text-danger">
+                Демо. Имеются определенные ограничения
+                <a title="Кликните для получения информации об ограничениях"
+                   class="material-symbols-sharp text-secondary text-decoration-none"
+                   style="vertical-align: middle;cursor: pointer;"
+                   data-bs-toggle="offcanvas" href="#offcanvasDemo" role="button" aria-controls="offcanvasDemo">
+                    info
+                </a>
+            </h2>
+            <small>По окончанию демо все данные будут удалены</small>
         </div>
 
-    </main>
+        {% include "main/partials/demo_user_quota.html" %}
+
+    {% endif %}
+    <div>
+        {% if messages %}
+            {% for message in messages %}
+                <div {% if message.tags %}
+                    class="alert alert-{{ message.tags }} alert-dismissible fade show"{% endif %}
+                    role="alert">
+                    {{ message|safe }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!--Add items form -->
+    {% include "main/partials/add_items_form.html" %}
+
+    <!-- Manual / Schedule tabs -->
+    <div x-data="{ tab: $persist('manual') }" class="mt-5">
+        <span id="manualAutoTabs">
+        <ul class="nav nav-tabs nav-fill bg-gradient mt-4" id="updateTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button  id="manual-update-tab"
+                        x-on:click="tab='manual'"
+                        {# add class 'active' if 'tab' value in localStorage == 'manual' else remove it #}
+                        x-bind:class="{ 'active fw-bold': tab=='manual'}"
+                        class="nav-link" data-bs-toggle="tab" type="button"
+                        data-bs-target="#manual-tab-pane" role="tab" aria-controls="manual-tab-pane"
+                        aria-selected="true">Обновить вручную
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button id="schedule-update-tab"
+                        x-on:click="tab='schedule'"
+                        x-bind:class="{ 'active fw-bold': tab=='schedule'}"
+                        class="nav-link"data-bs-toggle="tab" data-bs-target="#schedule-tab-pane"
+                        type="button" role="tab" aria-controls="schedule-tab-pane" aria-selected="false">
+                    Создать Автоматическое Расписание
+                </button>
+            </li>
+        </ul>
+        </span>
+
+        <!-- Tab contents -->
+        <div class="tab-content" id="myTabContent">
+            <div x-bind:class="{ 'show active': tab=='manual'}"
+                 class="tab-pane" id="manual-tab-pane" role="tabpanel"
+                 aria-labelledby="manual-update-tab"
+                 tabindex="0">
+                {% include "main/partials/manual_update_items.html" %}
+            </div>
+            <div x-bind:class="{ 'show active': tab=='schedule'}"
+                 class="tab-pane" id="schedule-tab-pane" role="tabpanel" aria-labelledby="schedule-tab"
+                 tabindex="0">
+                {% if scrape_interval_task %}
+                    {% include "main/partials/update_interval_form.html" %}
+                {% else %}
+                    {% include "main/partials/create_interval_form.html" %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</main>
 
 
 {% endblock content %}

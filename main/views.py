@@ -1,18 +1,23 @@
 import logging
+from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 from django.views.generic import ListView, DetailView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
+import config
+from .exceptions import QuotaExceededException
 from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm
 from .models import Item, Price
 from .utils import (
@@ -29,6 +34,10 @@ from .utils import (
     activate_parsing_for_selected_items,
     task_name,
     get_interval_russian_translation,
+    get_user_quota,
+    update_user_quota_for_max_allowed_sku,
+    update_user_quota_for_manual_updates,
+    update_user_quota_for_scheduled_updates,
 )
 
 user = get_user_model()
@@ -42,7 +51,7 @@ def index(request):
     return render(request, "main/index.html")
 
 
-class ItemListView(PermissionListMixin, ListView):
+class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
     # TODO: add min/max pills if min or max
     model = Item
     context_object_name = "items"
@@ -55,6 +64,17 @@ class ItemListView(PermissionListMixin, ListView):
         form = ScrapeForm()
         update_items_form = UpdateItemsForm()
         scrape_interval_form = ScrapeIntervalForm(user=self.request.user)
+        demo_users = user.objects.filter(is_demo_user=True)
+        inactive_demo_users = user.objects.filter(is_demo_user=True, is_active=False)
+        active_demo_users = user.objects.filter(is_demo_user=True, is_active=True)
+        expired_active_demo_users = [user for user in active_demo_users if user.is_demo_expired]
+        non_expired_active_demo_users = [user for user in active_demo_users if not user.is_demo_expired]
+        user_quota = get_user_quota(self.request.user)
+
+        time_since_user_created = timezone.now() - self.request.user.created_at
+        remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
+        remaining_hours = remaining_time.seconds // 3600
+        remaining_minutes = (remaining_time.seconds % 3600) // 60
 
         try:
             periodic_task = PeriodicTask.objects.get(name=task_name(self.request.user))
@@ -64,8 +84,18 @@ class ItemListView(PermissionListMixin, ListView):
         sku = None
         context["sku"] = sku
         context["form"] = form
+        context["demo_users"] = demo_users
+        context["inactive_demo_users"] = inactive_demo_users
+        context["non_expired_active_demo_users"] = non_expired_active_demo_users
+        context["expired_active_demo_users"] = expired_active_demo_users
         context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
+        context["user_quota"] = user_quota
+        context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
+        context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
+        context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
+        context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
+        context["demo_scheduled_updates"] = int(config.DEMO_USER_SCHEDULED_UPDATES)
         if periodic_task:
             schedule_interval = periodic_task.schedule.run_every
             context["scrape_interval_task"] = get_interval_russian_translation(periodic_task)
@@ -108,9 +138,21 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         item_updated_at = self.object.updated_at
         price_created_at = self.object.prices.latest("created_at")
 
+        user_quota = get_user_quota(self.request.user)
+        time_since_user_created = timezone.now() - self.request.user.created_at
+        remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
+        remaining_hours = remaining_time.seconds // 3600
+        remaining_minutes = (remaining_time.seconds % 3600) // 60
+
         context["prices"] = prices_paginated
         context["item_updated_at"] = item_updated_at
         context["price_created_at"] = price_created_at
+        context["user_quota"] = user_quota
+        context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
+        context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
+        context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
+        context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
+        context["demo_scheduled_updates"] = int(config.DEMO_USER_SCHEDULED_UPDATES)
         return context
 
     def get_queryset(self) -> QuerySet[Item]:
@@ -131,6 +173,16 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
         form = ScrapeForm(request.POST)
         if form.is_valid():
             skus = form.cleaned_data["skus"]
+
+            if request.user.is_demo_user:
+                try:
+                    logger.info("Trying to update demo user quota for max allowed skus...")
+                    update_user_quota_for_max_allowed_sku(request, skus)
+                except QuotaExceededException as e:
+                    logger.warning(e.message)
+                    messages.error(request, e.message)
+                    return redirect("item_list")
+
             logger.info("Scraping items with SKUs: %s", skus)
             items_data, invalid_skus = scrape_items_from_skus(skus)
             update_or_create_items(request, items_data)
@@ -153,11 +205,20 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
         form = UpdateItemsForm(request.POST)
         if form.is_valid():
             skus = request.POST.getlist("selected_items")
+
             # Convert the list of stringified numbers to a string of integers for scrape_items_from_skus:
             skus = " ".join(skus)
             logger.info("Beginning to update items info...")
             if not is_at_least_one_item_selected(request, skus):
                 return redirect("item_list")
+
+            #  needs to be place after is_at_least_one_item_selected check to avoid updating quota despite the error
+            if request.user.is_demo_user:
+                try:
+                    update_user_quota_for_manual_updates(request)
+                except QuotaExceededException as e:
+                    messages.error(request, e.message)
+                    return redirect("item_list")
 
             # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items
             items_data, _ = scrape_items_from_skus(skus)
@@ -227,7 +288,7 @@ def create_scrape_interval_task(
             except AttributeError:
                 messages.error(
                     request,
-                    "Ошибка создания расписания. Убедитесь, что выбрана единица времени.",
+                    "Ошибка создания расписания. Убедитесь, что выбрана единица времени (например, часы, дни).",
                 )
                 return redirect("item_list")
             if created:
@@ -242,6 +303,14 @@ def create_scrape_interval_task(
                     schedule.every,
                     schedule.period,
                 )
+
+            #  needs to be place after all form checks to avoid updating quota despite the error
+            if request.user.is_demo_user:
+                try:
+                    update_user_quota_for_scheduled_updates(request.user)
+                except QuotaExceededException as e:
+                    messages.error(request, e.message)
+                    return redirect("item_list")
 
             scrape_interval_task, created = PeriodicTask.objects.update_or_create(
                 name=task_name(request.user),

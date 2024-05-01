@@ -54,4 +54,3 @@ function limitMaxLength(input) {
         input.value = input.value.slice(0, input.maxLength);
     }
 }
-

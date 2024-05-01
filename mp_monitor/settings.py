@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "django_celery_beat",
     "django_extensions",
+    "django_htmx",
     "guardian",
     "simple_history",
     "widget_tweaks",
@@ -65,6 +66,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "mp_monitor.urls"
@@ -269,6 +271,7 @@ REDIS_PORT = "6379"
 CELERY_BROKER_URL = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
 CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timout": 3600}
 CELERY_RESULT_BACKEND = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
+CELERY_TIMEZONE = "Europe/Moscow"
 
 # new
 # CELERY_BROKER_URL = "redis://redis:6379"
