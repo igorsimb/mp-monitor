@@ -1,0 +1,39 @@
+{% load widget_tweaks %}
+
+
+<div x-data="{ expanded: false }">
+    <a id="addItemsToggleLink" class="toggle" title="Добавить новые товары для парсинга" @click="expanded = ! expanded">
+        <input type="checkbox">
+        <span class="button" id="addItemsToggle"></span>
+        <span class="material-symbols-sharp label text-primary">add</span>
+    </a>
+
+    {#<div class="collapse" id="addItems" x-show="expanded" x-collapse>#}
+    <div x-show="expanded" x-collapse>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="mb-3">
+                    <form method="POST" action="{% url 'scrape_item' skus=form.skus.value %}" id="addItemsForm">
+                        {% csrf_token %}
+
+                        <label for="skus" class="form-label h2">Добавить новые товары для парсинга</label>
+                        {% render_field form.skus class="form-control add-items focus-ring focus-ring-remove border-secondary-subtle shadow shadow-sm mt-3" id="skus" rows="5" placeholder="101231520, 109670641, 31299196" %}
+                        <div class="form-text text-body-secondary">{{ form.skus.help_text }}</div>
+
+                        {% if user.is_demo_user and user_quota.max_allowed_skus <= 0 %}
+                            <button type="submit" class="btn btn-primary rounded-pill mt-3 disabled">Добавить
+                            </button>
+                            <div class="text-danger">Достигнуто максимальное количество товаров для демо-пользователя.
+                                <a href="{% url 'account_logout' %}?next={% url 'account_signup' %}"
+                                   class="link-danger">Зарегистрируйтесь</a>,
+                                чтобы снять это ограничение.
+                            </div>
+                        {% else %}
+                            <button id="addItemsButton" type="submit" class="btn btn-primary rounded-pill my-3">Добавить</button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

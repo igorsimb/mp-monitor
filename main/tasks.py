@@ -6,8 +6,14 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django_celery_beat.models import PeriodicTask
 
+from .exceptions import QuotaExceededException
 from .models import Item, Tenant
-from .utils import scrape_item, scrape_items_from_skus, update_or_create_items_interval
+from .utils import (
+    scrape_item,
+    scrape_items_from_skus,
+    update_or_create_items_interval,
+    update_user_quota_for_scheduled_updates,
+)
 
 logger = logging.getLogger(__name__)
 user = get_user_model()
@@ -56,6 +62,14 @@ def update_or_create_items_task(self, tenant_id, skus_list):
         if not input_list:
             return ""
         return ",".join([str(integer) for integer in input_list])
+
+    user_to_update = user.objects.get(tenant__id=tenant_id)
+    if user_to_update.is_demo_user:
+        try:
+            update_user_quota_for_scheduled_updates(user_to_update)
+        except QuotaExceededException as e:
+            logger.warning(e.message)
+            return
 
     skus = convert_list_to_string(skus_list)
     # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items_interval

@@ -47,3 +47,14 @@ class ItemFactory(DjangoModelFactory):
     tenant = factory.SubFactory(TenantFactory, name=UserFactory.email)
     name = factory.Sequence(lambda n: f"item_{n+1}")
     sku = factory.Sequence(lambda n: f"{n+1}" * 5)
+
+
+class UserQuotaFactory(DjangoModelFactory):
+    class Meta:
+        model = "accounts.UserQuota"
+
+    user = factory.SubFactory(UserFactory)
+    user_lifetime_hours = 0
+    max_allowed_skus = 0
+    manual_updates = 0
+    scheduled_updates = 0

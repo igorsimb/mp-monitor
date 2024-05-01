@@ -1,0 +1,39 @@
+<!-- Offcanvas showing quota for demo users -->
+<div class="offcanvas offcanvas-end"
+     style="--bs-offcanvas-height: 100px; --bs-offcanvas-bg: transparent;--bs-offcanvas-border-width: 0; width: fit-content;"
+     tabindex="-1" id="offcanvasDemo"
+     aria-labelledby="offcanvasDemoLabel">
+    <div class="p-2 mb-3 bg-light rounded border border-secondary shadow shadow-sm">
+        <div class="offcanvas-header pt-1 mb-0 pb-0">
+            <div></div>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <h4 class="offcanvas-title mb-3 text-center" id="offcanvasDemoLabel">Ограничения демо</h4>
+
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item bg-light">
+                    Демо закончится через: {{ demo_remaining_time }} / {{ demo_user_lifetime_hours }} ч.
+                </li>
+                <li class="list-group-item bg-light">
+                    Максимальное количество товаров: <span {% if user_quota.max_allowed_skus == 0 %}
+                    class="text-danger" {% endif %}>{{ user_quota.max_allowed_skus }}</span>
+                    / {{ demo_max_allowed_skus }}
+                </li>
+                <li class="list-group-item bg-light">
+                    Ручные обновления: <span {% if user_quota.manual_updates == 0 %}
+                    class="text-danger" {% endif %}>{{ user_quota.manual_updates }}</span>
+                    / {{ demo_manual_updates }}
+                </li>
+                <li class="list-group-item bg-light">
+                    Автоматические сканирования: <span {% if user_quota.scheduled_updates == 0 %}
+                    class="text-danger" {% endif %}>{{ user_quota.scheduled_updates }}</span>
+                    / {{ demo_scheduled_updates }}
+                </li>
+            </ul>
+            <hr class="mx-auto w-25">
+            <a href="{% url 'account_logout' %}?next={% url 'account_signup' %}" class="link-danger">
+                <strong>Зарегистрируйтесь</strong></a>, чтобы снять все ограничения.
+        </div>
+    </div>
+</div>

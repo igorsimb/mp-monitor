@@ -1,15 +1,17 @@
 import decimal
 import logging
-import random
 import re
 import time
 from typing import Any
+from uuid import uuid4
 
 import httpx
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Page
+from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
@@ -21,13 +23,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from main.exceptions import InvalidSKUException
+import config
+from accounts.models import UserQuota
+from main.exceptions import InvalidSKUException, QuotaExceededException
 from main.models import Item, Tenant
 
 logger = logging.getLogger(__name__)
 
-MAX_RETRIES = 10
-MAX_ITEMS_ON_SCREEN = 10
 User = get_user_model()
 
 
@@ -75,24 +77,6 @@ def scrape_live_price(sku):
         print("Parsed price is ZERO")
 
     return parsed_price
-
-
-def extract_price_before_spp_old(item: dict) -> float | None:
-    try:
-        sale_price = item["extended"]["basicPriceU"]
-        logger.info("Found sale price in item['extended']['basicPriceU']")
-    except KeyError:
-        sale_price = item["priceU"]
-        logger.info("Found sale price in item['priceU']")
-
-    if sale_price is not None and isinstance(sale_price, (int, float)):
-        try:
-            seller_price = float(sale_price) / 100
-        except (ValueError, TypeError):
-            seller_price = None
-    else:
-        seller_price = None
-    return seller_price
 
 
 def extract_price_before_spp(item: dict) -> float | None:
@@ -199,7 +183,7 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     # in case of a server error, retry the request up to MAX_RETRIES times
     # TODO: check if we can use a separate function connect() with a @retry decorator like so
     # https://github.com/federicoazzu/five_decorators/tree/main/decorators
-    while retry_count < MAX_RETRIES:
+    while retry_count < config.MAX_RETRIES:
         try:
             response = httpx.get(url, headers=headers, timeout=60)
             response.raise_for_status()
@@ -215,7 +199,8 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
                 retry_count + 1,
             )
             retry_count += 1
-            sleep_amount_sec = random.uniform(0.5, 5)
+            # using exponential backoff for HTTP requests to handle rate limits and network issues more gracefully
+            sleep_amount_sec = min(60, 2**retry_count)
             logger.info("Sleeping for %s seconds", sleep_amount_sec)
             time.sleep(sleep_amount_sec)
     logger.info("Exited while loop...")
@@ -383,7 +368,7 @@ def activate_parsing_for_selected_items(request: WSGIRequest, skus_list: list[in
 def show_successful_scrape_message(
     request: HttpRequest,
     items_data: list[dict],
-    max_items_on_screen: int = MAX_ITEMS_ON_SCREEN,
+    max_items_on_screen: int = config.MAX_ITEMS_ON_SCREEN,
 ) -> None:
     """Displays a success message to the user indicating that the scrape was successful.
     Message depends on the number of items scraped to avoid screen clutter.
@@ -602,3 +587,197 @@ def get_interval_russian_translation(periodic_task: PeriodicTask) -> str:
         return f"{every} {time_unit_name}"
     else:
         return f"{every} {time_unit_number} {time_unit_name}"
+
+
+def get_user_quota(user: User) -> UserQuota:
+    """Get the user quota for a given user.
+
+    Args:
+        user (User): The user for which to get the quota.
+
+    Returns:
+        UserQuota: The user quota for the given user.
+
+    You can access the user quota fields like this:
+        user_quota.user_lifetime_hours
+
+        user_quota.max_allowed_skus
+
+        user_quota.manual_updates
+
+        user_quota.scheduled_updates
+    """
+    try:
+        user_quota = UserQuota.objects.get(user=user)
+        logger.info("User quota found: %s", user_quota)
+    except UserQuota.DoesNotExist:
+        user_quota = None
+
+    return user_quota
+
+
+def set_user_quota(
+    user: User,
+    user_lifetime_hours: int = config.DEMO_USER_EXPIRATION_HOURS,
+    max_allowed_skus: int = config.DEMO_USER_MAX_ALLOWED_SKUS,
+    manual_updates: int = config.DEMO_USER_MANUAL_UPDATES,
+    scheduled_updates: int = config.DEMO_USER_SCHEDULED_UPDATES,
+) -> None:
+    """Set the user quota for a given user.
+
+    Args:
+        user (User): The user for which to set the quota.
+        user_lifetime_hours (int): The number of hours the user has to use the service.
+        max_allowed_skus (int): The maximum number of items the user can add to the list.
+        manual_updates (int): The number of manual updates the user can make.
+        scheduled_updates (int): The number of scheduled updates the user can make.
+
+    Returns:
+        None
+    """
+    user_quota = UserQuota.objects.get(user=user)
+    user_quota.user_lifetime_hours = user_lifetime_hours
+    user_quota.max_allowed_skus = max_allowed_skus
+    user_quota.manual_updates = manual_updates
+    user_quota.scheduled_updates = scheduled_updates
+    user_quota.save()
+
+
+def create_demo_user() -> tuple[User, str]:
+    """
+    Create a demo user with a random name and password.
+    """
+    name_uuid = str(uuid4())
+    password_uuid = str(uuid4())
+
+    try:
+        demo_user = User.objects.create(
+            username=f"demo-user-{name_uuid}",
+            email=f"demo-user-{name_uuid}@demo.com",
+            is_demo_user=True,
+            is_demo_active=True,
+        )
+        demo_user.set_password(password_uuid)
+        demo_user.save()
+    except IntegrityError as e:
+        logger.error("Integrity error during demo user creation: %s", e)
+        raise
+    except ValidationError as e:
+        logger.error("Validation error during demo user creation: %s", e)
+        raise
+    except Exception as e:
+        logger.error("Unexpected error during demo user creation: %s", e)
+        raise
+
+    set_user_quota(demo_user)
+    logger.info("Demo user created with email: %s | password: %s", demo_user.email, password_uuid)
+    return demo_user, password_uuid
+
+
+def create_demo_items(demo_user):
+    """Create demo items for the given user."""
+    items = [
+        {
+            "tenant": demo_user.tenant,
+            "name": "Таймер кухонный электронный для яиц на магните",
+            "sku": "101231520",
+            "price": 500,
+        },
+        {
+            "tenant": demo_user.tenant,
+            "name": "Гидрофильное гель-масло для умывания и очищения лица",
+            "sku": "31299196",
+            "price": 500,
+        },
+    ]
+
+    created_items = []
+    try:
+        for item in items:
+            created_item = Item.objects.create(**item)
+            created_items.append(created_item)
+        demo_user.user_quotas.update(max_allowed_skus=config.DEMO_USER_MAX_ALLOWED_SKUS - len(created_items))
+    except IntegrityError as e:
+        logger.error("Integrity error during demo items creation: %s", e)
+        raise
+    except ValidationError as e:
+        logger.error("Validation error during demo items creation: %s", e)
+        raise
+    except Exception as e:
+        logger.error("Unexpected error during demo items creation: %s", e)
+        raise
+
+    return created_items
+
+
+def no_active_demo_user(user: User) -> bool:
+    """Make sure no active demo user exists for the user.
+    Prevents the user from going directly to demo/ url and creating another demo session
+    while the first one is still active.
+    """
+    return not (user.is_authenticated and hasattr(user, "is_demo_user") and user.is_demo_user)
+
+
+def update_user_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> None:
+    """
+    Checks if the user has enough quota to scrape items and then updates the remaining user quota.
+
+    Args:
+        request: The HttpRequest object containing user and form data.
+        skus (str): The string of SKUs to check.
+    """
+    user_quota = get_user_quota(request.user)
+    skus_count = len(re.split(r"\s+|\n|,(?:\s*)", skus))  # count number of skus
+    if skus_count <= user_quota.max_allowed_skus:
+        user_quota.max_allowed_skus -= skus_count
+        user_quota.save()
+    else:
+        raise QuotaExceededException(
+            message=(
+                "Слишком много товаров. Для демо пользователей число товаров для парсинга не должно превышать"
+                f" {config.DEMO_USER_MAX_ALLOWED_SKUS}."
+            ),
+            quota_type="max_allowed_skus",
+        )
+
+
+def update_user_quota_for_manual_updates(request: HttpRequest) -> None:
+    """
+    Checks if the user has enough quota to make manual updates and then updates the remaining user quota.
+
+    Args:
+        request: The HttpRequest object containing user and form data.
+    """
+    user_quota = get_user_quota(request.user)
+    if user_quota.manual_updates > 0:
+        user_quota.manual_updates -= 1
+        user_quota.save()
+    else:
+        raise QuotaExceededException(
+            message=(
+                f"Превышен лимит обновлений вручную для демо-пользователя ({config.DEMO_USER_MANUAL_UPDATES}). "
+                "Зарегистрируйтесь, чтобы снять это ограничение."
+            ),
+            quota_type="manual_updates",
+        )
+
+
+def update_user_quota_for_scheduled_updates(user: User) -> None:
+    """
+    Checks if the user has enough quota to make scheduled updates and then updates the remaining user quota.
+
+    Args:
+        user: The User object containing the user quota.
+    """
+    user_quota = get_user_quota(user)
+    if user_quota.scheduled_updates > 0:
+        user_quota.scheduled_updates -= 1
+        user_quota.save()
+    else:
+        raise QuotaExceededException(
+            message=(
+                f"Превышен лимит обновлений по расписанию для демо-пользователя ({config.DEMO_USER_SCHEDULED_UPDATES})."
+                " Зарегистрируйтесь, чтобы снять это ограничение."
+            ),
+            quota_type="scheduled_updates",
+        )

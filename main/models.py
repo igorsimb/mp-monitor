@@ -43,7 +43,7 @@ class Tenant(models.Model):
         Status.EXEMPT,
     )
     name = models.CharField(max_length=255, unique=True)
-    status = models.IntegerField(choices=Status.choices, default=Status.TRIALING)
+    status = models.IntegerField(choices=Status.choices, default=Status.ACTIVE)
 
     objects = TenantManager()
     history = HistoricalRecords()

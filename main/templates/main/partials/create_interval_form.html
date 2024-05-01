@@ -15,7 +15,7 @@
         </div>
     </div>
 
-    <div class=mb-2">
+    <div class="mb-4">
         {% if scrape_interval_task %}
             <strong>Текущее расписание:</strong> {{ scrape_interval_task }}
         {% else %}
@@ -23,10 +23,25 @@
         {% endif %}
     </div>
 
-    <button type="submit" class="btn btn-primary rounded-pill mt-4">
-        <span class="material-symbols-sharp">schedule</span>
-        Создать расписание
-    </button>
+    <!-- Disable the button if quota for demo user is reached -->
+    {% if user.is_demo_user and user_quota.scheduled_updates <= 0 %}
+        <button type="submit" class="btn btn-primary rounded-pill disabled">
+            <span class="material-symbols-sharp">schedule</span>
+            Создать расписание
+        </button>
+        <div class="text-danger">
+            Достигнуто максимальное количество обновлений по расписанию для демо-пользователя.
+            <a href="{% url 'account_logout' %}?next={% url 'account_signup' %}"
+               class="link-danger">Зарегистрируйтесь</a>, чтобы снять это ограничение.
+        </div>
+    {% else %}
+        <button type="submit" class="btn btn-primary rounded-pill">
+            <span class="material-symbols-sharp">schedule</span>
+            Создать расписание
+        </button>
+    {% endif %}
+
+
     {% include "main/partials/items_table.html" %}
 
 </form>
