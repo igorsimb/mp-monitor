@@ -10,6 +10,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import Http404
 from django.test import RequestFactory, Client
 from django.urls import reverse
+from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 
 from accounts.models import UserQuota
@@ -102,7 +103,10 @@ class TestItemListView:
         expected_context_items = ["scrape_interval_task", "next_interval_run_at"]
 
         PeriodicTaskFactory(
-            name=task_name(user), interval=IntervalScheduleFactory(every=10, period="minutes"), args=["arg1", 1]
+            name=task_name(user),
+            interval=IntervalScheduleFactory(every=10, period="minutes"),
+            args=["arg1", 1],
+            last_run_at=timezone.now(),
         )
 
         request = request_with_user
@@ -141,7 +145,10 @@ class TestItemListView:
         user = request_with_user.user
 
         task = PeriodicTaskFactory(
-            name=task_name(user), interval=IntervalScheduleFactory(every=10, period="minutes"), args=["arg1", 1]
+            name=task_name(user),
+            interval=IntervalScheduleFactory(every=10, period="minutes"),
+            args=["arg1", 1],
+            last_run_at=timezone.now(),
         )
 
         task.last_run_at = datetime.now()

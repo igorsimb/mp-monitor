@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from celery import shared_task
 from django.contrib import messages
@@ -83,5 +82,4 @@ def update_or_create_items_task(self, tenant_id, skus_list):
         messages.error(self.request, "Расписание не найдено. Попробуйте еще раз или обратитесь в службу поддержки.")
         return
 
-    task_obj.last_run_at = datetime.now()
     task_obj.save()

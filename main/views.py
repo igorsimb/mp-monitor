@@ -99,11 +99,7 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         if periodic_task:
             schedule_interval = periodic_task.schedule.run_every
             context["scrape_interval_task"] = get_interval_russian_translation(periodic_task)
-            if periodic_task.last_run_at:
-                # covered in TestItemListView.test_next_interval_run_is_calculated_correctly_in_context
-                context["next_interval_run_at"] = periodic_task.last_run_at + schedule_interval  # pragma: no cover
-            else:
-                context["next_interval_run_at"] = periodic_task.date_changed + schedule_interval
+            context["next_interval_run_at"] = periodic_task.last_run_at + schedule_interval
         return context
 
     def get_queryset(self) -> QuerySet[Item]:
@@ -318,6 +314,7 @@ def create_scrape_interval_task(
                     "interval": schedule,
                     "task": "main.tasks.update_or_create_items_task",
                     # "start_time": timezone.now(),
+                    "last_run_at": timezone.now(),
                     "args": [request.user.tenant.id, skus_list],
                 },
             )
