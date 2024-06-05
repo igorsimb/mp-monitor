@@ -21,8 +21,8 @@
             {% include "main/partials/demo_user_quota.html" %}
         {% endif %}
 
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb p-3 bg-body-tertiary rounded-3">
+        <nav aria-label="breadcrumb" class="mb-5">
+            <ol class="breadcrumb p-2 bg-body-secondary rounded-3">
                 <li class="breadcrumb-item">
                     <a class="link-body-emphasis fw-semibold text-decoration-none" href="{% url 'item_list' %}">
                         <span class="material-symbols-sharp">arrow_back_ios_new</span>
@@ -43,7 +43,7 @@
                 <a href="https://www.wildberries.ru/catalog/{{ item.sku }}/detail.aspx"
                    class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
                    title="Посмотреть товар на Wildberries" target="_blank">
-                    На страницу товара <span class="material-symbols-sharp">open_in_new</span>
+                    Страница товара на WB<span class="material-symbols-sharp">open_in_new</span>
                 </a>
             </div>
             <div class="card-body">
