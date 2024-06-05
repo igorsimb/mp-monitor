@@ -45,14 +45,15 @@
     <title>{% block title %}{% endblock title %}</title>
 
 </head>
-<body class="d-flex flex-column h-100 main-content" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<body class="d-flex flex-column h-100 main-content" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+style="background-image: url({% static 'img/bg.png' %}); background-position: center; background-repeat: repeat;">
 
 <!-- Navigation -->
 {% if user.is_authenticated %}
     <nav class="container d-flex flex-wrap justify-content-between py-3">
         <a href="{% url 'item_list' %}"
            class="d-flex align-items-center mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-            <img src="{% static 'img/homepage/logo.jpg' %}" width="210" height="70" alt="logo" loading="eager">
+            <img src="{% static 'img/homepage/logo.png' %}" width="210" height="70" alt="logo" loading="eager">
         </a>
 
         <ul class="nav nav-pills">
@@ -80,7 +81,7 @@
     <nav class="container d-flex flex-wrap justify-content-between py-3">
         <a href="{% url 'index' %}"
            class="d-flex align-items-center mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-            <img src="{% static 'img/homepage/logo.jpg' %}" width="210" height="70" alt="logo" loading="eager">
+            <img src="{% static 'img/homepage/logo.png' %}" width="210" height="70" alt="logo" loading="eager">
         </a>
 
         <ul class="nav nav-pills">

@@ -18,6 +18,7 @@
             Как это работает?</a>
 
         <span x-data="{ loading: false, loadingMessage: 'Загружаем . . .' }">
+{#            Transition effect not working. More info: https://github.com/igorsimb/mp-monitor/issues/134 #}
             <a hx-get="{% url 'demo' %}"
                hx-push-url="true"
                hx-target=".main-content"

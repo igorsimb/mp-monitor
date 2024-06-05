@@ -29,7 +29,8 @@ Source: https://www.youtube.com/watch?v=81pnuZFarRw
 #e9ecef = bg-body-secondary
 */
 .bg-fullwidth {
-    box-shadow: 0 0 0 100vmax #f8f9fa;
+    /*box-shadow: 0 0 0 100vmax #f8f9fa;*/
+    box-shadow: 0 0 0 100vmax #e9ecef;
     clip-path: inset(0 -100vmax);
 }
 
@@ -198,13 +199,29 @@ source: https://uiverse.io/Pradeepsaranbishnoi/jolly-robin-0 */
 
 @keyframes slide-from-right {
     from {
-        transform: translateX(90px);
+        /*transform: translateX(90px);*/
+        transform: translateX(390px);
     }
 }
 
 @keyframes slide-to-left {
     to {
-        transform: translateX(-90px);
+        /*transform: translateX(-90px);*/
+        transform: translateX(-390px);
+    }
+}
+
+@keyframes slide-from-left {
+    from {
+        /*transform: translateX(90px);*/
+        transform: translateX(-390px);
+    }
+}
+
+@keyframes slide-to-right {
+    to {
+        /*transform: translateX(-90px);*/
+        transform: translateX(390px);
     }
 }
 
@@ -219,9 +236,24 @@ source: https://uiverse.io/Pradeepsaranbishnoi/jolly-robin-0 */
     600ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
 }
 
+::view-transition-old(slide-it-reverse) {
+    animation: 180ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
+    600ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-right;
+    /*600ms cubic-bezier(1, 0, 0.2, 1) both slide-to-left;*/
+}
+
+::view-transition-new(slide-it-reverse) {
+    animation: 420ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in,
+    600ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-left;
+}
+
 /* tie the view transition to a given CSS class */
 .slide-transition {
     view-transition-name: slide-it;
+}
+
+.slide-transition-reverse {
+    view-transition-name: slide-it-reverse;
 }
 
 /* View transition effect END */
@@ -269,6 +301,7 @@ shepherd-step-highlight {
 .shepherd-progress {
     font-size: 0.8rem;
 }
+
 /* Shepherd tour END */
 
 .wb-gradient-text {

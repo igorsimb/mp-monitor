@@ -112,6 +112,10 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
 
     def get(self, request, *args, **kwargs):
         logger.info("Going to Item List page")
+        if self.request.htmx:
+            self.object_list = self.get_queryset()
+            context = self.get_context_data()
+            return render(request, "main/partials/item_list_content.html", context)
         return super().get(request, *args, **kwargs)
 
 
@@ -165,7 +169,12 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
             self.get_object().sku,
             self.get_object().name,
         )
+        if self.request.htmx:
+            self.object = self.get_object()
+            context = self.get_context_data(object=self.object)
+            return render(request, "main/partials/item_detail_content.html", context)
         return super().get(request, *args, **kwargs)
+        # return render(request, self.template_name)
 
 
 def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponseRedirect:

@@ -39,7 +39,12 @@
                             {% endif %}
                     >
                 </td>
-                <td><a href="{{ item.get_absolute_url }}">{{ item.sku }}</a></td>
+{#                <td><a href="{{ item.get_absolute_url }}">{{ item.sku }}</a></td>#}
+                <td><a hx-get="{{ item.get_absolute_url }}"
+                       hx-push-url="true"
+                       hx-swap="outerHTML transition:true"
+                       hx-target="#main-section">{{ item.sku }}</a>
+                </td>
                 <td>{{ item.name }}</td>
                 {#                    <td class="text-center">{{ item.spp }}%</td>#}
                 <td class="text-center">
