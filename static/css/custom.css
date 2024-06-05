@@ -29,7 +29,8 @@ Source: https://www.youtube.com/watch?v=81pnuZFarRw
 #e9ecef = bg-body-secondary
 */
 .bg-fullwidth {
-    box-shadow: 0 0 0 100vmax #f8f9fa;
+    /*box-shadow: 0 0 0 100vmax #f8f9fa;*/
+    box-shadow: 0 0 0 100vmax #e9ecef;
     clip-path: inset(0 -100vmax);
 }
 

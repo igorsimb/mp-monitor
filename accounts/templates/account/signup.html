@@ -31,7 +31,8 @@
 
     <title>MP Monitor - регистрация</title>
 </head>
-<body class="d-flex flex-column h-100">
+<body class="d-flex flex-column h-100"
+      style="background-image: url({% static 'img/bg.png' %}); background-position: center; background-repeat: repeat;">
 
 
 <div class="d-flex justify-content-center align-items-center">
@@ -43,11 +44,11 @@
                 {% else %}
                     href="{% url 'index' %}">
                 {% endif %}
-                <img src="{% static 'img/homepage/logo.jpg' %}" width="210" height="70" alt="logo" loading="eager">
+                <img src="{% static 'img/homepage/logo.png' %}" width="210" height="70" alt="logo" loading="eager">
                 </a>
             </div>
             <form method="POST"
-                  class="shadow shadow-lg border border-secondary-subtle rounded row gx-4 gy-4 pb-3">
+                  class="shadow shadow-lg border border-secondary-subtle rounded row gx-4 gy-4 pb-3 bg-body-tertiary">
                 {% csrf_token %}
                 <div class="col-12 text-center">
                     <h2>Регистрация</h2>

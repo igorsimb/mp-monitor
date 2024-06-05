@@ -69,13 +69,8 @@
             <p>В поле формы введите необходимое число и выберите из списка нужный период. Например,
                 "Обновлять информацию с Wildberries каждые 12 часов".</p>
 
-{#            <a href="{% url 'demo' %}"  class="btn btn-success bg-gradient btn-lg px-4 me-md-2 mt-3 rounded-pill shadow shadow-sm">#}
-{#                Демо одним кликом#}
-{#        </a>#}
-{#            <button class="btn btn-outline-secondary bg-gradient btn-lg px-4 rounded-pill ms-4 mt-3" type="button">#}
-{#                Регистрация#}
-{#            </button>#}
             <span x-data="{ loading: false, loadingMessage: 'Загружаем . . .' }">
+{#   Transition effect not working. More info: https://github.com/igorsimb/mp-monitor/issues/134 #}
     <a hx-get="{% url 'demo' %}"
        hx-push-url="true"
        hx-target=".main-content"
