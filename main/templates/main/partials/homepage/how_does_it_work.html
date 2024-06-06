@@ -12,7 +12,7 @@
                  class="img-fluid img-thumbnail border-secondary-subtle shadow shadow-sm">
         </div>
         <div class="mt-2 col-sm-2 col-md-1 order-1 order-sm-2 d-flex flex-column align-items-center justify-content-center">
-            <span class="badge bg-primary bg-gradient rounded-circle fs-3 shadow">1</span>
+            <span class="badge bg-primary bg-gradient rounded-circle fs-2 shadow">1</span>
             <div class="bg-primary-subtle mt-4 flex-grow-1 d-none d-sm-block"
                  style="width: 3px; height: auto;"></div>
         </div>
@@ -20,15 +20,24 @@
             <h2>Заполните артикулы</h2>
             <ul>
                 <li>
+                    <div class="d-flex justify-content-start align-items-center">
+                        <div>Нажмите</div>
+                        {#                    <span class="material-symbols-sharp btn btn-sm btn-outline-success disabled">add</span> в верхнем левом углу.#}
+                        <div class="mx-2">
+                            <a class="toggle" title="Добавить новые товары для парсинга">
+                                <input type="checkbox">
+                                <span class="button"></span>
+                                <span class="material-symbols-sharp label text-primary">add</span>
+                            </a>
+                        </div>
+                    </div>
+
+                </li>
+                <li> Это откроет форму добавления артикулов.</li>
+                <li>Введите артикулы.</li>
+                <li>
                     Нажмите
-                    <span class="material-symbols-sharp btn btn-sm btn-outline-success disabled">add</span> в верхнем левом углу.
-                </li>
-                <li>
-                    Введите один или несколько артикулов через запятую, пробел или с новой строки
-                    (напр., 101231520, 109670641, 31299196).
-                </li>
-                <li>
-                    Нажмите <button class="btn btn-success rounded-pill disabled">Добавить</button>
+                    <button class="btn btn-primary rounded-pill disabled">Добавить</button>
                 </li>
                 <li>
                     Дождитесь окончания первого парсинга.
@@ -41,11 +50,12 @@
     <!-- 2 -->
     <div class="row my-4" style="min-height: 200px;">
         <div class="d-flex col-sm-5 col-md-6 order-2 order-sm-1 align-items-center">
-            <img loading="lazy" src="{% static 'img/homepage/tiny_create_schedule_button_arrow.png' %}" alt="Заполните артикулы"
+            <img loading="lazy" src="{% static 'img/homepage/tiny_create_schedule_button_arrow.png' %}"
+                 alt="Заполните артикулы"
                  class="img-fluid img-thumbnail border-secondary-subtle shadow shadow-sm">
         </div>
         <div class="col-sm-2 col-md-1 order-1 order-sm-2 d-flex flex-column align-items-center justify-content-center">
-            <span class="badge bg-primary bg-gradient rounded-circle fs-3 shadow">2</span>
+            <span class="badge bg-primary bg-gradient rounded-circle fs-2 shadow">2</span>
             <div class="border-danger bg-primary-subtle mt-3 flex-grow-1 d-none d-sm-block"
                  style="width: 3px; height: auto;"></div>
         </div>
@@ -62,12 +72,13 @@
                  class="img-fluid img-thumbnail border-secondary-subtle shadow shadow-sm">
         </div>
         <div class="col-sm-2 col-md-1 order-1 order-sm-2 d-flex flex-column align-items-center justify-content-start">
-            <span class="badge bg-primary bg-gradient rounded-circle fs-3 shadow">3</span>
+            <span class="badge bg-primary bg-gradient rounded-circle fs-2 shadow">3</span>
         </div>
         <div class="ol-sm-5 col-md-5 order-3 h-auto">
             <h2>Создайте расписание</h2>
             <p>В поле формы введите необходимое число и выберите из списка нужный период. Например,
                 "Обновлять информацию с Wildberries каждые 12 часов".</p>
+            <p>А теперь попробуйте все сами, запустив демо.</p>
 
             <span x-data="{ loading: false, loadingMessage: 'Загружаем . . .' }">
 {#   Transition effect not working. More info: https://github.com/igorsimb/mp-monitor/issues/134 #}
