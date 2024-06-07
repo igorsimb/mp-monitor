@@ -14,6 +14,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.generic import ListView, DetailView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from django_ratelimit.core import is_ratelimited
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 import config
@@ -164,7 +165,14 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         return super().get(request, *args, **kwargs)
 
 
+# TODO: consider renaming this function to add_new_items or something similar
 def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponseRedirect:
+    """Scrapes items from the given SKUs taken from the form data"""
+    if is_ratelimited(request, group="scrape_items", key="user_or_ip", method="POST", rate="10/m", increment=True):
+        messages.error(request, "Вы сделали слишком много запросов на парсинг товаров. Попробуйте позже.")
+        logger.error("Request limit exceeded for scrape_items, user: %s", request.user)
+        return redirect("item_list")
+
     if request.method == "POST":
         form = ScrapeForm(request.POST)
         if form.is_valid():
@@ -196,7 +204,13 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
 
 
 def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
-    """Scrape items manually"""
+    """Scrapes selected items"""
+
+    if is_ratelimited(request, group="update_items", key="user_or_ip", method="POST", rate="10/m", increment=True):
+        messages.error(request, "Слишком много запросов на обновление товаров. Попробуйте позже.")
+        logger.error("Request limit exceeded for update_items, user: %s", request.user)
+        return redirect("item_list")
+
     if request.method == "POST":
         form = UpdateItemsForm(request.POST)
         if form.is_valid():
