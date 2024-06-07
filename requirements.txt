@@ -42,6 +42,7 @@ django-environ==0.11.2
 django-extensions==3.2.3
 django-guardian==2.4.0
 django-htmx==1.17.3
+django-ratelimit==4.1.0
 django-simple-history==3.5.0
 django-stubs==4.2.7
 django-stubs-ext==4.2.7

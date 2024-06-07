@@ -308,3 +308,6 @@ SILENCED_SYSTEM_CHECKS: list[str] = ["security.W009"]
 # sentry-sdk
 SENTRY_ENABLED = env("SENTRY_ENABLED")
 SENTRY_DSN = env("SENTRY_DSN")
+
+# rate limiting
+RATELIMIT_ENABLE = True  # set to False to disable all rate limiting
