@@ -18,7 +18,7 @@
         </tr>
         </thead>
         <tbody id="table-body">
-        {% for item in items %}
+        {% for item in page_obj  %}
             <tr>
                 <td class="text-center">
                 {% if item.is_parser_active %}
@@ -75,5 +75,50 @@
         {% endfor %}
         </tbody>
     </table>
+
+<!-- PAGINATION -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" title="Первая страница">
+                            <span class="material-symbols-sharp">first_page</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" title="Предыдущая страница">
+                            &laquo;
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item">
+                            <a class="page-link active" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" title="Следующая страница">&raquo;</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" title="Последняя страница">
+                            <span class="material-symbols-sharp">last_page</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
 </div>
 

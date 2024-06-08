@@ -59,6 +59,8 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
     permission_required = ["view_item"]
     template_name = "main/item_list.html"
 
+    paginate_by = 25
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -120,7 +122,7 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
     slug_field = "sku"
 
     def get_context_data(self, **kwargs) -> dict:
-        items_per_page = 10
+        items_per_page = 15
         context = super().get_context_data(**kwargs)
 
         prices = Price.objects.filter(item=self.object)
