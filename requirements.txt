@@ -89,6 +89,8 @@ platformdirs==4.2.0
 pluggy==1.4.0
 pre-commit==3.6.2
 prompt-toolkit==3.0.43
+psycopg==3.1.19
+psycopg-binary==3.1.19
 pyasn1==0.5.1
 pycparser==2.21
 pydivert==2.1.0
