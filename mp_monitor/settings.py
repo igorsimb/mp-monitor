@@ -93,16 +93,28 @@ WSGI_APPLICATION = "mp_monitor.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-        # for sqlite write lock timeout
-        "OPTIONS": {
-            "timeout": 5,
-        },
+if LOCAL_DEVELOPMENT:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+            # for sqlite write lock timeout
+            "OPTIONS": {
+                "timeout": 5,
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env("DBNAME"),
+            "USER": env("DBUSER"),
+            "PASSWORD": env("DBPASS"),
+            "HOST": env("DBHOST"),
+            "PORT": env("APP_PORT"),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
