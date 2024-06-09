@@ -154,7 +154,7 @@ STATIC_DIR = [BASE_DIR / "static"]
 if LOCAL_DEVELOPMENT:
     STATICFILES_DIRS = [BASE_DIR / "static"]
 else:
-    STATIC_ROOT = BASE_DIR / "static"
+    STATIC_ROOT = env("STATIC_ROOT")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
