@@ -1,8 +1,10 @@
 import os
 from pathlib import Path
+
+import dj_database_url
+import environ
 from django.contrib.messages import constants as message_constants
 from django.utils import timezone
-import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -106,14 +108,11 @@ if LOCAL_DEVELOPMENT:
     }
 else:
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": env("DBNAME"),
-            "USER": env("DBUSER"),
-            "PASSWORD": env("DBPASS"),
-            "HOST": env("DBHOST"),
-            "PORT": env("APP_PORT"),
-        }
+        "default": dj_database_url.parse(
+            env("DB_CONNECTION_STRING"),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
 
 # Password validation
