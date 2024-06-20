@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-import dj_database_url
 import environ
 from django.contrib.messages import constants as message_constants
 from django.utils import timezone
@@ -25,7 +24,7 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
-ALLOWED_HOSTS: list[str] = env("ALLOWED_HOSTS")
+ALLOWED_HOSTS = ["mpmonitor.ru", "www.mpmonitor.ru", "127.0.4.47:58322", "localhost", "127.0.0.1"]
 LOCAL_DEVELOPMENT = env("LOCAL_DEVELOPMENT")
 
 
@@ -108,11 +107,14 @@ if LOCAL_DEVELOPMENT:
     }
 else:
     DATABASES = {
-        "default": dj_database_url.parse(
-            env("DB_CONNECTION_STRING"),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "HOST": os.environ["DBHOST"],
+            "NAME": os.environ["DBNAME"],
+            "USER": os.environ["DBUSER"],
+            "PASSWORD": os.environ["DBPASS"],
+            "PORT": "5432",
+        },
     }
 
 # Password validation
@@ -277,18 +279,17 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 
 # REDIS-related settings
-REDIS_HOST = "127.0.0.1"
-REDIS_PORT = "6379"
-CELERY_BROKER_URL = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
-CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timout": 3600}
-CELERY_RESULT_BACKEND = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
+if LOCAL_DEVELOPMENT:
+    REDIS_HOST = "127.0.0.1"
+    REDIS_PORT = "6379"
+    CELERY_BROKER_URL = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
+    CELERY_RESULT_BACKEND = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
+else:
+    CELERY_BROKER_URL = "redis://localhost:6379"
+    CELERY_RESULT_BACKEND = "django-db"
+
 CELERY_TIMEZONE = "Europe/Moscow"
-
-# new
-# CELERY_BROKER_URL = "redis://redis:6379"
-# CELERY_RESULT_BACKEND = "redis://redis:6379"
-# end new
-
+CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timout": 3600}
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
