@@ -19,9 +19,9 @@ class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     model = CustomUser
     date_hierarchy = "created_at"
-    list_display = ["email", "username", "created_at", "get_item_count", "is_demo_user", "is_demo_active"]
+    list_display = ["email", "username", "created_at", "get_item_count", "is_demo_user", "is_active"]
     raw_id_fields = ["tenant"]
-    list_filter = ["is_demo_user", "is_demo_active"]
+    list_filter = ["is_demo_user", "is_active"]
     list_display_links = [
         "email",
         "username",
