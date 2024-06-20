@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "anymail",
     "debug_toolbar",
     "django_celery_beat",
+    "django_celery_results",
     "django_extensions",
     "django_htmx",
     "guardian",
@@ -114,6 +115,7 @@ else:
             "USER": os.environ["DBUSER"],
             "PASSWORD": os.environ["DBPASS"],
             "PORT": "5432",
+            "OPTIONS": {"charset": "utf8", "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
         },
     }
 
