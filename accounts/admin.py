@@ -19,7 +19,7 @@ class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     model = CustomUser
     date_hierarchy = "created_at"
-    list_display = ["email", "username", "tenant", "is_demo_user", "is_demo_active"]
+    list_display = ["email", "username", "created_at", "get_item_count", "is_demo_user", "is_demo_active"]
     raw_id_fields = ["tenant"]
     list_filter = ["is_demo_user", "is_demo_active"]
     list_display_links = [
@@ -58,6 +58,10 @@ class CustomUserAdmin(UserAdmin):
     def get_item_sku(self, obj) -> str:  # type: ignore
         return obj.item.sku  # pragma: no cover
 
+    # number of items for a user
+    @admin.display(description="Товаров")
+    def get_item_count(self, obj) -> str:
+        return obj.tenant.item_set.count()
 
 @admin.register(UserQuota)
 class UserQuotaAdmin(admin.ModelAdmin):
