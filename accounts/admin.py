@@ -63,6 +63,7 @@ class CustomUserAdmin(UserAdmin):
     def get_item_count(self, obj) -> str:
         return obj.tenant.item_set.count()
 
+
 @admin.register(UserQuota)
 class UserQuotaAdmin(admin.ModelAdmin):
     model = UserQuota
