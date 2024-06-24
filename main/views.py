@@ -425,3 +425,7 @@ def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     print(f"{periodic_task} has been deleted!")
 
     return redirect("item_list")
+
+
+def oferta_view(request: WSGIRequest) -> HttpResponse:
+    return render(request, "main/oferta.html")

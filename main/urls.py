@@ -9,6 +9,7 @@ from .views import (
     destroy_scrape_interval_task,
     scrape_items,
     update_items,
+    oferta_view,
 )
 
 urlpatterns = [
@@ -25,4 +26,5 @@ urlpatterns = [
     path("items/<str:slug>/", ItemDetailView.as_view(), name="item_detail"),
     path("scrape/<str:skus>/", scrape_items, name="scrape_item"),
     path("update_items/", update_items, name="update_items"),
+    path("oferta/", oferta_view, name="oferta"),
 ]
