@@ -34,6 +34,11 @@ Source: https://www.youtube.com/watch?v=81pnuZFarRw
     clip-path: inset(0 -100vmax);
 }
 
+.bg-fullwidth-light {
+    box-shadow: 0 0 0 100vmax #F8F9FA;
+    clip-path: inset(0 -100vmax);
+}
+
 .material-symbols-sharp, .custom-material-icon {
     display: inline-flex;
     vertical-align: text-bottom;
