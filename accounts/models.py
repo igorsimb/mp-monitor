@@ -77,10 +77,11 @@ def create_user_quota(sender, instance, created, **kwargs):  # type: ignore  # p
 
 class UserQuota(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="user_quotas")
-    user_lifetime_hours = models.PositiveIntegerField(default=0, blank=True, null=True)
-    max_allowed_skus = models.PositiveIntegerField(default=0, blank=True, null=True)
-    manual_updates = models.PositiveIntegerField(default=0, blank=True, null=True)
-    scheduled_updates = models.PositiveIntegerField(default=0, blank=True, null=True)
+    user_lifetime_hours = models.PositiveIntegerField(default=10, blank=True, null=True)
+    max_allowed_skus = models.PositiveIntegerField(default=10, blank=True, null=True)
+    manual_updates = models.PositiveIntegerField(default=10, blank=True, null=True)
+    scheduled_updates = models.PositiveIntegerField(default=10, blank=True, null=True)
+    allowed_parse_units = models.PositiveIntegerField(default=10, blank=True, null=True)
 
     class Meta:
         verbose_name = "Квота"

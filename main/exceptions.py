@@ -19,7 +19,7 @@ class QuotaExceededException(Exception):
         quota_type (str): The type of quota that was exceeded.
     """
 
-    VALID_QUOTA_TYPES = ["max_allowed_skus", "manual_updates", "scheduled_updates"]
+    VALID_QUOTA_TYPES = ["max_allowed_skus", "manual_updates", "scheduled_updates", "allowed_parse_units"]
 
     def __init__(self, message: str, quota_type: str):
         super().__init__(message)

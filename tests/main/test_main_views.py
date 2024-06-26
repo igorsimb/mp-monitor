@@ -26,6 +26,7 @@ from main.views import (
     update_items,
     update_scrape_interval,
 )
+from tests.factories import UserQuotaFactory
 
 logger = logging.getLogger(__name__)
 
@@ -373,6 +374,16 @@ class TestScrapeItemsView:
 
         return request
 
+    def test_user_and_quotas_creation(self):
+        my_user = UserFactory()
+        my_quotas = UserQuotaFactory(user=my_user)
+
+        assert my_quotas.user == my_user
+        assert my_quotas.user_lifetime_hours == 10
+        assert my_quotas.max_allowed_skus == 10
+        assert my_quotas.manual_updates == 10
+        assert my_quotas.scheduled_updates == 10
+
     def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user
         mocker.patch("main.utils.scrape_live_price", return_value=100)
@@ -418,8 +429,7 @@ class TestScrapeItemsView:
         assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
         assert response.url == item_list_url
 
-    @pytest.mark.demo_user
-    def test_demo_user_message_called_if_sku_quota_exceeded(
+    def test_message_called_if_sku_quota_exceeded(
         self, client: Client, post_request_with_user: WSGIRequest, mocker
     ) -> None:
         """
@@ -433,8 +443,6 @@ class TestScrapeItemsView:
         skus = ["12345", "67890"]
         request = post_request_with_user
         error_message = mocker.patch("django.contrib.messages.error")
-        request.user.is_demo_user = True
-        request.user.save()
 
         logger.info("Creating a user with a quota of 1 max allowed sku...")
         user_quota = UserQuota.objects.get(user=request.user)
@@ -454,8 +462,7 @@ class TestScrapeItemsView:
         logger.info("Checking if the max allowed skus were not changed after the error...")
         assert new_user_quota == old_user_quota
 
-    @pytest.mark.demo_user
-    def test_demo_user_message_not_called_if_sku_quota_not_exceeded(
+    def test_message_not_called_if_sku_quota_not_exceeded(
         self, client: Client, post_request_with_user: WSGIRequest, mocker
     ) -> None:
         """
@@ -469,8 +476,6 @@ class TestScrapeItemsView:
         skus = ["12345", "67890"]
         request = post_request_with_user
         error_message = mocker.patch("django.contrib.messages.error")
-        request.user.is_demo_user = True
-        request.user.save()
 
         logger.info("Creating a user with a quota of 3 max allowed sku...")
         user_quota = UserQuota.objects.get(user=request.user)
@@ -491,7 +496,6 @@ class TestScrapeItemsView:
         logger.info("Checking if the max allowed skus was changed by the number of skus sent...")
         assert new_user_quota == old_user_quota - len(skus)
 
-    @pytest.mark.demo_user
     @pytest.mark.parametrize(
         "manual_updates_count, errors_called_count, is_quota_updated",
         [
@@ -500,7 +504,7 @@ class TestScrapeItemsView:
         ],
         ids=["no_quota_left", "quota_left"],
     )
-    def test_demo_user_message_called_if_manual_updates_quota_exceeded(
+    def test_message_called_if_manual_updates_quota_exceeded(
         self,
         client: Client,
         update_post_request_with_user: WSGIRequest,
@@ -519,8 +523,6 @@ class TestScrapeItemsView:
         """
         request = update_post_request_with_user
         error_message = mocker.patch("django.contrib.messages.error")
-        request.user.is_demo_user = True
-        request.user.save()
 
         logger.info("Creating a user with a quota of 1 max allowed sku...")
         user_quota = UserQuota.objects.get(user=request.user)
@@ -541,6 +543,72 @@ class TestScrapeItemsView:
         assert (
             new_user_quota != old_user_quota
         ) == is_quota_updated, f"Expected {old_user_quota}, but got {new_user_quota}."
+
+    def test_message_called_if_allowed_parse_units_quota_exceeded(
+        self, post_request_with_user: WSGIRequest, mocker
+    ) -> None:
+        """
+        Tests that a message is displayed to the user if the quota is exceeded.
+        Test flow:
+        1. Create a user with a quota of 1 max allowed sku.
+        2. Send a POST request to the scrape 2 SKUs (thus exceeding the quota).
+        3. Check if the error message is displayed to the user.
+        4. Check that allowed parse units were not changed after the error.
+        """
+        skus = ["12345", "67890"]
+        request = post_request_with_user
+        error_message = mocker.patch("django.contrib.messages.error")
+
+        logger.info("Creating a user with a quota of 1 allowed parse unit...")
+        user_quota = UserQuota.objects.get(user=request.user)
+        user_quota.allowed_parse_units = 1
+        user_quota.save()
+
+        old_user_quota = user_quota.allowed_parse_units
+
+        logger.info("Sending a POST request to scrape 2 SKUs...")
+        response = scrape_items(request, skus)
+        assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
+        logger.info("Checking if the error message was displayed to the user...")
+        assert error_message.call_count == 1
+
+        user_quota.refresh_from_db()
+        new_user_quota = user_quota.allowed_parse_units
+        logger.info("Checking if the allowed parse units were not changed after the error...")
+        assert new_user_quota == old_user_quota
+
+    def test_message_not_called_if_allowed_parse_units_quota_not_exceeded(
+        self, post_request_with_user: WSGIRequest, mocker
+    ) -> None:
+        """
+        Tests that a message is displayed to the user if the quota is exceeded.
+        Test flow:
+        1. Create a user with a quota of 1 max allowed sku.
+        2. Send a POST request to the scrape 2 SKUs (thus exceeding the quota).
+        3. Check if the error message is displayed to the user.
+        4. Check that allowed parse units were not changed after the error.
+        """
+        skus = ["12345", "67890"]
+        request = post_request_with_user
+        error_message = mocker.patch("django.contrib.messages.error")
+
+        logger.info("Creating a user with a quota of 3 allowed parse unit...")
+        user_quota = UserQuota.objects.get(user=request.user)
+        user_quota.allowed_parse_units = 3
+        user_quota.save()
+
+        old_user_quota = user_quota.allowed_parse_units
+
+        logger.info("Sending a POST request to scrape 2 SKUs...")
+        response = scrape_items(request, skus)
+        assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
+        logger.info("Checking if the error message was displayed to the user...")
+        assert error_message.call_count == 0
+
+        user_quota.refresh_from_db()
+        new_user_quota = user_quota.allowed_parse_units
+        logger.info("Checking if the allowed parse units were not changed after the error...")
+        assert new_user_quota != old_user_quota
 
 
 class TestCreateScrapeIntervalTaskView:

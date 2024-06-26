@@ -9,7 +9,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <h4 class="offcanvas-title mb-3 text-center" id="offcanvasDemoLabel">Ограничения демо</h4>
+            <h4 class="offcanvas-title mb-3 text-center" id="offcanvasDemoLabel">Ограничения</h4>
 
             <ul class="list-group list-group-flush">
                 <li class="list-group-item bg-light">
@@ -29,6 +29,12 @@
                     Автоматические сканирования: <span {% if user_quota.scheduled_updates == 0 %}
                     class="text-danger" {% endif %}>{{ user_quota.scheduled_updates }}</span>
                     / {{ demo_scheduled_updates }}
+                </li>
+                <li class="list-group-item bg-light">
+                    <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Однократная проверка одного товара">Единицы проверки</span>:
+                    <span {% if user_quota.allowed_parse_units == 0 %}
+                    class="text-danger" {% endif %}>{{ user_quota.allowed_parse_units }}</span>
+                    / {{ demo_allowed_parse_units }}
                 </li>
             </ul>
             <hr class="mx-auto w-25">

@@ -53,8 +53,9 @@ class UserQuotaFactory(DjangoModelFactory):
     class Meta:
         model = "accounts.UserQuota"
 
-    user = factory.SubFactory(UserFactory)
-    user_lifetime_hours = 0
-    max_allowed_skus = 0
-    manual_updates = 0
-    scheduled_updates = 0
+    # check if user is set, otherwise create a new user
+    user = factory.LazyAttribute(lambda obj: obj.user if obj.user else UserFactory())
+    user_lifetime_hours = 10
+    max_allowed_skus = 10
+    manual_updates = 10
+    scheduled_updates = 10

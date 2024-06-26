@@ -589,7 +589,7 @@ def get_interval_russian_translation(periodic_task: PeriodicTask) -> str:
         return f"{every} {time_unit_number} {time_unit_name}"
 
 
-def get_user_quota(user: User) -> UserQuota:
+def get_user_quota(user: User) -> UserQuota | None:
     """Get the user quota for a given user.
 
     Args:
@@ -622,6 +622,7 @@ def set_user_quota(
     max_allowed_skus: int = config.DEMO_USER_MAX_ALLOWED_SKUS,
     manual_updates: int = config.DEMO_USER_MANUAL_UPDATES,
     scheduled_updates: int = config.DEMO_USER_SCHEDULED_UPDATES,
+    allowed_parse_units: int = config.DEMO_USER_ALLOWED_PARSE_UNITS,
 ) -> None:
     """Set the user quota for a given user.
 
@@ -631,6 +632,7 @@ def set_user_quota(
         max_allowed_skus (int): The maximum number of items the user can add to the list.
         manual_updates (int): The number of manual updates the user can make.
         scheduled_updates (int): The number of scheduled updates the user can make.
+        allowed_parse_units (int): The number of allowed parse units for the user.
 
     Returns:
         None
@@ -640,6 +642,7 @@ def set_user_quota(
     user_quota.max_allowed_skus = max_allowed_skus
     user_quota.manual_updates = manual_updates
     user_quota.scheduled_updates = scheduled_updates
+    user_quota.allowed_parse_units = allowed_parse_units
     user_quota.save()
 
 
@@ -733,10 +736,7 @@ def update_user_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> No
         user_quota.save()
     else:
         raise QuotaExceededException(
-            message=(
-                "Слишком много товаров. Для демо пользователей число товаров для парсинга не должно превышать"
-                f" {config.DEMO_USER_MAX_ALLOWED_SKUS}."
-            ),
+            message=("Превышен лимит количества товаров для данного тарифа."),
             quota_type="max_allowed_skus",
         )
 
@@ -754,10 +754,7 @@ def update_user_quota_for_manual_updates(request: HttpRequest) -> None:
         user_quota.save()
     else:
         raise QuotaExceededException(
-            message=(
-                f"Превышен лимит обновлений вручную для демо-пользователя ({config.DEMO_USER_MANUAL_UPDATES}). "
-                "Зарегистрируйтесь, чтобы снять это ограничение."
-            ),
+            message=("Превышен лимит обновлений вручную для данного тарифа."),
             quota_type="manual_updates",
         )
 
@@ -775,9 +772,19 @@ def update_user_quota_for_scheduled_updates(user: User) -> None:
         user_quota.save()
     else:
         raise QuotaExceededException(
-            message=(
-                f"Превышен лимит обновлений по расписанию для демо-пользователя ({config.DEMO_USER_SCHEDULED_UPDATES})."
-                " Зарегистрируйтесь, чтобы снять это ограничение."
-            ),
+            message=("Превышен лимит обновлений по расписанию для данного тарифа."),
             quota_type="scheduled_updates",
+        )
+
+
+def update_user_quota_for_allowed_parse_units(user: User, skus: str) -> None:
+    user_quota = get_user_quota(user)
+    skus_count = len(re.split(r"\s+|\n|,(?:\s*)", skus))
+    if user_quota.allowed_parse_units >= skus_count:
+        user_quota.allowed_parse_units -= skus_count
+        user_quota.save()
+    else:
+        raise QuotaExceededException(
+            message=("Превышен лимит единиц проверки для данного тарифа."),
+            quota_type="allowed_parse_units",
         )
