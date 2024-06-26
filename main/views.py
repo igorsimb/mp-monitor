@@ -39,6 +39,7 @@ from .utils import (
     update_user_quota_for_max_allowed_sku,
     update_user_quota_for_manual_updates,
     update_user_quota_for_scheduled_updates,
+    update_user_quota_for_allowed_parse_units,
 )
 
 user = get_user_model()
@@ -75,9 +76,11 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         user_quota = get_user_quota(self.request.user)
 
         time_since_user_created = timezone.now() - self.request.user.created_at
-        remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
-        remaining_hours = remaining_time.seconds // 3600
-        remaining_minutes = (remaining_time.seconds % 3600) // 60
+        if get_user_quota(self.request.user) is not None:
+            remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
+            remaining_hours = remaining_time.seconds // 3600
+            remaining_minutes = (remaining_time.seconds % 3600) // 60
+            context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
 
         try:
             periodic_task = PeriodicTask.objects.get(name=task_name(self.request.user))
@@ -94,11 +97,11 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
         context["user_quota"] = user_quota
-        context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
         context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
         context["demo_scheduled_updates"] = int(config.DEMO_USER_SCHEDULED_UPDATES)
+        context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         if periodic_task:
             schedule_interval = periodic_task.schedule.run_every
             context["scrape_interval_task"] = get_interval_russian_translation(periodic_task)
@@ -139,15 +142,16 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
 
         user_quota = get_user_quota(self.request.user)
         time_since_user_created = timezone.now() - self.request.user.created_at
-        remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
-        remaining_hours = remaining_time.seconds // 3600
-        remaining_minutes = (remaining_time.seconds % 3600) // 60
+        if get_user_quota(self.request.user) is not None:
+            remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
+            remaining_hours = remaining_time.seconds // 3600
+            remaining_minutes = (remaining_time.seconds % 3600) // 60
+            context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
 
         context["prices"] = prices_paginated
         context["item_updated_at"] = item_updated_at
         context["price_created_at"] = price_created_at
         context["user_quota"] = user_quota
-        context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
         context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
@@ -180,10 +184,11 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
         if form.is_valid():
             skus = form.cleaned_data["skus"]
 
-            if request.user.is_demo_user:
+            if get_user_quota(request.user) is not None:
                 try:
                     logger.info("Trying to update demo user quota for max allowed skus...")
                     update_user_quota_for_max_allowed_sku(request, skus)
+                    update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     logger.warning(e.message)
                     messages.error(request, e.message)
@@ -224,10 +229,11 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             if not is_at_least_one_item_selected(request, skus):
                 return redirect("item_list")
 
-            #  needs to be place after is_at_least_one_item_selected check to avoid updating quota despite the error
-            if request.user.is_demo_user:
+            #  needs to be placed after is_at_least_one_item_selected check to avoid updating quota despite the error
+            if get_user_quota(request.user) is not None:
                 try:
                     update_user_quota_for_manual_updates(request)
+                    update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     messages.error(request, e.message)
                     return redirect("item_list")
@@ -316,10 +322,11 @@ def create_scrape_interval_task(
                     schedule.period,
                 )
 
-            #  needs to be place after all form checks to avoid updating quota despite the error
-            if request.user.is_demo_user:
+            #  needs to be placed after all form checks to avoid updating quota despite the error
+            if get_user_quota(request.user) is not None:
                 try:
                     update_user_quota_for_scheduled_updates(request.user)
+                    update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     messages.error(request, e.message)
                     return redirect("item_list")

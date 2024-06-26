@@ -8,10 +8,10 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.test import RequestFactory
 from django.utils.safestring import mark_safe
+from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory
 from pytest_mock import MockerFixture
 
 import config
-from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory
 from main.exceptions import InvalidSKUException, QuotaExceededException
 from main.models import Item, Tenant
 from main.utils import (
@@ -591,16 +591,17 @@ class TestGetIntervalRussianTranslation:
         assert result == expected
 
 
-@pytest.mark.demo_user
 class TestUpdateUserQuotaForScheduledUpdates:
     def test_exception_raised_if_no_quota(self):
         """Exception is raised if user has no quota left"""
-        user = UserFactory(is_demo_user=True)
-        user_quota = user.user_quotas.get(user=user)
+        test_user = UserFactory(is_demo_user=True)
+        user_quota = test_user.user_quotas.get(user=test_user)
+        user_quota.scheduled_updates = 0
+        user_quota.save()
 
         assert user_quota.scheduled_updates == 0
         with pytest.raises(QuotaExceededException):
-            update_user_quota_for_scheduled_updates(user)
+            update_user_quota_for_scheduled_updates(test_user)
         assert user_quota.scheduled_updates == 0
 
     def test_exception_not_raised_if_quota(self):
