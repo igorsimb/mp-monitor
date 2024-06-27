@@ -24,11 +24,10 @@ class TestTenantModel:
         user = UserFactory()
 
         assert user.tenant is not None
-        assert user.tenant.status == user.tenant.Status.FREE
+        assert user.tenant.status == user.tenant.Status.ACTIVE
 
-    def test_active_status(self) -> None:
+    def test_active_tenant(self) -> None:
         """Tests the active() manager method to ensure it correctly returns active tenants."""
-        free = TenantFactory(status=Tenant.Status.FREE, name="unique0@testing.com")
         trialing = TenantFactory(status=Tenant.Status.TRIALING, name="unique1@testing.com")
         active = TenantFactory(status=Tenant.Status.ACTIVE, name="unique2@testing.com")
         exempt = TenantFactory(status=Tenant.Status.EXEMPT, name="unique3@testing.com")
@@ -36,7 +35,7 @@ class TestTenantModel:
         TenantFactory(status=Tenant.Status.TRIAL_EXPIRED, name="unique6@testing.com")
 
         active_tenants = Tenant.objects.active()  # Queryset, aka a set
-        assert set(active_tenants) == {free, trialing, active, exempt}
+        assert set(active_tenants) == {trialing, active, exempt}
 
     def test_tenant_name_is_equal_to_user_email(self) -> None:
         user = UserFactory()

@@ -31,7 +31,6 @@ class TenantManager(models.Manager):
 class Tenant(models.Model):
     # in ORM can be referenced as tenant.Status.TRIALING
     class Status(models.IntegerChoices):
-        FREE = 0, _("Free")
         TRIALING = 1, _("Trialing")
         ACTIVE = 2, _("Active")
         EXEMPT = 3, _("Exempt")  # for using service without paying, e.g. admins, etc
@@ -39,13 +38,12 @@ class Tenant(models.Model):
         TRIAL_EXPIRED = 5, _("Trial expired")
 
     ACTIVE_STATUSES = (
-        Status.FREE,
         Status.TRIALING,
         Status.ACTIVE,
         Status.EXEMPT,
     )
     name = models.CharField(max_length=255, unique=True)
-    status = models.IntegerField(choices=Status.choices, default=Status.FREE)
+    status = models.IntegerField(choices=Status.choices, default=Status.ACTIVE)
 
     objects = TenantManager()
     history = HistoricalRecords()
