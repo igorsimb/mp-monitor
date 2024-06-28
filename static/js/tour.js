@@ -44,7 +44,7 @@ tour.addStep({
     },
     attachTo: {
         element: '#addItemsToggle',
-        on: 'right',
+        on: 'top',
     },
     buttons: [
         {
