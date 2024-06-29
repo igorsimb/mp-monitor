@@ -16,24 +16,24 @@
                     Демо закончится через: {{ demo_remaining_time }} / {{ demo_user_lifetime_hours }} ч.
                 </li>
                 <li class="list-group-item bg-light">
-                    Максимальное количество товаров: <span {% if user_quota.max_allowed_skus == 0 %}
-                    class="text-danger" {% endif %}>{{ user_quota.max_allowed_skus }}</span>
+                    Максимальное количество товаров: <span {% if user_quota.skus_limit == 0 %}
+                    class="text-danger" {% endif %}>{{ user_quota.skus_limit }}</span>
                     / {{ demo_max_allowed_skus }}
                 </li>
                 <li class="list-group-item bg-light">
-                    Ручные обновления: <span {% if user_quota.manual_updates == 0 %}
-                    class="text-danger" {% endif %}>{{ user_quota.manual_updates }}</span>
+                    Ручные обновления: <span {% if user_quota.manual_updates_limit == 0 %}
+                    class="text-danger" {% endif %}>{{ user_quota.manual_updates_limit }}</span>
                     / {{ demo_manual_updates }}
                 </li>
                 <li class="list-group-item bg-light">
-                    Автоматические сканирования: <span {% if user_quota.scheduled_updates == 0 %}
-                    class="text-danger" {% endif %}>{{ user_quota.scheduled_updates }}</span>
+                    Автоматические сканирования: <span {% if user_quota.scheduled_updates_limit == 0 %}
+                    class="text-danger" {% endif %}>{{ user_quota.scheduled_updates_limit }}</span>
                     / {{ demo_scheduled_updates }}
                 </li>
                 <li class="list-group-item bg-light">
                     <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Однократная проверка одного товара">Единицы проверки</span>:
-                    <span {% if user_quota.allowed_parse_units == 0 %}
-                    class="text-danger" {% endif %}>{{ user_quota.allowed_parse_units }}</span>
+                    <span {% if user_quota.parse_units_limit == 0 %}
+                    class="text-danger" {% endif %}>{{ user_quota.parse_units_limit }}</span>
                     / {{ demo_allowed_parse_units }}
                 </li>
             </ul>

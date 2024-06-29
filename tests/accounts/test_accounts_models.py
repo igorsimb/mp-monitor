@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.dispatch import Signal
 
-from accounts.models import CustomUser, add_user_to_group
+from accounts.models import User, add_user_to_group
 from accounts.models import Tenant
 from tests.factories import UserFactory, UserQuotaFactory
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-class TestCustomUserModel:
+class TestUserModel:
     def test_user_exists(self) -> None:
         user = UserFactory()
 
@@ -50,7 +50,7 @@ def setup_signal_test():
 
     logger.debug("Creating a signal to connect the function to post_save")
     signal = Signal()
-    signal.connect(add_user_to_group, sender=CustomUser, dispatch_uid="test_signal")
+    signal.connect(add_user_to_group, sender=User, dispatch_uid="test_signal")
 
     return user, signal
 
@@ -61,7 +61,7 @@ class TestAddUserToGroup:
         user, signal = setup_signal_test
 
         logger.debug("Emitting signal with created=True")
-        signal.send(sender=CustomUser, instance=user, created=True)
+        signal.send(sender=User, instance=user, created=True)
 
         logger.info("Checking if the user is added to group '%s'", user.tenant.name)
         group = Group.objects.get(name=user.tenant.name)
@@ -77,7 +77,7 @@ class TestAddUserToGroup:
         logger.info("Saved user, user.tenant = %s", user.tenant)
 
         logger.debug("Emitting signal with created=True")
-        signal.send(sender=CustomUser, instance=user, created=True)
+        signal.send(sender=User, instance=user, created=True)
 
         logger.info("Checking if the user is added to a group after saving the user...")
         assert user.groups.count() == 1
@@ -86,7 +86,7 @@ class TestAddUserToGroup:
         user, signal = setup_signal_test
 
         logger.debug("Emitting signal with created=True")
-        signal.send(sender=CustomUser, instance=user, created=True)
+        signal.send(sender=User, instance=user, created=True)
 
         old_group = Group.objects.filter(name=user.tenant.name).first()
 
@@ -96,7 +96,7 @@ class TestAddUserToGroup:
         logger.info("New tenant name is %s", user.tenant.name)
 
         logger.debug("Emitting post-save signal again")
-        signal.send(sender=CustomUser, instance=user, created=False)
+        signal.send(sender=User, instance=user, created=False)
 
         logger.info("Checking if the user is removed from the old group and added to the new group")
         new_group = Group.objects.filter(name="new_tenant_name").first()

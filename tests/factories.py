@@ -51,7 +51,7 @@ class ItemFactory(DjangoModelFactory):
 
 class UserQuotaFactory(DjangoModelFactory):
     class Meta:
-        model = "accounts.UserQuota"
+        model = "accounts.TenantQuota"
 
     # check if user is set, otherwise create a new user
     user = factory.LazyAttribute(lambda obj: obj.user if obj.user else UserFactory())

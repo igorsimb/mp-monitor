@@ -2,22 +2,17 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from allauth.account.models import EmailAddress
 from django.utils.translation import gettext_lazy as _
+from simple_history.admin import SimpleHistoryAdmin
 
 from accounts.forms import CustomUserCreationForm, CustomUserChangeForm
-from accounts.models import CustomUser, UserQuota
+from accounts.models import User, TenantQuota, Tenant
 
 
-class QuotaInline(admin.TabularInline):
-    model = UserQuota
-    extra = 0
-
-
-@admin.register(CustomUser)
+@admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    inlines = [QuotaInline]
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
-    model = CustomUser
+    model = User
     date_hierarchy = "created_at"
     list_display = ["email", "username", "created_at", "get_item_count", "is_demo_user", "is_active"]
     raw_id_fields = ["tenant"]
@@ -64,11 +59,29 @@ class CustomUserAdmin(UserAdmin):
         return obj.tenant.item_set.count()
 
 
-@admin.register(UserQuota)
-class UserQuotaAdmin(admin.ModelAdmin):
-    model = UserQuota
-    list_display = ["user", "user_lifetime_hours", "max_allowed_skus", "manual_updates", "scheduled_updates"]
-    raw_id_fields = ["user"]
+class TenantInline(admin.TabularInline):
+    model = Tenant
+    extra = 0
 
+
+@admin.register(TenantQuota)
+class TenantQuotaAdmin(admin.ModelAdmin):
+    model = TenantQuota
+    inlines = [TenantInline]
+    list_display = ["name", "total_hours_allowed", "skus_limit", "manual_updates_limit", "scheduled_updates_limit",
+                    "parse_units_limit"]
+    list_display_links = ["name", "total_hours_allowed"]
+
+
+@admin.register(Tenant)
+class TenantAdmin(SimpleHistoryAdmin):
+    history_list_display = ["tenant_status"]
+    list_display = ["name", "status", "payment_plan", "quota"]
+
+    def tenant_status(self, obj):
+        return obj.get_status_display()
+
+
+# admin.site.register(TenantAdmin)
 
 admin.site.unregister(EmailAddress)

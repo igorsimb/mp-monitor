@@ -4,7 +4,7 @@ import httpx
 import pytest
 from django.contrib.auth import get_user_model
 
-from accounts.models import CustomUser
+from accounts.models import User
 from main.models import Item, Tenant
 from main.tasks import scrape_interval_task
 
@@ -101,11 +101,11 @@ class TestScrapeIntervalTask:
         mocker.patch("httpx.get", side_effect=mock_responses)
 
     @pytest.fixture
-    def user(self) -> CustomUser:
+    def user(self) -> User:
         return User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
 
     @pytest.fixture
-    def tenant(self, user: CustomUser) -> Tenant:
+    def tenant(self, user: User) -> Tenant:
         return Tenant.objects.get(name=user.email)
 
     @pytest.fixture

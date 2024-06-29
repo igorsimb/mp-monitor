@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from guardian.shortcuts import assign_perm, get_perms
 
-from main.models import Tenant, Item, Price
+from main.models import Tenant, Item, Price, TenantStatus
 from tests.factories import UserFactory, TenantFactory
 
 logger = logging.getLogger(__name__)
@@ -24,15 +24,15 @@ class TestTenantModel:
         user = UserFactory()
 
         assert user.tenant is not None
-        assert user.tenant.status == user.tenant.Status.ACTIVE
+        assert user.tenant.status == user.tenant.status.ACTIVE
 
     def test_active_tenant(self) -> None:
         """Tests the active() manager method to ensure it correctly returns active tenants."""
-        trialing = TenantFactory(status=Tenant.Status.TRIALING, name="unique1@testing.com")
-        active = TenantFactory(status=Tenant.Status.ACTIVE, name="unique2@testing.com")
-        exempt = TenantFactory(status=Tenant.Status.EXEMPT, name="unique3@testing.com")
-        TenantFactory(status=Tenant.Status.CANCELED, name="unique4@testing.com")
-        TenantFactory(status=Tenant.Status.TRIAL_EXPIRED, name="unique6@testing.com")
+        trialing = TenantFactory(status=TenantStatus.TRIALING, name="unique1@testing.com")
+        active = TenantFactory(status=TenantStatus.ACTIVE, name="unique2@testing.com")
+        exempt = TenantFactory(status=TenantStatus.EXEMPT, name="unique3@testing.com")
+        TenantFactory(status=TenantStatus.CANCELED, name="unique4@testing.com")
+        TenantFactory(status=TenantStatus.TRIAL_EXPIRED, name="unique6@testing.com")
 
         active_tenants = Tenant.objects.active()  # Queryset, aka a set
         assert set(active_tenants) == {trialing, active, exempt}

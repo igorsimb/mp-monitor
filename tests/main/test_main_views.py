@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 
-from accounts.models import UserQuota
+from accounts.models import TenantQuota
 from factories import IntervalScheduleFactory, PeriodicTaskFactory, UserFactory
 from main.forms import ScrapeForm, ScrapeIntervalForm
 from main.models import Item
@@ -445,7 +445,7 @@ class TestScrapeItemsView:
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 1 max allowed sku...")
-        user_quota = UserQuota.objects.get(user=request.user)
+        user_quota = TenantQuota.objects.get(user=request.user)
         user_quota.max_allowed_skus = 1
         user_quota.save()
 
@@ -478,7 +478,7 @@ class TestScrapeItemsView:
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 3 max allowed sku...")
-        user_quota = UserQuota.objects.get(user=request.user)
+        user_quota = TenantQuota.objects.get(user=request.user)
         user_quota.max_allowed_skus = 3
         user_quota.save()
 
@@ -525,7 +525,7 @@ class TestScrapeItemsView:
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 1 max allowed sku...")
-        user_quota = UserQuota.objects.get(user=request.user)
+        user_quota = TenantQuota.objects.get(user=request.user)
         user_quota.manual_updates = manual_updates_count
         user_quota.save()
 
@@ -560,7 +560,7 @@ class TestScrapeItemsView:
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 1 allowed parse unit...")
-        user_quota = UserQuota.objects.get(user=request.user)
+        user_quota = TenantQuota.objects.get(user=request.user)
         user_quota.allowed_parse_units = 1
         user_quota.save()
 
@@ -593,7 +593,7 @@ class TestScrapeItemsView:
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 3 allowed parse unit...")
-        user_quota = UserQuota.objects.get(user=request.user)
+        user_quota = TenantQuota.objects.get(user=request.user)
         user_quota.allowed_parse_units = 3
         user_quota.save()
 

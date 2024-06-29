@@ -8,7 +8,7 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 
 import config
-from accounts.models import UserQuota
+from accounts.models import TenantQuota
 from main.models import Item
 from tests.factories import UserFactory, PeriodicTaskFactory
 
@@ -76,7 +76,7 @@ class TestDemoView:
         """
         client.get(reverse("demo"))
         user = User.objects.get(username__startswith="demo-user")
-        user_quota = UserQuota.objects.get(user=user)
+        user_quota = TenantQuota.objects.get(user=user)
         items = Item.objects.filter(tenant=user.tenant)
         assert user_quota.user_lifetime_hours == config.DEMO_USER_EXPIRATION_HOURS
         assert user_quota.max_allowed_skus == config.DEMO_USER_MAX_ALLOWED_SKUS - len(items)

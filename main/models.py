@@ -1,7 +1,7 @@
 import logging
+from _decimal import InvalidOperation, DivisionByZero
 from datetime import datetime
 
-from _decimal import InvalidOperation, DivisionByZero
 from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -11,57 +11,95 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
-from simple_history.models import HistoricalRecords
+
+# from accounts.models import Tenant
+
+# from simple_history.models import HistoricalRecords
+
+# from accounts.models import TenantQuota
 
 logger = logging.getLogger(__name__)
 
 
-class TenantManager(models.Manager):
-    """A manager to provide custom methods for Tenant"""
+class PaymentPlan(models.Model):
+    class PlanName(models.TextChoices):
+        FREE = "FREE", _("Free")
+        BUSINESS = "BUSINESS", _("Business")
+        PROFESSIONAL = "PROFESSIONAL", _("Professional")
+        CORPORATE = "CORPORATE", _("Corporate")
 
-    def active(self) -> models.QuerySet:
-        """
-        Returns only active tenants.
-        Can be used in ORM like so: Tenant.objects.active()
-        """
-        qs = self.get_queryset()
-        return qs.filter(status__in=self.model.ACTIVE_STATUSES)  # type: ignore
+    name = models.CharField(max_length=20, choices=PlanName.choices, unique=True)
+    quotas = models.ForeignKey("accounts.TenantQuota", on_delete=models.PROTECT, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
+    @classmethod
+    def get_default_payment_plan(cls) -> "PaymentPlan":
+        plan, created = cls.objects.get_or_create(name=cls.PlanName.FREE)
+        return plan.id
 
-class Tenant(models.Model):
-    # in ORM can be referenced as tenant.Status.TRIALING
-    class Status(models.IntegerChoices):
-        TRIALING = 1, _("Trialing")
-        ACTIVE = 2, _("Active")
-        EXEMPT = 3, _("Exempt")  # for using service without paying, e.g. admins, etc
-        CANCELED = 4, _("Canceled")
-        TRIAL_EXPIRED = 5, _("Trial expired")
-
-    ACTIVE_STATUSES = (
-        Status.TRIALING,
-        Status.ACTIVE,
-        Status.EXEMPT,
-    )
-    name = models.CharField(max_length=255, unique=True)
-    status = models.IntegerField(choices=Status.choices, default=Status.ACTIVE)
-
-    objects = TenantManager()
-    history = HistoricalRecords()
-
-    class Meta:
-        verbose_name = "Организация"
-        verbose_name_plural = "Организации"
-        # speeds up database queries (https://docs.djangoproject.com/en/5.0/ref/models/options/#indexes)
-        indexes = [
-            models.Index(fields=["status"]),
-        ]
-
-    def __str__(self):  # pylint: disable=invalid-str-returned
+    def __str__(self):
         return self.name
 
 
+# class TenantManager(models.Manager):
+#     """A manager to provide custom methods for Tenant"""
+#
+#     def active(self) -> models.QuerySet:
+#         """
+#         Returns only active tenants.
+#         Can be used in ORM like so: Tenant.objects.active()
+#         """
+#         qs = self.get_queryset()
+#         return qs.filter(status__in=self.model.ACTIVE_STATUSES)  # type: ignore
+#
+#
+# class TenantStatus(models.IntegerChoices):
+#     TRIALING = 1, _("Trialing")
+#     ACTIVE = 2, _("Active")
+#     EXEMPT = 3, _("Exempt")  # # for using service without paying, e.g. admins, etc
+#     CANCELED = 4, _("Canceled")
+#     TRIAL_EXPIRED = 5, _("Trial expired")
+#
+#
+# class Tenant(models.Model):
+#     ACTIVE_STATUSES = (
+#         TenantStatus.TRIALING,
+#         TenantStatus.ACTIVE,
+#         TenantStatus.EXEMPT,
+#     )
+#     name = models.CharField(max_length=255, unique=True)
+#     status = models.IntegerField(choices=TenantStatus.choices, default=TenantStatus.ACTIVE)
+#     # Ensure a tenant cannot be associated with a non-existent payment plan.
+#     payment_plan = models.ForeignKey(
+#         PaymentPlan, on_delete=models.SET_NULL, null=True, default=PaymentPlan.get_default_payment_plan
+#     )
+#     quota = models.ForeignKey("accounts.TenantQuota", on_delete=models.PROTECT, related_name="tenants", null=True,
+#                               blank=True)
+#
+#     objects = TenantManager()
+#     history = HistoricalRecords()
+#
+#     class Meta:
+#         verbose_name = "Организация"
+#         verbose_name_plural = "Организации"
+#         # speeds up database queries (https://docs.djangoproject.com/en/5.0/ref/models/options/#indexes)
+#         indexes = [
+#             models.Index(fields=["status"]),
+#         ]
+#
+#     def __str__(self):  # pylint: disable=invalid-str-returned
+#         return self.name
+#
+#
+# # Create a TenantQuota object for each tenant upon creation
+# @receiver(post_save, sender=Tenant)
+# def create_user_quota(sender, instance, created, **kwargs):  # type: ignore  # pylint: disable=[unused-argument]
+#     if created:
+#         TenantQuota.objects.create(tenant=instance)
+
+
 class Item(models.Model):
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+    tenant = models.ForeignKey("accounts.Tenant", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=20)
     seller_price = models.DecimalField(
@@ -229,6 +267,5 @@ class Price(models.Model):
 
     def __str__(self) -> str:
         return str(self.value)
-
 
 # TODO: Use Custom models manager for queryset of enabled products

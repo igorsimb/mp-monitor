@@ -77,7 +77,7 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
 
         time_since_user_created = timezone.now() - self.request.user.created_at
         if get_user_quota(self.request.user) is not None:
-            remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
+            remaining_time = timedelta(hours=user_quota.total_hours_allowed) - time_since_user_created
             remaining_hours = remaining_time.seconds // 3600
             remaining_minutes = (remaining_time.seconds % 3600) // 60
             context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
@@ -143,7 +143,7 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         user_quota = get_user_quota(self.request.user)
         time_since_user_created = timezone.now() - self.request.user.created_at
         if get_user_quota(self.request.user) is not None:
-            remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
+            remaining_time = timedelta(hours=user_quota.total_hours_allowed) - time_since_user_created
             remaining_hours = remaining_time.seconds // 3600
             remaining_minutes = (remaining_time.seconds % 3600) // 60
             context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
@@ -156,6 +156,7 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
         context["demo_scheduled_updates"] = int(config.DEMO_USER_SCHEDULED_UPDATES)
+        context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         return context
 
     def get_queryset(self) -> QuerySet[Item]:
