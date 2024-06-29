@@ -268,4 +268,5 @@ class Price(models.Model):
     def __str__(self) -> str:
         return str(self.value)
 
+
 # TODO: Use Custom models manager for queryset of enabled products

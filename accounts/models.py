@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from config import DEMO_USER_EXPIRATION_HOURS
+
 # from main.models import Tenant, TenantStatus
 from simple_history.models import HistoricalRecords
 
@@ -42,10 +43,12 @@ class Tenant(models.Model):
     name = models.CharField(max_length=255, unique=True)
     status = models.IntegerField(choices=TenantStatus.choices, default=TenantStatus.ACTIVE)
     # Ensure a tenant cannot be associated with a non-existent payment plan.
-    payment_plan = models.ForeignKey(PaymentPlan, on_delete=models.SET_NULL,
-                                     default=PaymentPlan.get_default_payment_plan, null=True)
-    quota = models.ForeignKey("accounts.TenantQuota", on_delete=models.PROTECT, related_name="tenants", null=True,
-                              blank=True)
+    payment_plan = models.ForeignKey(
+        PaymentPlan, on_delete=models.SET_NULL, default=PaymentPlan.get_default_payment_plan, null=True
+    )
+    quota = models.ForeignKey(
+        "accounts.TenantQuota", on_delete=models.PROTECT, related_name="tenants", null=True, blank=True
+    )
 
     objects = TenantManager()
     history = HistoricalRecords()

@@ -74,9 +74,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="user",
-            index=models.Index(
-                fields=["tenant"], name="accounts_us_tenant__b29105_idx"
-            ),
+            index=models.Index(fields=["tenant"], name="accounts_us_tenant__b29105_idx"),
         ),
         migrations.AddIndex(
             model_name="tenant",
