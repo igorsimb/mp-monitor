@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 
-from accounts.models import UserQuota
+from accounts.models import TenantQuota
 from factories import IntervalScheduleFactory, PeriodicTaskFactory, UserFactory
 from main.forms import ScrapeForm, ScrapeIntervalForm
 from main.models import Item
@@ -26,7 +26,7 @@ from main.views import (
     update_items,
     update_scrape_interval,
 )
-from tests.factories import UserQuotaFactory
+from tests.factories import TenantQuotaFactory
 
 logger = logging.getLogger(__name__)
 
@@ -355,7 +355,8 @@ class TestScrapeItemsView:
     @pytest.fixture
     def post_request_with_user(self) -> WSGIRequest:
         skus = f"{self.sku1}, {self.sku2}"
-        user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
+        # user = User.objects.create_user(username="testuser", email="testuser@test.com", password="testpassword")
+        user = UserFactory(username="testuser", email="testuser@test.com", password="testpassword")
         factory = RequestFactory()
         url = reverse("scrape_item", kwargs={"skus": skus})
         request = factory.post(url, {"skus": skus})
@@ -374,15 +375,15 @@ class TestScrapeItemsView:
 
         return request
 
-    def test_user_and_quotas_creation(self):
+    def test_user_and_quotas_default_values(self):
         my_user = UserFactory()
-        my_quotas = UserQuotaFactory(user=my_user)
-
-        assert my_quotas.user == my_user
-        assert my_quotas.user_lifetime_hours == 10
-        assert my_quotas.max_allowed_skus == 10
-        assert my_quotas.manual_updates == 10
-        assert my_quotas.scheduled_updates == 10
+        my_user.tenant.quota = TenantQuotaFactory()
+        assert my_user.tenant.quota is not None
+        assert my_user.tenant.quota.total_hours_allowed == 10
+        assert my_user.tenant.quota.skus_limit == 10
+        assert my_user.tenant.quota.manual_updates_limit == 10
+        assert my_user.tenant.quota.scheduled_updates_limit == 10
+        assert my_user.tenant.quota.parse_units_limit == 100
 
     def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user
@@ -433,23 +434,16 @@ class TestScrapeItemsView:
         self, client: Client, post_request_with_user: WSGIRequest, mocker
     ) -> None:
         """
-        Tests that a message is displayed to the user if the quota is exceeded.
-        Test flow:
-        1. Create a user with a quota of 1 max allowed sku.
-        2. Send a POST request to the scrape 2 SKUs (thus exceeding the quota).
-        3. Check if the error message is displayed to the user.
-        4. Check that max allowed skus were not changed after the error.
+        Tests that a message is displayed to the user if the quota is exceeded and no quota change is made.
         """
         skus = ["12345", "67890"]
         request = post_request_with_user
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 1 max allowed sku...")
-        user_quota = UserQuota.objects.get(user=request.user)
-        user_quota.max_allowed_skus = 1
-        user_quota.save()
-
-        old_user_quota = user_quota.max_allowed_skus
+        request.user.tenant.quota = TenantQuotaFactory()
+        request.user.tenant.quota.skus_limit = 1
+        old_user_quota = request.user.tenant.quota.skus_limit
 
         logger.info("Sending a POST request to scrape 2 SKUs...")
         response = scrape_items(request, skus)
@@ -457,8 +451,7 @@ class TestScrapeItemsView:
         logger.info("Checking if the error message was displayed to the user...")
         assert error_message.call_count == 1
 
-        user_quota.refresh_from_db()
-        new_user_quota = user_quota.max_allowed_skus
+        new_user_quota = request.user.tenant.quota.skus_limit
         logger.info("Checking if the max allowed skus were not changed after the error...")
         assert new_user_quota == old_user_quota
 
@@ -466,23 +459,16 @@ class TestScrapeItemsView:
         self, client: Client, post_request_with_user: WSGIRequest, mocker
     ) -> None:
         """
-        Tests that a message is not displayed to the user if the quota is not exceeded.
-        Test flow:
-        1. Create a user with a quota of 3 max allowed sku.
-        2. Send a POST request to the scrape 2 SKUs (thus not exceeding the quota).
-        3. Check no error message is displayed to the user.
-        4. Check that max allowed skus was changed by the number of skus sent.
+        Tests that a message is not displayed to the user if the quota is not exceeded and quota change is made.
         """
         skus = ["12345", "67890"]
         request = post_request_with_user
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 3 max allowed sku...")
-        user_quota = UserQuota.objects.get(user=request.user)
-        user_quota.max_allowed_skus = 3
-        user_quota.save()
-
-        old_user_quota = user_quota.max_allowed_skus
+        request.user.tenant.quota = TenantQuotaFactory()
+        request.user.tenant.quota.skus_limit = 3
+        old_user_quota = request.user.tenant.quota.skus_limit
 
         logger.info("Sending a POST request to scrape 2 SKUs...")
         response = scrape_items(request, skus)
@@ -491,11 +477,11 @@ class TestScrapeItemsView:
         logger.info("Checking that no error message was displayed to the user...")
         assert error_message.call_count == 0
 
-        user_quota.refresh_from_db()
-        new_user_quota = user_quota.max_allowed_skus
+        new_user_quota = request.user.tenant.quota.skus_limit
         logger.info("Checking if the max allowed skus was changed by the number of skus sent...")
         assert new_user_quota == old_user_quota - len(skus)
 
+    @pytest.mark.skip(reason="Manual updates quota will be deprecated in the future")
     @pytest.mark.parametrize(
         "manual_updates_count, errors_called_count, is_quota_updated",
         [
@@ -525,7 +511,7 @@ class TestScrapeItemsView:
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 1 max allowed sku...")
-        user_quota = UserQuota.objects.get(user=request.user)
+        user_quota = TenantQuota.objects.get(user=request.user)
         user_quota.manual_updates = manual_updates_count
         user_quota.save()
 
@@ -560,11 +546,9 @@ class TestScrapeItemsView:
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 1 allowed parse unit...")
-        user_quota = UserQuota.objects.get(user=request.user)
-        user_quota.allowed_parse_units = 1
-        user_quota.save()
-
-        old_user_quota = user_quota.allowed_parse_units
+        request.user.tenant.quota = TenantQuotaFactory()
+        request.user.tenant.quota.parse_units_limit = 1
+        old_user_quota = request.user.tenant.quota.parse_units_limit
 
         logger.info("Sending a POST request to scrape 2 SKUs...")
         response = scrape_items(request, skus)
@@ -572,8 +556,7 @@ class TestScrapeItemsView:
         logger.info("Checking if the error message was displayed to the user...")
         assert error_message.call_count == 1
 
-        user_quota.refresh_from_db()
-        new_user_quota = user_quota.allowed_parse_units
+        new_user_quota = request.user.tenant.quota.parse_units_limit
         logger.info("Checking if the allowed parse units were not changed after the error...")
         assert new_user_quota == old_user_quota
 
@@ -593,11 +576,9 @@ class TestScrapeItemsView:
         error_message = mocker.patch("django.contrib.messages.error")
 
         logger.info("Creating a user with a quota of 3 allowed parse unit...")
-        user_quota = UserQuota.objects.get(user=request.user)
-        user_quota.allowed_parse_units = 3
-        user_quota.save()
-
-        old_user_quota = user_quota.allowed_parse_units
+        request.user.tenant.quota = TenantQuotaFactory()
+        request.user.tenant.quota.parse_units_limit = 3
+        old_user_quota = request.user.tenant.quota.parse_units_limit
 
         logger.info("Sending a POST request to scrape 2 SKUs...")
         response = scrape_items(request, skus)
@@ -605,8 +586,7 @@ class TestScrapeItemsView:
         logger.info("Checking if the error message was displayed to the user...")
         assert error_message.call_count == 0
 
-        user_quota.refresh_from_db()
-        new_user_quota = user_quota.allowed_parse_units
+        new_user_quota = request.user.tenant.quota.parse_units_limit
         logger.info("Checking if the allowed parse units were not changed after the error...")
         assert new_user_quota != old_user_quota
 

@@ -2,13 +2,16 @@ import factory
 from factory.django import DjangoModelFactory
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
-from main.models import Tenant, Item
+from main.models import Item
+from accounts.models import Tenant, TenantQuota
 from mp_monitor import settings
 
 
 class TenantFactory(DjangoModelFactory):
     class Meta:
         model = Tenant
+
+    name = factory.Sequence(lambda n: f"test_tenant_{n+1}@testing.com")
 
 
 class UserFactory(DjangoModelFactory):
@@ -49,13 +52,13 @@ class ItemFactory(DjangoModelFactory):
     sku = factory.Sequence(lambda n: f"{n+1}" * 5)
 
 
-class UserQuotaFactory(DjangoModelFactory):
+class TenantQuotaFactory(DjangoModelFactory):
     class Meta:
-        model = "accounts.UserQuota"
+        model = TenantQuota
 
-    # check if user is set, otherwise create a new user
-    user = factory.LazyAttribute(lambda obj: obj.user if obj.user else UserFactory())
-    user_lifetime_hours = 10
-    max_allowed_skus = 10
-    manual_updates = 10
-    scheduled_updates = 10
+    name = factory.Sequence(lambda n: f"test_quota_{n+1}")
+    total_hours_allowed = 10
+    skus_limit = 10
+    manual_updates_limit = 10
+    scheduled_updates_limit = 10
+    parse_units_limit = 100

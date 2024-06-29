@@ -60,6 +60,7 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
     permission_required = ["view_item"]
     template_name = "main/item_list.html"
 
+    ordering = ["-updated_at"]
     paginate_by = 25
 
     def get_context_data(self, **kwargs):
@@ -73,11 +74,11 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         active_demo_users = user.objects.filter(is_demo_user=True, is_active=True)
         expired_active_demo_users = [user for user in active_demo_users if user.is_demo_expired]
         non_expired_active_demo_users = [user for user in active_demo_users if not user.is_demo_expired]
-        user_quota = get_user_quota(self.request.user)
+        tenant_quota = get_user_quota(self.request.user)
 
         time_since_user_created = timezone.now() - self.request.user.created_at
         if get_user_quota(self.request.user) is not None:
-            remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
+            remaining_time = timedelta(hours=tenant_quota.total_hours_allowed) - time_since_user_created
             remaining_hours = remaining_time.seconds // 3600
             remaining_minutes = (remaining_time.seconds % 3600) // 60
             context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
@@ -96,7 +97,7 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         context["expired_active_demo_users"] = expired_active_demo_users
         context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
-        context["user_quota"] = user_quota
+        context["tenant_quota"] = tenant_quota
         context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
@@ -140,10 +141,10 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         item_updated_at = self.object.updated_at
         price_created_at = self.object.prices.latest("created_at")
 
-        user_quota = get_user_quota(self.request.user)
+        tenant_quota = get_user_quota(self.request.user)
         time_since_user_created = timezone.now() - self.request.user.created_at
         if get_user_quota(self.request.user) is not None:
-            remaining_time = timedelta(hours=user_quota.user_lifetime_hours) - time_since_user_created
+            remaining_time = timedelta(hours=tenant_quota.total_hours_allowed) - time_since_user_created
             remaining_hours = remaining_time.seconds // 3600
             remaining_minutes = (remaining_time.seconds % 3600) // 60
             context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
@@ -151,11 +152,12 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         context["prices"] = prices_paginated
         context["item_updated_at"] = item_updated_at
         context["price_created_at"] = price_created_at
-        context["user_quota"] = user_quota
+        context["tenant_quota"] = tenant_quota
         context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
         context["demo_scheduled_updates"] = int(config.DEMO_USER_SCHEDULED_UPDATES)
+        context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         return context
 
     def get_queryset(self) -> QuerySet[Item]:

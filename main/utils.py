@@ -24,9 +24,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 import config
-from accounts.models import UserQuota
+from accounts.models import TenantQuota, Tenant
 from main.exceptions import InvalidSKUException, QuotaExceededException
-from main.models import Item, Tenant
+from main.models import Item
 
 logger = logging.getLogger(__name__)
 
@@ -589,14 +589,14 @@ def get_interval_russian_translation(periodic_task: PeriodicTask) -> str:
         return f"{every} {time_unit_number} {time_unit_name}"
 
 
-def get_user_quota(user: User) -> UserQuota | None:
+def get_user_quota(user: User) -> TenantQuota | None:
     """Get the user quota for a given user.
 
     Args:
         user (User): The user for which to get the quota.
 
     Returns:
-        UserQuota: The user quota for the given user.
+        TenantQuota: The user quota for the given user.
 
     You can access the user quota fields like this:
         user_quota.user_lifetime_hours
@@ -608,42 +608,44 @@ def get_user_quota(user: User) -> UserQuota | None:
         user_quota.scheduled_updates
     """
     try:
-        user_quota = UserQuota.objects.get(user=user)
+        # user_quota = TenantQuota.objects.get(user=user)
+        user_quota = user.tenant.quota
         logger.info("User quota found: %s", user_quota)
-    except UserQuota.DoesNotExist:
+    except TenantQuota.DoesNotExist:
         user_quota = None
 
     return user_quota
 
 
 def set_user_quota(
-    user: User,
-    user_lifetime_hours: int = config.DEMO_USER_EXPIRATION_HOURS,
-    max_allowed_skus: int = config.DEMO_USER_MAX_ALLOWED_SKUS,
-    manual_updates: int = config.DEMO_USER_MANUAL_UPDATES,
-    scheduled_updates: int = config.DEMO_USER_SCHEDULED_UPDATES,
-    allowed_parse_units: int = config.DEMO_USER_ALLOWED_PARSE_UNITS,
+    tenant: Tenant,
+    name: str = "DEMO_QUOTA",
+    total_hours_allowed: int = config.DEMO_USER_EXPIRATION_HOURS,
+    skus_limit: int = config.DEMO_USER_MAX_ALLOWED_SKUS,
+    manual_updates_limit: int = config.DEMO_USER_MANUAL_UPDATES,
+    scheduled_updates_limit: int = config.DEMO_USER_SCHEDULED_UPDATES,
+    parse_units_limit: int = config.DEMO_USER_ALLOWED_PARSE_UNITS,
 ) -> None:
-    """Set the user quota for a given user.
+    """Set the user quota for a given user."""
 
-    Args:
-        user (User): The user for which to set the quota.
-        user_lifetime_hours (int): The number of hours the user has to use the service.
-        max_allowed_skus (int): The maximum number of items the user can add to the list.
-        manual_updates (int): The number of manual updates the user can make.
-        scheduled_updates (int): The number of scheduled updates the user can make.
-        allowed_parse_units (int): The number of allowed parse units for the user.
-
-    Returns:
-        None
-    """
-    user_quota = UserQuota.objects.get(user=user)
-    user_quota.user_lifetime_hours = user_lifetime_hours
-    user_quota.max_allowed_skus = max_allowed_skus
-    user_quota.manual_updates = manual_updates
-    user_quota.scheduled_updates = scheduled_updates
-    user_quota.allowed_parse_units = allowed_parse_units
-    user_quota.save()
+    # user_quota, _ = TenantQuota.objects.get_or_create(name="DEMO")
+    # user_quota.user_lifetime_hours = total_hours_allowed
+    # user_quota.max_allowed_skus = skus_limit
+    # user_quota.manual_updates = manual_updates_limit
+    # user_quota.scheduled_updates = scheduled_updates_limit
+    # user_quota.allowed_parse_units = parse_units_limit
+    # user_quota.save()
+    # tenant.quota = user_quota
+    tenant.quota, _ = TenantQuota.objects.get_or_create(
+        name=name,
+        total_hours_allowed=total_hours_allowed,
+        skus_limit=skus_limit,
+        manual_updates_limit=manual_updates_limit,
+        scheduled_updates_limit=scheduled_updates_limit,
+        parse_units_limit=parse_units_limit,
+    )
+    # assign the quota to the tenant
+    tenant.save(update_fields=["quota"])
 
 
 def create_demo_user() -> tuple[User, str]:
@@ -672,7 +674,7 @@ def create_demo_user() -> tuple[User, str]:
         logger.error("Unexpected error during demo user creation: %s", e)
         raise
 
-    set_user_quota(demo_user)
+    set_user_quota(tenant=demo_user.tenant)
     logger.info("Demo user created with email: %s | password: %s", demo_user.email, password_uuid)
     return demo_user, password_uuid
 
@@ -699,7 +701,7 @@ def create_demo_items(demo_user):
         for item in items:
             created_item = Item.objects.create(**item)
             created_items.append(created_item)
-        demo_user.user_quotas.update(max_allowed_skus=config.DEMO_USER_MAX_ALLOWED_SKUS - len(created_items))
+        demo_user.tenant.quota.sku_limit = config.DEMO_USER_MAX_ALLOWED_SKUS - len(created_items)
     except IntegrityError as e:
         logger.error("Integrity error during demo items creation: %s", e)
         raise
@@ -731,8 +733,8 @@ def update_user_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> No
     """
     user_quota = get_user_quota(request.user)
     skus_count = len(re.split(r"\s+|\n|,(?:\s*)", skus))  # count number of skus
-    if skus_count <= user_quota.max_allowed_skus:
-        user_quota.max_allowed_skus -= skus_count
+    if skus_count <= user_quota.skus_limit:
+        user_quota.skus_limit -= skus_count
         user_quota.save()
     else:
         raise QuotaExceededException(
@@ -749,8 +751,8 @@ def update_user_quota_for_manual_updates(request: HttpRequest) -> None:
         request: The HttpRequest object containing user and form data.
     """
     user_quota = get_user_quota(request.user)
-    if user_quota.manual_updates > 0:
-        user_quota.manual_updates -= 1
+    if user_quota.manual_updates_limit > 0:
+        user_quota.manual_updates_limit -= 1
         user_quota.save()
     else:
         raise QuotaExceededException(
@@ -767,8 +769,8 @@ def update_user_quota_for_scheduled_updates(user: User) -> None:
         user: The User object containing the user quota.
     """
     user_quota = get_user_quota(user)
-    if user_quota.scheduled_updates > 0:
-        user_quota.scheduled_updates -= 1
+    if user_quota.scheduled_updates_limit > 0:
+        user_quota.scheduled_updates_limit -= 1
         user_quota.save()
     else:
         raise QuotaExceededException(
@@ -780,8 +782,8 @@ def update_user_quota_for_scheduled_updates(user: User) -> None:
 def update_user_quota_for_allowed_parse_units(user: User, skus: str) -> None:
     user_quota = get_user_quota(user)
     skus_count = len(re.split(r"\s+|\n|,(?:\s*)", skus))
-    if user_quota.allowed_parse_units >= skus_count:
-        user_quota.allowed_parse_units -= skus_count
+    if user_quota.parse_units_limit >= skus_count:
+        user_quota.parse_units_limit -= skus_count
         user_quota.save()
     else:
         raise QuotaExceededException(

@@ -8,8 +8,6 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 
 import config
-from accounts.models import UserQuota
-from main.models import Item
 from tests.factories import UserFactory, PeriodicTaskFactory
 
 logger = logging.getLogger(__name__)
@@ -76,12 +74,10 @@ class TestDemoView:
         """
         client.get(reverse("demo"))
         user = User.objects.get(username__startswith="demo-user")
-        user_quota = UserQuota.objects.get(user=user)
-        items = Item.objects.filter(tenant=user.tenant)
-        assert user_quota.user_lifetime_hours == config.DEMO_USER_EXPIRATION_HOURS
-        assert user_quota.max_allowed_skus == config.DEMO_USER_MAX_ALLOWED_SKUS - len(items)
-        assert user_quota.manual_updates == config.DEMO_USER_MANUAL_UPDATES
-        assert user_quota.scheduled_updates == config.DEMO_USER_SCHEDULED_UPDATES
+        assert user.tenant.quota.total_hours_allowed == config.DEMO_USER_EXPIRATION_HOURS
+        assert user.tenant.quota.skus_limit == config.DEMO_USER_MAX_ALLOWED_SKUS
+        assert user.tenant.quota.manual_updates_limit == config.DEMO_USER_MANUAL_UPDATES
+        assert user.tenant.quota.scheduled_updates_limit == config.DEMO_USER_SCHEDULED_UPDATES
 
 
 @pytest.mark.demo_user
