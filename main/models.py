@@ -1,7 +1,7 @@
 import logging
+from _decimal import InvalidOperation, DivisionByZero
 from datetime import datetime
 
-from _decimal import InvalidOperation, DivisionByZero
 from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -11,57 +11,32 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
-from simple_history.models import HistoricalRecords
 
 logger = logging.getLogger(__name__)
 
 
-class TenantManager(models.Manager):
-    """A manager to provide custom methods for Tenant"""
+class PaymentPlan(models.Model):
+    class PlanName(models.TextChoices):
+        FREE = "FREE", _("Free")
+        BUSINESS = "BUSINESS", _("Business")
+        PROFESSIONAL = "PROFESSIONAL", _("Professional")
+        CORPORATE = "CORPORATE", _("Corporate")
 
-    def active(self) -> models.QuerySet:
-        """
-        Returns only active tenants.
-        Can be used in ORM like so: Tenant.objects.active()
-        """
-        qs = self.get_queryset()
-        return qs.filter(status__in=self.model.ACTIVE_STATUSES)  # type: ignore
+    name = models.CharField(max_length=20, choices=PlanName.choices, unique=True)
+    quotas = models.ForeignKey("accounts.TenantQuota", on_delete=models.PROTECT, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
+    @classmethod
+    def get_default_payment_plan(cls) -> "PaymentPlan":
+        plan, created = cls.objects.get_or_create(name=cls.PlanName.FREE)
+        return plan.id
 
-class Tenant(models.Model):
-    # in ORM can be referenced as tenant.Status.TRIALING
-    class Status(models.IntegerChoices):
-        TRIALING = 1, _("Trialing")
-        ACTIVE = 2, _("Active")
-        EXEMPT = 3, _("Exempt")  # for using service without paying, e.g. admins, etc
-        CANCELED = 4, _("Canceled")
-        TRIAL_EXPIRED = 5, _("Trial expired")
-
-    ACTIVE_STATUSES = (
-        Status.TRIALING,
-        Status.ACTIVE,
-        Status.EXEMPT,
-    )
-    name = models.CharField(max_length=255, unique=True)
-    status = models.IntegerField(choices=Status.choices, default=Status.ACTIVE)
-
-    objects = TenantManager()
-    history = HistoricalRecords()
-
-    class Meta:
-        verbose_name = "Организация"
-        verbose_name_plural = "Организации"
-        # speeds up database queries (https://docs.djangoproject.com/en/5.0/ref/models/options/#indexes)
-        indexes = [
-            models.Index(fields=["status"]),
-        ]
-
-    def __str__(self):  # pylint: disable=invalid-str-returned
+    def __str__(self):
         return self.name
 
 
 class Item(models.Model):
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+    tenant = models.ForeignKey("accounts.Tenant", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=20)
     seller_price = models.DecimalField(
@@ -159,6 +134,7 @@ class Item(models.Model):
         Price.objects.create(item=self, value=self.price)
 
 
+# TODO: move to signals.py
 # Having post_save signal solves "Object needs to be persisted first" if adding perms on save, resulting in failure to
 # add a scraped item to db. This is because Django adds ManyToMany related fields after saving.
 # Source: https://stackoverflow.com/a/23772575
@@ -181,7 +157,6 @@ def add_perms_to_group(sender, instance, created, **kwargs) -> None:  # type: ig
             )
 
 
-# TODO: creation in view and connecting to tenant and items to be implemented in future
 class Schedule(models.Model):
     class Period(models.TextChoices):
         SECONDS = "seconds", _("Секунды")
@@ -229,6 +204,3 @@ class Price(models.Model):
 
     def __str__(self) -> str:
         return str(self.value)
-
-
-# TODO: Use Custom models manager for queryset of enabled products

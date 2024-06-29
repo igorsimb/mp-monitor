@@ -6,7 +6,8 @@ from django.contrib.auth import get_user_model
 from django_celery_beat.models import PeriodicTask
 
 from .exceptions import QuotaExceededException
-from .models import Item, Tenant
+from .models import Item
+from accounts.models import Tenant
 from .utils import (
     scrape_item,
     scrape_items_from_skus,

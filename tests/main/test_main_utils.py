@@ -12,8 +12,9 @@ from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalSch
 from pytest_mock import MockerFixture
 
 import config
-from main.exceptions import InvalidSKUException, QuotaExceededException
-from main.models import Item, Tenant
+from accounts.models import Tenant
+from main.exceptions import InvalidSKUException
+from main.models import Item
 from main.utils import (
     uncheck_all_boxes,
     scrape_item,
@@ -25,7 +26,6 @@ from main.utils import (
     show_invalid_skus_message,
     activate_parsing_for_selected_items,
     get_interval_russian_translation,
-    update_user_quota_for_scheduled_updates,
 )
 
 logger = logging.getLogger(__name__)
@@ -591,26 +591,27 @@ class TestGetIntervalRussianTranslation:
         assert result == expected
 
 
-class TestUpdateUserQuotaForScheduledUpdates:
-    def test_exception_raised_if_no_quota(self):
-        """Exception is raised if user has no quota left"""
-        test_user = UserFactory(is_demo_user=True)
-        user_quota = test_user.user_quotas.get(user=test_user)
-        user_quota.scheduled_updates = 0
-        user_quota.save()
-
-        assert user_quota.scheduled_updates == 0
-        with pytest.raises(QuotaExceededException):
-            update_user_quota_for_scheduled_updates(test_user)
-        assert user_quota.scheduled_updates == 0
-
-    def test_exception_not_raised_if_quota(self):
-        user = UserFactory(is_demo_user=True)
-        user_quota = user.user_quotas.get(user=user)
-        user_quota.scheduled_updates = 1
-        user_quota.save()
-
-        assert user_quota.scheduled_updates == 1
-        update_user_quota_for_scheduled_updates(user)
-        user_quota.refresh_from_db()
-        assert user_quota.scheduled_updates == 0
+# TODO: scheduled updates quota will be removed in the near future
+# class TestUpdateTenantQuotaForScheduledUpdates:
+#     def test_exception_raised_if_no_quota(self):
+#         """Exception is raised if user has no quota left"""
+#         test_user = UserFactory(is_demo_user=True)
+#         user_quota = test_user.user_quotas.get(user=test_user)
+#         user_quota.scheduled_updates = 0
+#         user_quota.save()
+#
+#         assert user_quota.scheduled_updates == 0
+#         with pytest.raises(QuotaExceededException):
+#             update_user_quota_for_scheduled_updates(test_user)
+#         assert user_quota.scheduled_updates == 0
+#
+#     def test_exception_not_raised_if_quota(self):
+#         user = UserFactory(is_demo_user=True)
+#         user_quota = user.user_quotas.get(user=user)
+#         user_quota.scheduled_updates = 1
+#         user_quota.save()
+#
+#         assert user_quota.scheduled_updates == 1
+#         update_user_quota_for_scheduled_updates(user)
+#         user_quota.refresh_from_db()
+#         assert user_quota.scheduled_updates == 0
