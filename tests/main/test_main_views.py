@@ -381,8 +381,6 @@ class TestScrapeItemsView:
         assert my_user.tenant.quota is not None
         assert my_user.tenant.quota.total_hours_allowed == 10
         assert my_user.tenant.quota.skus_limit == 10
-        assert my_user.tenant.quota.manual_updates_limit == 10
-        assert my_user.tenant.quota.scheduled_updates_limit == 10
         assert my_user.tenant.quota.parse_units_limit == 100
 
     def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore

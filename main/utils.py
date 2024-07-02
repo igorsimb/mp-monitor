@@ -611,37 +611,25 @@ def get_user_quota(user: User) -> TenantQuota | None:
         # user_quota = TenantQuota.objects.get(user=user)
         user_quota = user.tenant.quota
         logger.info("User quota found: %s", user_quota)
+        # print(f"BLEH: {user_quota.skus_limit=}, {user.tenant=}")
     except TenantQuota.DoesNotExist:
         user_quota = None
 
     return user_quota
 
 
-def set_user_quota(
+def set_tenant_quota(
     tenant: Tenant,
     name: str = "DEMO_QUOTA",
     total_hours_allowed: int = config.DEMO_USER_EXPIRATION_HOURS,
     skus_limit: int = config.DEMO_USER_MAX_ALLOWED_SKUS,
-    manual_updates_limit: int = config.DEMO_USER_MANUAL_UPDATES,
-    scheduled_updates_limit: int = config.DEMO_USER_SCHEDULED_UPDATES,
     parse_units_limit: int = config.DEMO_USER_ALLOWED_PARSE_UNITS,
 ) -> None:
     """Set the user quota for a given user."""
-
-    # user_quota, _ = TenantQuota.objects.get_or_create(name="DEMO")
-    # user_quota.user_lifetime_hours = total_hours_allowed
-    # user_quota.max_allowed_skus = skus_limit
-    # user_quota.manual_updates = manual_updates_limit
-    # user_quota.scheduled_updates = scheduled_updates_limit
-    # user_quota.allowed_parse_units = parse_units_limit
-    # user_quota.save()
-    # tenant.quota = user_quota
     tenant.quota, _ = TenantQuota.objects.get_or_create(
         name=name,
         total_hours_allowed=total_hours_allowed,
         skus_limit=skus_limit,
-        manual_updates_limit=manual_updates_limit,
-        scheduled_updates_limit=scheduled_updates_limit,
         parse_units_limit=parse_units_limit,
     )
     # assign the quota to the tenant
@@ -674,12 +662,11 @@ def create_demo_user() -> tuple[User, str]:
         logger.error("Unexpected error during demo user creation: %s", e)
         raise
 
-    set_user_quota(tenant=demo_user.tenant)
     logger.info("Demo user created with email: %s | password: %s", demo_user.email, password_uuid)
     return demo_user, password_uuid
 
 
-def create_demo_items(demo_user):
+def create_demo_items(demo_user: User) -> list[Item]:
     """Create demo items for the given user."""
     items = [
         {
@@ -701,7 +688,6 @@ def create_demo_items(demo_user):
         for item in items:
             created_item = Item.objects.create(**item)
             created_items.append(created_item)
-        demo_user.tenant.quota.sku_limit = config.DEMO_USER_MAX_ALLOWED_SKUS - len(created_items)
     except IntegrityError as e:
         logger.error("Integrity error during demo items creation: %s", e)
         raise
@@ -723,7 +709,7 @@ def no_active_demo_user(user: User) -> bool:
     return not (user.is_authenticated and hasattr(user, "is_demo_user") and user.is_demo_user)
 
 
-def update_user_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> None:
+def update_tenant_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> None:
     """
     Checks if the user has enough quota to scrape items and then updates the remaining user quota.
 
@@ -738,44 +724,12 @@ def update_user_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> No
         user_quota.save()
     else:
         raise QuotaExceededException(
-            message=("Превышен лимит количества товаров для данного тарифа."),
+            message=(
+                "Превышен лимит количества товаров для данного тарифа. %s / %s",
+                skus_count,
+                user_quota.skus_limit,
+            ),
             quota_type="max_allowed_skus",
-        )
-
-
-def update_user_quota_for_manual_updates(request: HttpRequest) -> None:
-    """
-    Checks if the user has enough quota to make manual updates and then updates the remaining user quota.
-
-    Args:
-        request: The HttpRequest object containing user and form data.
-    """
-    user_quota = get_user_quota(request.user)
-    if user_quota.manual_updates_limit > 0:
-        user_quota.manual_updates_limit -= 1
-        user_quota.save()
-    else:
-        raise QuotaExceededException(
-            message=("Превышен лимит обновлений вручную для данного тарифа."),
-            quota_type="manual_updates",
-        )
-
-
-def update_user_quota_for_scheduled_updates(user: User) -> None:
-    """
-    Checks if the user has enough quota to make scheduled updates and then updates the remaining user quota.
-
-    Args:
-        user: The User object containing the user quota.
-    """
-    user_quota = get_user_quota(user)
-    if user_quota.scheduled_updates_limit > 0:
-        user_quota.scheduled_updates_limit -= 1
-        user_quota.save()
-    else:
-        raise QuotaExceededException(
-            message=("Превышен лимит обновлений по расписанию для данного тарифа."),
-            quota_type="scheduled_updates",
         )
 
 

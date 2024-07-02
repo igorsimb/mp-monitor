@@ -59,6 +59,4 @@ class TenantQuotaFactory(DjangoModelFactory):
     name = factory.Sequence(lambda n: f"test_quota_{n+1}")
     total_hours_allowed = 10
     skus_limit = 10
-    manual_updates_limit = 10
-    scheduled_updates_limit = 10
     parse_units_limit = 100

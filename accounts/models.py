@@ -136,8 +136,6 @@ class TenantQuota(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     total_hours_allowed = models.PositiveIntegerField(default=10, blank=True, null=True)
     skus_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
-    manual_updates_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
-    scheduled_updates_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
     parse_units_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
 
     class Meta:

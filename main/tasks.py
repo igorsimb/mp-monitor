@@ -5,14 +5,14 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django_celery_beat.models import PeriodicTask
 
+from accounts.models import Tenant
 from .exceptions import QuotaExceededException
 from .models import Item
-from accounts.models import Tenant
 from .utils import (
     scrape_item,
     scrape_items_from_skus,
     update_or_create_items_interval,
-    update_user_quota_for_scheduled_updates,
+    update_user_quota_for_allowed_parse_units,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,8 @@ def update_or_create_items_task(self, tenant_id, skus_list):
     user_to_update = user.objects.get(tenant__id=tenant_id)
     if user_to_update.is_demo_user:
         try:
-            update_user_quota_for_scheduled_updates(user_to_update)
+            # update_user_quota_for_scheduled_updates(user_to_update)
+            update_user_quota_for_allowed_parse_units(user_to_update, skus_list)
         except QuotaExceededException as e:
             logger.warning(e.message)
             return
