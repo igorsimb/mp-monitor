@@ -111,7 +111,8 @@ else:
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "HOST": os.environ["DBHOST"],
-            "NAME": os.environ["DBNAME"],
+            # "NAME": os.environ["DBNAME"],
+            "NAME": "c92626_mpmonitor_ru_db",
             "USER": os.environ["DBUSER"],
             "PASSWORD": os.environ["DBPASS"],
             "PORT": "5432",
