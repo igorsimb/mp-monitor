@@ -11,8 +11,9 @@ from django.urls import reverse
 from django_celery_beat.models import PeriodicTask
 from django_htmx.http import HttpResponseClientRedirect
 
+import config
 from main.models import Item
-from main.utils import task_name, create_demo_user, create_demo_items, no_active_demo_user
+from main.utils import task_name, create_demo_user, create_demo_items, no_active_demo_user, set_tenant_quota
 
 logger = logging.getLogger(__name__)
 user = get_user_model()
@@ -35,16 +36,19 @@ def demo_view(request) -> HttpResponse | HttpResponseRedirect:
     """
     try:
         demo_user, password_uuid = create_demo_user()
-        create_demo_items(demo_user)
+        set_tenant_quota(tenant=demo_user.tenant)
+        demo_items = create_demo_items(demo_user)
+        demo_user.tenant.quota.skus_limit = config.DEMO_USER_MAX_ALLOWED_SKUS - len(demo_items)
+        demo_user.tenant.quota.save()
     except (IntegrityError, ValidationError):
         return render(request, "account/demo_error.html")
     except Exception as e:
         logger.error("Unexpected error in demo_view: %s", e)
         return render(request, "account/demo_error.html")
 
-    user = authenticate(request, username=demo_user.email, password=password_uuid)
-    if user is not None:
-        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+    demo_user = authenticate(request, username=demo_user.email, password=password_uuid)
+    if demo_user is not None:
+        login(request, demo_user, backend="django.contrib.auth.backends.ModelBackend")
     else:
         logger.error("Authentication failed for demo user %s", demo_user.email)
         return render(request, "account/demo_error.html")

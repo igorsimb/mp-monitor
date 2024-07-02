@@ -36,9 +36,7 @@ from .utils import (
     task_name,
     get_interval_russian_translation,
     get_user_quota,
-    update_user_quota_for_max_allowed_sku,
-    update_user_quota_for_manual_updates,
-    update_user_quota_for_scheduled_updates,
+    update_tenant_quota_for_max_allowed_sku,
     update_user_quota_for_allowed_parse_units,
 )
 
@@ -100,8 +98,6 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         context["tenant_quota"] = tenant_quota
         context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
-        context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
-        context["demo_scheduled_updates"] = int(config.DEMO_USER_SCHEDULED_UPDATES)
         context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         if periodic_task:
             schedule_interval = periodic_task.schedule.run_every
@@ -155,8 +151,6 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         context["tenant_quota"] = tenant_quota
         context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
-        context["demo_manual_updates"] = int(config.DEMO_USER_MANUAL_UPDATES)
-        context["demo_scheduled_updates"] = int(config.DEMO_USER_SCHEDULED_UPDATES)
         context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         return context
 
@@ -189,7 +183,7 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
             if get_user_quota(request.user) is not None:
                 try:
                     logger.info("Trying to update demo user quota for max allowed skus...")
-                    update_user_quota_for_max_allowed_sku(request, skus)
+                    update_tenant_quota_for_max_allowed_sku(request, skus)
                     update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     logger.warning(e.message)
@@ -234,7 +228,6 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             #  needs to be placed after is_at_least_one_item_selected check to avoid updating quota despite the error
             if get_user_quota(request.user) is not None:
                 try:
-                    update_user_quota_for_manual_updates(request)
                     update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     messages.error(request, e.message)
@@ -327,7 +320,6 @@ def create_scrape_interval_task(
             #  needs to be placed after all form checks to avoid updating quota despite the error
             if get_user_quota(request.user) is not None:
                 try:
-                    update_user_quota_for_scheduled_updates(request.user)
                     update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     messages.error(request, e.message)

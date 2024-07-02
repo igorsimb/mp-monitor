@@ -13,22 +13,12 @@
 
             <ul class="list-group list-group-flush">
                 <li class="list-group-item bg-light">
-                    Демо закончится через: {{ demo_remaining_time }} / {{ demo_user_lifetime_hours }} ч.
+                    Демо закончится через: {{ demo_remaining_time }}
                 </li>
                 <li class="list-group-item bg-light">
                     Максимальное количество товаров: <span {% if tenant_quota.skus_limit == 0 %}
                     class="text-danger" {% endif %}>{{ tenant_quota.skus_limit }}</span>
                     / {{ demo_max_allowed_skus }}
-                </li>
-                <li class="list-group-item bg-light">
-                    Ручные обновления: <span {% if tenant_quota.manual_updates_limit == 0 %}
-                    class="text-danger" {% endif %}>{{ tenant_quota.manual_updates_limit }}</span>
-                    / {{ demo_manual_updates }}
-                </li>
-                <li class="list-group-item bg-light">
-                    Автоматические сканирования: <span {% if tenant_quota.scheduled_updates_limit == 0 %}
-                    class="text-danger" {% endif %}>{{ tenant_quota.scheduled_updates_limit }}</span>
-                    / {{ demo_scheduled_updates }}
                 </li>
                 <li class="list-group-item bg-light">
                     <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Однократная проверка одного товара">Единицы проверки</span>:

@@ -72,8 +72,6 @@ class TenantQuotaAdmin(admin.ModelAdmin):
         "name",
         "total_hours_allowed",
         "skus_limit",
-        "manual_updates_limit",
-        "scheduled_updates_limit",
         "parse_units_limit",
     ]
     list_display_links = ["name", "total_hours_allowed"]
