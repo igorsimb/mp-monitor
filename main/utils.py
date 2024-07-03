@@ -294,6 +294,7 @@ def scrape_items_from_skus(skus: str, is_parser_active: bool = False) -> tuple[l
     logger.info("Going to scrape items: %s", skus)
     items_data = []
     invalid_skus = []
+    # TODO: introduce sleep and improve UX: https://github.com/igorsimb/mp-monitor/issues/164
     for sku in re.split(r"\s+|\n|,(?:\s*)", skus):
         logger.info("Scraping item: %s", sku)
         try:
