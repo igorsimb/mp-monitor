@@ -1,0 +1,130 @@
+<section class="mt-5">
+    <h2 class="h2 text-center display-6 fw-bold text-body-emphasis my-4">Тарифы и цены</h2>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 my-5 text-center pricing-card-container">
+        <div class="col px-0">
+            <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
+                <div class="card-header py-3">
+                    <h3 class="h3 my-0 fw-bold">БЕСПЛАТНЫЙ</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column justify-content-between h-100">
+                        <div>
+                            <h4 class="h2 card-title pricing-card-title mb-0">
+                                0<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                            </h4>
+                            <div class="text-body-secondary fw-light">/месяц</div>
+                            <ul class="list-unstyled my-4 ms-3 text-start">
+                                <li class="mb-3">Количество товаров - 50</li>
+                                <li>
+                                    <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
+                                          data-bs-title="Однократная проверка одного товара">Единиц проверки</span> -
+                                    5000
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <hr class="opacity-25 w-50 mx-auto">
+                            <a href="{% url 'account_signup' %}" type="button" class="w-100 btn btn-lg btn-outline-primary">Регистрация</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col px-1">
+            <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
+                <div class="card-header py-3">
+                    <h3 class="h3 my-0 fw-bold">БИЗНЕС</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column justify-content-between h-100">
+                        <div>
+                            <h4 class="h2 card-title pricing-card-title mb-0">
+                                5 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                            </h4>
+                            <div class="text-body-secondary fw-light">/месяц</div>
+                            <ul class="list-unstyled mt-3 mb-4 ms-3 text-start ">
+                                <li>Количество товаров - 50</li>
+                                <li class="my-3">
+                            <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
+                                  data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 35 000
+                                </li>
+                                <li>Стоимость за проверку - 0.17 руб.</li>
+                            </ul>
+                        </div>
+{#                        <div>#}
+{#                            <hr class="opacity-25 w-50 mx-auto">#}
+{#                            <button type="button" class="w-100 btn btn-lg btn-outline-primary">Регистрация</button>#}
+{#                        </div>#}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col px-0">
+            <div class="card mb-4 rounded-3 shadow-sm border-primary fit-content price-card-height">
+                <div class="card-header py-3 text-bg-primary border-primary">
+                    <h3 class="h3 my-0 fw-bold">ПРОФЕССИОНАЛ</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column justify-content-between h-100">
+                        <div>
+                            <h4 class="h2 card-title pricing-card-title mb-0">
+                                11 990<span
+                                    class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                            </h4>
+                            <div class="text-body-secondary fw-light">/месяц</div>
+                            <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
+                                <li>Количество товаров - 1000</li>
+                                <li class="my-3">
+                            <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
+                                  data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 100 000
+                                </li>
+                                <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
+                                <li>Стоимость за проверку - 0.12 руб.</li>
+                            </ul>
+                        </div>
+{#                        <div>#}
+{#                            <hr class="opacity-25 w-50 mx-auto">#}
+{#                            <button type="button" class="w-100 btn btn-lg btn-primary">Регистрация</button>#}
+{#                        </div>#}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col ps-1">
+            <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
+                <div class="card-header py-3">
+                    <h3 class="h3 my-0 fw-bold">КОРПОРАТИВНЫЙ</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column justify-content-between h-100">
+                        <div>
+                            <h4 class="h2 card-title pricing-card-title mb-0">
+                                35 990<span
+                                    class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                            </h4>
+                            <div class="text-body-secondary fw-light">/месяц</div>
+                            <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
+                                <li>Количество товаров - 5000</li>
+                                <li class="my-3">
+                            <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
+                                  data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 500 000
+                                </li>
+                                <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
+                                <li>Стоимость за проверку - 0.07 руб.</li>
+                            </ul>
+                        </div>
+{#                        <div>#}
+{#                            <hr class="opacity-25 w-50 mx-auto">#}
+{#                            <button type="button" class="w-100 btn btn-lg btn-outline-primary">Регистрация</button>#}
+{#                        </div>#}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+

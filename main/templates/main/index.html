@@ -8,22 +8,24 @@
 
 {% block content %}
 
-    <main class="container py-3 slide-transition">
+    <main class="container pt-3 pb-0 mb-0 slide-transition">
 
         {% include "main/partials/homepage/hero_section.html" %}
         {% include "main/partials/homepage/features.html" %}
+        {% include "main/partials/homepage/prices.html" %}
         {% include "main/partials/homepage/how_does_it_work.html" %}
-{#        {% include "main/partials/homepage/problem_solution.html" %}#}
+        {#        {% include "main/partials/homepage/problem_solution.html" %}#}
         {% include "main/partials/homepage/faq.html" %}
 
         <!-- Call to action -->
-        <section aria-labelledby="cta-title" class="row my-5">
+        <section aria-labelledby="cta-title" class="row mt-5 pb-5 bg-body-secondary bg-fullwidth">
             <div class="col text-center rounded-3">
                 <h2 id="cta-title" class="display-6 fw-bold text-body-emphasis">
                     Начните получать актуальную информацию о ценах на Wildberries
                 </h2>
                 <div class="mt-4">
-                    <a href="{% url 'account_signup' %}" class="btn btn-lg btn-success bg-gradient px-4 rounded-pill" type="button">
+                    <a href="{% url 'account_signup' %}" class="btn btn-lg btn-success bg-gradient px-4 rounded-pill"
+                       type="button">
                         Зарегистрироваться и начать мониторинг
                     </a>
                 </div>
