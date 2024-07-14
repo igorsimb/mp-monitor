@@ -7,13 +7,42 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Мониторинг цен на Wildberries: легко и без лишней ручной работы" />
+    <meta name="description" content="Мониторинг цен на Wildberries: легко и без лишней ручной работы"/>
 
-    <meta property="og:title" content="MP Monitor" />
-    <meta property="og:description" content="Мониторинг цен на Wildberries: легко и без лишней ручной работы" />
-    <meta property="og:type" content="Website" />
-    <meta property="og:image" content="{% static 'img/homepage/logo.png' %}" />
-    <meta name="author" content="Игорь Симбирцев" />
+    <meta property="og:title" content="MP Monitor"/>
+    <meta property="og:description" content="Мониторинг цен на Wildberries: легко и без лишней ручной работы"/>
+    <meta property="og:type" content="Website"/>
+    <meta property="og:image" content="{% static 'img/homepage/logo.png' %}"/>
+    <meta name="author" content="Игорь Симбирцев"/>
+
+
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function (m, e, t, r, i, k, a) {
+            m[i] = m[i] || function () {
+                (m[i].a = m[i].a || []).push(arguments)
+            };
+            m[i].l = 1 * new Date();
+            for (var j = 0; j < document.scripts.length; j++) {
+                if (document.scripts[j].src === r) {
+                    return;
+                }
+            }
+            k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a)
+        })
+        (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+        ym(97825888, "init", {
+            clickmap: true,
+            trackLinks: true,
+            accurateTrackBounce: true,
+            webvisor: true
+        });
+    </script>
+    <noscript>
+        <div><img src="https://mc.yandex.ru/watch/97825888" style="position:absolute; left:-9999px;" alt=""/></div>
+    </noscript>
+    <!-- /Yandex.Metrika counter -->
 
 
     <!-- HTMX -->
@@ -54,7 +83,7 @@
 
 </head>
 <body class="d-flex flex-column h-100 main-content" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-style="background-image: url({% static 'img/bg.png' %}); background-position: center; background-repeat: repeat;">
+      style="background-image: url({% static 'img/bg.png' %}); background-position: center; background-repeat: repeat;">
 
 {% include "main/partials/navbar.html" %}
 
