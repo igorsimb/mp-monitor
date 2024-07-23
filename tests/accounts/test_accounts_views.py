@@ -76,7 +76,7 @@ class TestDemoView:
         client.get(reverse("demo"))
         user = User.objects.get(username__startswith="demo-user")
         items = Item.objects.filter(tenant=user.tenant)
-        assert user.tenant.quota.total_hours_allowed == config.DEMO_USER_EXPIRATION_HOURS
+        assert user.tenant.quota.total_hours_allowed == config.DEMO_USER_HOURS_ALLOWED
         assert user.tenant.quota.skus_limit == config.DEMO_USER_MAX_ALLOWED_SKUS - len(items)
 
 
@@ -93,13 +93,13 @@ class TestCheckExpiredDemoUsers:
     @pytest.fixture
     def create_expired_demo_user(self) -> User:
         """
-        Demo user created in the past beyond the DEMO_USER_EXPIRATION_HOURS threshold.
+        Demo user created in the past beyond the DEMO_USER_HOURS_ALLOWED threshold.
         """
         demo_user = UserFactory(
             is_demo_user=True,
             is_demo_active=True,
         )
-        demo_user.created_at = timezone.now() - timezone.timedelta(hours=config.DEMO_USER_EXPIRATION_HOURS + 1)
+        demo_user.created_at = timezone.now() - timezone.timedelta(hours=config.DEMO_USER_HOURS_ALLOWED + 1)
         demo_user.save()
         return demo_user
 
