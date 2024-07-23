@@ -1,7 +1,7 @@
 import logging
-from _decimal import InvalidOperation, DivisionByZero
 from datetime import datetime
 
+from _decimal import InvalidOperation, DivisionByZero
 from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -19,7 +19,7 @@ class PaymentPlan(models.Model):
     class PlanName(models.TextChoices):
         FREE = "FREE", _("Free")
         BUSINESS = "BUSINESS", _("Business")
-        PROFESSIONAL = "PROFESSIONAL", _("Professional")
+        PRO = "PROFESSIONAL", _("Professional")
         CORPORATE = "CORPORATE", _("Corporate")
 
     name = models.CharField(max_length=20, choices=PlanName.choices, unique=True)
