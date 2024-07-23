@@ -32,7 +32,7 @@ def logout_view(request):
 def demo_view(request) -> HttpResponse | HttpResponseRedirect:
     """
     Creates a demo user and logs them in.
-    Demo is expired after DEMO_USER_EXPIRATION_HOURS hours (see accounts/models.py).
+    Demo is expired after DEMO_USER_HOURS_ALLOWED hours (see accounts/models.py).
     """
     try:
         demo_user, password_uuid = create_demo_user()

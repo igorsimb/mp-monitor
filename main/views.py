@@ -96,7 +96,7 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         context["update_items_form"] = update_items_form
         context["scrape_interval_form"] = scrape_interval_form
         context["tenant_quota"] = tenant_quota
-        context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
+        context["demo_user_lifetime_hours"] = int(config.DEMO_USER_HOURS_ALLOWED)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         if periodic_task:
@@ -149,7 +149,7 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         context["item_updated_at"] = item_updated_at
         context["price_created_at"] = price_created_at
         context["tenant_quota"] = tenant_quota
-        context["demo_user_lifetime_hours"] = int(config.DEMO_USER_EXPIRATION_HOURS)
+        context["demo_user_lifetime_hours"] = int(config.DEMO_USER_HOURS_ALLOWED)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         return context

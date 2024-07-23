@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
-from config import DEMO_USER_EXPIRATION_HOURS
+from config import DEMO_USER_HOURS_ALLOWED
 from main.models import PaymentPlan
 
 
@@ -90,7 +90,7 @@ class User(AbstractUser):
 
     @property
     def is_demo_expired(self):
-        return timezone.now() > (self.created_at + timezone.timedelta(hours=DEMO_USER_EXPIRATION_HOURS))
+        return timezone.now() > (self.created_at + timezone.timedelta(hours=DEMO_USER_HOURS_ALLOWED))
 
     @property
     def is_active_demo_user(self):
@@ -134,7 +134,7 @@ def add_user_to_group(sender, instance, created, **kwargs):  # type: ignore  # p
 
 class TenantQuota(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
-    total_hours_allowed = models.PositiveIntegerField(default=10, blank=True, null=True)
+    total_hours_allowed = models.PositiveIntegerField(default=24 * 60, blank=True, null=True)
     skus_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
     parse_units_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
 

@@ -621,7 +621,7 @@ def get_user_quota(user: User) -> TenantQuota | None:
 def set_tenant_quota(
     tenant: Tenant,
     name: str = "DEMO_QUOTA",
-    total_hours_allowed: int = config.DEMO_USER_EXPIRATION_HOURS,
+    total_hours_allowed: int = config.DEMO_USER_HOURS_ALLOWED,
     skus_limit: int = config.DEMO_USER_MAX_ALLOWED_SKUS,
     parse_units_limit: int = config.DEMO_USER_ALLOWED_PARSE_UNITS,
 ) -> None:
