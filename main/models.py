@@ -12,31 +12,13 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
 
+from accounts.models import Tenant
+
 logger = logging.getLogger(__name__)
 
 
-class PaymentPlan(models.Model):
-    class PlanName(models.TextChoices):
-        FREE = "FREE", _("Free")
-        BUSINESS = "BUSINESS", _("Business")
-        PRO = "PROFESSIONAL", _("Professional")
-        CORPORATE = "CORPORATE", _("Corporate")
-
-    name = models.CharField(max_length=20, choices=PlanName.choices, unique=True)
-    quotas = models.ForeignKey("accounts.TenantQuota", on_delete=models.PROTECT, null=True, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-
-    @classmethod
-    def get_default_payment_plan(cls) -> "PaymentPlan":
-        plan, created = cls.objects.get_or_create(name=cls.PlanName.FREE)
-        return plan.id
-
-    def __str__(self):
-        return self.name
-
-
 class Item(models.Model):
-    tenant = models.ForeignKey("accounts.Tenant", on_delete=models.CASCADE)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=20)
     seller_price = models.DecimalField(

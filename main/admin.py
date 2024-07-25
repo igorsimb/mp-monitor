@@ -1,20 +1,7 @@
 from django.contrib import admin
 
-from main.models import Item, Price, PaymentPlan
-
-
-# class TenantQuotaInline(admin.TabularInline):
-#     model = TenantQuota
-#     extra = 0
-
-
-# @admin.register(Tenant)
-# class TenantAdmin(SimpleHistoryAdmin):
-#     history_list_display = ["tenant_status"]
-#     list_display = ["name", "status", "payment_plan", "quota"]
-#
-#     def tenant_status(self, obj):
-#         return obj.get_status_display()
+from accounts.models import PaymentPlan
+from main.models import Item, Price
 
 
 @admin.register(Item)
