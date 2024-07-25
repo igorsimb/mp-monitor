@@ -15,10 +15,10 @@ MAX_RETRIES = 10
 
 class PlanType(Enum):
     # can be accessed like so: PaymentPlan.FREE, etc
-    FREE = "Free"
-    BUSINESS = "Business"
-    PRO = "Professional"
-    CORPORATE = "Corporate"
+    FREE = "FREE"
+    BUSINESS = "BUSINESS"
+    PRO = "PROFESSIONAL"
+    CORPORATE = "CORPORATE"
 
 
 DEFAULT_QUOTAS = {

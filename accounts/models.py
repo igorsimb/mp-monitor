@@ -7,8 +7,53 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
-from config import DEMO_USER_HOURS_ALLOWED
-from main.models import PaymentPlan
+from config import DEMO_USER_HOURS_ALLOWED, DEFAULT_QUOTAS, PlanType
+
+
+class TenantQuota(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True)
+    total_hours_allowed = models.PositiveIntegerField(default=24 * 60, blank=True, null=True)
+    skus_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
+    parse_units_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Квота"
+        verbose_name_plural = "Квоты"
+
+    @classmethod
+    def get_default_quota(cls) -> "TenantQuota":
+        quota, created = TenantQuota.objects.get_or_create(
+            name=PlanType.FREE.value,
+            defaults={
+                "total_hours_allowed": DEFAULT_QUOTAS[PlanType.FREE]["total_hours_allowed"],
+                "skus_limit": DEFAULT_QUOTAS[PlanType.FREE]["skus_limit"],
+                "parse_units_limit": DEFAULT_QUOTAS[PlanType.FREE]["parse_units_limit"],
+            },
+        )
+        return quota.id
+
+    def __str__(self):
+        return self.name if self.name else f"SKUs: {self.skus_limit}, PUs:{self.parse_units_limit}"
+
+
+class PaymentPlan(models.Model):
+    class PlanName(models.TextChoices):
+        FREE = "FREE", _("Free")
+        BUSINESS = "BUSINESS", _("Business")
+        PRO = "PROFESSIONAL", _("Professional")
+        CORPORATE = "CORPORATE", _("Corporate")
+
+    name = models.CharField(max_length=20, choices=PlanName.choices)
+    quotas = models.ForeignKey(TenantQuota, on_delete=models.PROTECT, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    @classmethod
+    def get_default_payment_plan(cls) -> "PaymentPlan":
+        plan, created = cls.objects.get_or_create(name=cls.PlanName.FREE)
+        return plan.id
+
+    def __str__(self):
+        return self.name
 
 
 class TenantManager(models.Manager):
@@ -44,7 +89,12 @@ class Tenant(models.Model):
         PaymentPlan, on_delete=models.SET_NULL, default=PaymentPlan.get_default_payment_plan, null=True
     )
     quota = models.ForeignKey(
-        "accounts.TenantQuota", on_delete=models.PROTECT, related_name="tenants", null=True, blank=True
+        TenantQuota,
+        on_delete=models.PROTECT,
+        default=TenantQuota.get_default_quota,
+        related_name="tenants",
+        null=True,
+        blank=True,
     )
 
     objects = TenantManager()
@@ -130,17 +180,3 @@ def add_user_to_group(sender, instance, created, **kwargs):  # type: ignore  # p
         if new_group not in old_groups:
             instance.groups.clear()
             instance.groups.add(new_group)
-
-
-class TenantQuota(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)
-    total_hours_allowed = models.PositiveIntegerField(default=24 * 60, blank=True, null=True)
-    skus_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
-    parse_units_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
-
-    class Meta:
-        verbose_name = "Квота"
-        verbose_name_plural = "Квоты"
-
-    def __str__(self):
-        return self.name if self.name else f"SKUs: {self.skus_limit}, PUs:{self.parse_units_limit}"
