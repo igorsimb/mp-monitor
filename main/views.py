@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
@@ -430,3 +430,8 @@ def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
 
 def oferta_view(request: WSGIRequest) -> HttpResponse:
     return render(request, "main/oferta.html")
+
+
+@login_required
+def billing_view(request: WSGIRequest) -> HttpResponse:
+    return render(request, "main/billing.html")

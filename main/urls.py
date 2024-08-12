@@ -10,6 +10,7 @@ from .views import (
     scrape_items,
     update_items,
     oferta_view,
+    billing_view,
 )
 
 urlpatterns = [
@@ -27,4 +28,5 @@ urlpatterns = [
     path("scrape/<str:skus>/", scrape_items, name="scrape_item"),
     path("update_items/", update_items, name="update_items"),
     path("oferta/", oferta_view, name="oferta"),
+    path("billing/", billing_view, name="billing"),
 ]
