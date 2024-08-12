@@ -741,6 +741,6 @@ def update_user_quota_for_allowed_parse_units(user: User, skus: str) -> None:
         user_quota.save()
     else:
         raise QuotaExceededException(
-            message=("Превышен лимит единиц проверки для данного тарифа."),
+            message="Превышен лимит единиц проверки для данного тарифа.",
             quota_type="allowed_parse_units",
         )
