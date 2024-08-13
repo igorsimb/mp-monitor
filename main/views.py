@@ -435,3 +435,8 @@ def oferta_view(request: WSGIRequest) -> HttpResponse:
 @login_required
 def billing_view(request: WSGIRequest) -> HttpResponse:
     return render(request, "main/billing.html")
+
+
+# TODO:
+#   - billing page: display current balance (if user paid 5k, it should display 5k)
+#   - add balance field to Tenant model

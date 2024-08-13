@@ -1,11 +1,16 @@
+import base64
 import decimal
+import hashlib
 import logging
+import os
 import re
 import time
 from typing import Any
 from uuid import uuid4
 
+import django
 import httpx
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -15,18 +20,25 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
-from django_celery_beat.models import PeriodicTask
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-
 import config
-from accounts.models import TenantQuota, Tenant
-from main.exceptions import InvalidSKUException, QuotaExceededException
-from main.models import Item
+
+# have to import this here to avoid the following error:
+# django.core.exceptions.ImproperlyConfigured: Requested setting USE_DEPRECATED_PYTZ, but settings are not configured.
+# You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing
+# settings.
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mp_monitor.settings")
+django.setup()
+from django_celery_beat.models import PeriodicTask  # noqa
+
+from accounts.models import TenantQuota, Tenant  # noqa
+from main.exceptions import InvalidSKUException, QuotaExceededException  # noqa
+from main.models import Item  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -744,3 +756,73 @@ def update_user_quota_for_allowed_parse_units(user: User, skus: str) -> None:
             message="Превышен лимит единиц проверки для данного тарифа.",
             quota_type="allowed_parse_units",
         )
+
+
+class MerchantSignatureGenerator:
+    """
+    API reference: https://modulbank.ru/support/formation_payment_request
+
+    Generate a signature for merchant payments based on the secret key.
+    "merchant" is the merchant ID (get it from the merchant dashboard; not a required field).
+    "salt" is a random string that is used to prevent replay attacks (not a required field).
+    secret_key = settings.PAYMENT_TEST_SECRET_KEY
+
+    Example of use:
+    secret_key = settings.PAYMENT_TEST_SECRET_KEY
+
+    items = {
+        "testing": "1",
+        "salt": "xafAFruTVrpwHKjvZoHvSVkUeMqZoefp",
+        "order_id": "43683694",
+        "amount": "555",
+        "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
+        "description": "Заказ №43683693",
+        "client_phone": "+7 (700) 675-87-89",
+        "client_email": "test@test.ru",
+        "client_name": "Тестов Тест Тестович",
+        "success_url": "https://pay.modulbank.ru/success",
+        "unix_timestamp": "1723447580",
+    }
+
+    generator = MerchantSignatureGenerator(secret_key)
+    print(generator.get_signature(items))
+
+    """
+
+    def __init__(self, secret_key: str):
+        self.secret_key = secret_key
+
+    def get_raw_signature(self, params: dict) -> str:
+        """Generate a raw signature string from the sorted parameters."""
+        chunks = []
+
+        for key in sorted(params.keys()):
+            if key == "signature":
+                continue
+
+            value = params[key]
+
+            if isinstance(value, str):
+                value = value.encode("utf8")
+            else:
+                value = str(value).encode("utf-8")
+
+            if not value:
+                continue
+
+            value_encoded = base64.b64encode(value)
+            chunks.append(f"{key}={value_encoded.decode()}")
+
+        raw_signature = "&".join(chunks)
+        return raw_signature
+
+    def double_sha1(self, data: str) -> str:
+        """Apply double SHA1 hashing based on the secret key."""
+        sha1_hex = lambda s: hashlib.sha1(s.encode("utf-8")).hexdigest()  # noqa
+        digest = sha1_hex(self.secret_key + sha1_hex(self.secret_key + data))
+        return digest
+
+    def get_signature(self, params: dict) -> str:
+        """Calculate the signature based on the parameters."""
+        raw_signature = self.get_raw_signature(params)
+        return self.double_sha1(raw_signature)

@@ -325,3 +325,6 @@ SENTRY_DSN = env("SENTRY_DSN")
 
 # rate limiting
 RATELIMIT_ENABLE = True  # set to False to disable all rate limiting
+
+# Merchant settings
+PAYMENT_TEST_SECRET_KEY = env("PAYMENT_TEST_SECRET_KEY")
