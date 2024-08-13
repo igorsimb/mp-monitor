@@ -2,15 +2,12 @@ import base64
 import decimal
 import hashlib
 import logging
-import os
 import re
 import time
 from typing import Any
 from uuid import uuid4
 
-import django
 import httpx
-
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -20,22 +17,22 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
+
+# import this here if you encounter the following error:
+# django.core.exceptions.ImproperlyConfigured: Requested setting USE_DEPRECATED_PYTZ, but settings are not configured.
+# You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing
+# settings.
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mp_monitor.settings")
+# django.setup()
+from django_celery_beat.models import PeriodicTask
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+
 import config
-
-# have to import this here to avoid the following error:
-# django.core.exceptions.ImproperlyConfigured: Requested setting USE_DEPRECATED_PYTZ, but settings are not configured.
-# You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing
-# settings.
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mp_monitor.settings")
-django.setup()
-from django_celery_beat.models import PeriodicTask  # noqa
-
 from accounts.models import TenantQuota, Tenant  # noqa
 from main.exceptions import InvalidSKUException, QuotaExceededException  # noqa
 from main.models import Item  # noqa
