@@ -70,14 +70,14 @@
     {% include "main/partials/add_items_form.html" %}
 
     <!-- Manual / Schedule tabs -->
-    <div x-data="{ tab: $persist('manual') }" class="mt-5">
+    <div x-data="{ tab: $persist('manual') }" class="my-5">
         <span id="manualAutoTabs">
-        <ul class="nav nav-tabs nav-fill bg-gradient mt-4" id="updateTabs" role="tablist">
+        <ul class="nav nav-tabs" id="updateTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button  id="manual-update-tab"
                         x-on:click="tab='manual'"
                         {# add class 'active' if 'tab' value in localStorage == 'manual' else remove it #}
-                        x-bind:class="{ 'active fw-bold': tab=='manual'}"
+                        x-bind:class="{ 'active': tab=='manual'}"
                         class="nav-link" data-bs-toggle="tab" type="button"
                         data-bs-target="#manual-tab-pane" role="tab" aria-controls="manual-tab-pane"
                         aria-selected="true">Обновить вручную
@@ -86,7 +86,7 @@
             <li class="nav-item" role="presentation">
                 <button id="schedule-update-tab"
                         x-on:click="tab='schedule'"
-                        x-bind:class="{ 'active fw-bold': tab=='schedule'}"
+                        x-bind:class="{ 'active': tab=='schedule'}"
                         class="nav-link"data-bs-toggle="tab" data-bs-target="#schedule-tab-pane"
                         type="button" role="tab" aria-controls="schedule-tab-pane" aria-selected="false">
                     Создать Автоматическое Расписание
@@ -96,7 +96,7 @@
         </span>
 
         <!-- Tab contents -->
-        <div class="tab-content" id="myTabContent">
+        <div class="tab-content bg-white p-4 border border-top-0 rounded-bottom" id="myTabContent">
             <div x-bind:class="{ 'show active': tab=='manual'}"
                  class="tab-pane" id="manual-tab-pane" role="tabpanel"
                  aria-labelledby="manual-update-tab"

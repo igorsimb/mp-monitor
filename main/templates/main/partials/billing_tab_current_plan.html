@@ -1,0 +1,65 @@
+<div x-show="billing_tab === 'billing_tab1'" class="p-4">
+    <!-- Plan Name -->
+    <h1 class="display-4 mb-4">Premium Plan</h1>
+
+    <!-- Current Balance -->
+    <div class="mb-4">
+        <h4 class="text-body-secondary">Current Balance:</h4>
+        <div class="h2 mb-0">$120.00</div>
+        <!-- if not free plan -->
+        <small class="text-body-secondary">Следующая оплата: 15.09.2024</small>
+    </div>
+
+    <!-- Quotas and Usage -->
+    <div class="mb-4 pt-3">
+        <h5 class="text-muted mb-3">Usage Quotas</h5>
+        <ul class="list-unstyled">
+            <!-- Total Hours Allowed -->
+            <li class="mb-4">
+                <div class="d-flex justify-content-between">
+                    <span>Total Hours Allowed</span>
+                    <span class="text-muted">100 hours</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 40%;" aria-valuenow="40"
+                         aria-valuemin="0" aria-valuemax="100">40%
+                    </div>
+                </div>
+            </li>
+            <!-- SKUs Limit -->
+            <li class="mb-4">
+                <div class="d-flex justify-content-between">
+                    <span>SKUs Limit</span>
+                    <span class="text-muted">500 SKUs</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 80%;" aria-valuenow="80"
+                         aria-valuemin="0" aria-valuemax="100">80%
+                    </div>
+                </div>
+            </li>
+            <!-- Parse Units Limit -->
+            <li class="mb-4">
+                <div class="d-flex justify-content-between">
+                    <span>Parse Units Limit</span>
+                    <span class="text-muted">10,000 units</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 75%;" aria-valuenow="75"
+                         aria-valuemin="0" aria-valuemax="100">75%
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Upgrade Suggestion -->
+    <div class="mt-4 mb-4 text-center">
+        <p class="text-muted">Need more API calls? <a href="#" class="text-primary">Upgrade your plan</a></p>
+    </div>
+
+    <!-- Support Contact -->
+    <div class="text-center">
+        <p class="text-muted">Need help? <a href="#" class="text-primary">Contact Support</a></p>
+    </div>
+</div>
