@@ -320,7 +320,7 @@ SILENCED_SYSTEM_CHECKS: list[str] = ["security.W009"]
 
 
 # sentry-sdk
-SENTRY_ENABLED = env("SENTRY_ENABLED")
+SENTRY_ENABLED = env.bool("SENTRY_ENABLED", default=False)
 SENTRY_DSN = env("SENTRY_DSN")
 
 # rate limiting

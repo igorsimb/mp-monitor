@@ -1,23 +1,41 @@
-<section class="mt-5">
-    <h2 id="pricing" class="h2 text-center display-6 fw-bold text-body-emphasis my-4">Тарифы и цены</h2>
+{#<div x-show="billing_tab === 'billing_tab3'">#}
+{#    <h2 class="mb-3">Payment Plans</h2>#}
+{#    <form>#}
+{#        <div class="mb-3">#}
+{#            <label for="planSelect" class="form-label">Select a Plan</label>#}
+{#            <select class="form-select" id="planSelect">#}
+{#                <option value="basic">Basic - $20/month</option>#}
+{#                <option value="standard">Standard - $35/month</option>#}
+{#                <option value="premium" selected>Premium - $50/month</option>#}
+{#            </select>#}
+{#        </div>#}
+{#        <button type="submit" class="btn btn-primary">Switch Plan</button>#}
+{#    </form>#}
+{#</div>#}
+
+
+<section x-show="billing_tab === 'billing_tab3'" class="mt-5">
+    <h2 class="h2 text-center display-6 fw-bold text-body-emphasis my-4">Тарифы и цены</h2>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 my-5 text-center pricing-card-container">
+
+        <!-- Free Plan -->
         <div class="col px-0">
             <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
                 <div class="card-header py-3">
-                    <h3 class="h3 my-0 fw-bold">БЕСПЛАТНЫЙ</h3>
+                    <h3 class="h3 my-0 fw-bold text-body-secondary">БЕСПЛАТНЫЙ</h3>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-column justify-content-between h-100">
-                        <div>
+                        <div class="text-body-secondary">
                             <h4 class="h2 card-title pricing-card-title mb-0">
                                 0<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
                             </h4>
-                            <div class="text-body-secondary fw-light">/месяц</div>
+                            <div class="fw-light">/месяц</div>
                             <ul class="list-unstyled my-4 ms-3 text-start">
                                 <li class="mb-3">Количество товаров - 50</li>
                                 <li>
-                                    <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
+                                    <span class="tooltip-needed " data-bs-toggle="tooltip" data-bs-placement="top"
                                           data-bs-title="Однократная проверка одного товара">Единиц проверки</span> -
                                     5000
                                 </li>
@@ -25,17 +43,19 @@
                         </div>
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <a href="{% url 'account_signup' %}" type="button" class="w-100 btn btn-lg btn-outline-primary">Регистрация</a>
+                            <a href="#" type="button" class="w-100 btn btn-lg btn-outline-secondary">Switch Now</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Business Plan (Current Plan) -->
         <div class="col px-1">
-            <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
-                <div class="card-header py-3">
+            <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height border-primary">
+                <div class="card-header py-3 bg-light border-primary position-relative">
                     <h3 class="h3 my-0 fw-bold">БИЗНЕС</h3>
+                    <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Your Plan</span>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-column justify-content-between h-100">
@@ -53,47 +73,51 @@
                                 <li>Стоимость за проверку - 0.17 руб.</li>
                             </ul>
                         </div>
-{#                        <div>#}
-{#                            <hr class="opacity-25 w-50 mx-auto">#}
-{#                            <button type="button" class="w-100 btn btn-lg btn-outline-primary">Регистрация</button>#}
-{#                        </div>#}
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Professional Plan (Best Value - Выгодно?)
+        TODO: use `fw-semibold text-success-emphasis` class only for plans that are more expensive
+         than user's current plan and `text-body-secondary` for cheaper ones to encourage them to upgrade -->
         <div class="col px-0">
             <div class="card mb-4 rounded-3 shadow-sm border-primary fit-content price-card-height">
-                <div class="card-header py-3 text-bg-primary border-primary">
+                <div class="card-header py-3 text-bg-primary border-primary position-relative">
                     <h3 class="h3 my-0 fw-bold">ПРОФЕССИОНАЛ</h3>
+                    <span class="badge bg-warning position-absolute top-0 translate-middle-y end-0 me-3">Best Value</span>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-column justify-content-between h-100">
                         <div>
                             <h4 class="h2 card-title pricing-card-title mb-0">
-                                11 990<span
-                                    class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                                11 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
                             </h4>
                             <div class="text-body-secondary fw-light">/месяц</div>
                             <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
-                                <li>Количество товаров - 1000</li>
+                                <li>Количество товаров - <span class="fw-semibold text-success-emphasis">1000</span>
+                                </li>
                                 <li class="my-3">
-                            <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
-                                  data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 100 000
+        <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
+              data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - <span
+                                        class="fw-semibold text-success-emphasis">100 000</span>
                                 </li>
                                 <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
-                                <li>Стоимость за проверку - 0.12 руб.</li>
+                                <li>Стоимость за проверку - <span
+                                        class="fw-semibold text-success-emphasis">0.12 руб.</span></li>
                             </ul>
                         </div>
-{#                        <div>#}
-{#                            <hr class="opacity-25 w-50 mx-auto">#}
-{#                            <button type="button" class="w-100 btn btn-lg btn-primary">Регистрация</button>#}
-{#                        </div>#}
+                        <div>
+                            <hr class="opacity-25 w-50 mx-auto">
+                            <button type="button" class="w-100 btn btn-lg btn-primary">Upgrade Now</button>
+                            <p class="mt-2 text-muted fs-6">Switch at the start of the next billing cycle</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Corporate Plan -->
         <div class="col ps-1">
             <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
                 <div class="card-header py-3">
@@ -103,28 +127,29 @@
                     <div class="d-flex flex-column justify-content-between h-100">
                         <div>
                             <h4 class="h2 card-title pricing-card-title mb-0">
-                                35 990<span
-                                    class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                                35 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
                             </h4>
                             <div class="text-body-secondary fw-light">/месяц</div>
                             <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
-                                <li>Количество товаров - 5000</li>
+                                <li>Количество товаров - <span class="fw-semibold text-success-emphasis">5000</span></li>
                                 <li class="my-3">
                             <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
-                                  data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 500 000
+                                  data-bs-title="Однократная проверка одного товара">Единиц проверки</span> -
+                                    <span class="fw-semibold text-success-emphasis">500 000</span>
                                 </li>
                                 <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
-                                <li>Стоимость за проверку - 0.07 руб.</li>
+                                <li>Стоимость за проверку -
+                                    <span class="fw-semibold text-success-emphasis">0.07 руб.</span></li>
                             </ul>
                         </div>
-{#                        <div>#}
-{#                            <hr class="opacity-25 w-50 mx-auto">#}
-{#                            <button type="button" class="w-100 btn btn-lg btn-outline-primary">Регистрация</button>#}
-{#                        </div>#}
+                        <div>
+                            <hr class="opacity-25 w-50 mx-auto">
+                            <button type="button" class="w-100 btn btn-lg btn-outline-primary">Upgrade Now</button>
+                            <p class="mt-2 text-muted fs-6">Switch at the start of the next billing cycle</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-
