@@ -13,22 +13,50 @@
     <!-- using(sessionStorage) clears the tab data once the user closes the browser tab.
     No need to save which billing tab is open. Source: https://alpinejs.dev/plugins/persist#custom-storage -->
     <div class="container my-5" x-data="{ billing_tab: $persist('billing_tab1').using(sessionStorage) }">
-        <h1 class="mb-4">Billing</h1>
+        <h1 class="mb-4">Биллинг</h1>
+
+        <!-- Offcanvas showing admin panel for demo users -->
+        {% if request.user.is_superuser %}
+            <div class="offcanvas offcanvas-end"
+                 style="--bs-offcanvas-height: 100px; --bs-offcanvas-bg: transparent;--bs-offcanvas-border-width: 0;"
+                 tabindex="-1" id="offcanvasAdmin"
+                 aria-labelledby="offcanvasAdminLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="offcanvasAdminLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <div class="p-3 mb-3 bg-light rounded border border-secondary shadow shadow-sm"
+                         style="width: fit-content">
+                        <div class="fw-bold">All demo users: {{ demo_users|length }}</div>
+                        <div class="text-secondary">Inactive demo users: {{ inactive_demo_users|length }}</div>
+                        <div class="text-success">Active demo users: {{ non_expired_active_demo_users|length }}</div>
+                        <div class="text-danger">Expired active demo users: {{ expired_active_demo_users|length }}
+                            (delete us)
+                        </div>
+                        <form method="POST" action="{% url 'check_expired_demo_users' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger mt-3">Delete expired active demo users</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 
         <!-- Tabs -->
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <!-- @click.prevent prevents the default action of the link (in this case, the page reloading) -->
                 <a href="#" class="nav-link" :class="{ 'active': billing_tab === 'billing_tab1' }"
-                   @click.prevent="billing_tab = 'billing_tab1'">Current Plan</a>
+                   @click.prevent="billing_tab = 'billing_tab1'">Мой тариф</a>
             </li>
             <li class="nav-item">
                 <a href="#" class="nav-link" :class="{ 'active': billing_tab === 'billing_tab2' }"
-                   @click.prevent="billing_tab = 'billing_tab2'">Transaction History</a>
+                   @click.prevent="billing_tab = 'billing_tab2'">Транзакции</a>
             </li>
             <li class="nav-item">
                 <a href="#" class="nav-link" :class="{ 'active': billing_tab === 'billing_tab3' }"
-                   @click.prevent="billing_tab = 'billing_tab3'">Payment Plans</a>
+                   @click.prevent="billing_tab = 'billing_tab3'">Все тарифы</a>
             </li>
         </ul>
 

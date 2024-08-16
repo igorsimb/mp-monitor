@@ -95,7 +95,7 @@
                 {% endif %}
 
                 <div class="col-12 form-floating">
-                    {% render_field form.password1 class="form-control border-secondary-subtle shadow shadow-sm" id="password1" placeholder="Пароль" %}
+                    {% render_field form.password1 class="form-control border-secondary-subtle shadow shadow-sm" id="password1" minlength="8" placeholder="Пароль" %}
                     <label for="password1" class="ms-2">Пароль</label>
                 </div>
                 {% if form.password1.errors %}
@@ -106,8 +106,8 @@
                     </ul>
                 {% endif %}
 
-                <div class="col-12 form-floating overflow-hidden">
-                    {% render_field form.password2 class="form-control border-secondary-subtle shadow shadow-sm" id="password2" placeholder="Подтвердите пароль" %}
+                <div class="col-12 form-floating">
+                    {% render_field form.password2 class="form-control border-secondary-subtle shadow shadow-sm" id="password2" minlength="8" placeholder="Подтвердите пароль" %}
                     <label for="password2" class="ms-2">Подтвердите пароль</label>
                 </div>
                 {% if form.password2.errors %}
