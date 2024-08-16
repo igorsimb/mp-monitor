@@ -1,4 +1,7 @@
 {% load static %}
+{% url 'index' as index_url %}
+{% url 'billing' as billing_url %}
+{% url 'item_list' as item_list_url %}
 <nav class="container d-flex flex-wrap justify-content-between py-3">
 
     {% if user.is_authenticated %}
@@ -8,8 +11,10 @@
     </a>
 
     <ul class="nav nav-pills">
-        <li class="nav-item"><a href="{% url 'item_list' %}" class="nav-link" aria-current="page">Мои товары</a>
-        <li class="nav-item"><a href="{% url 'billing' %}" class="nav-link" aria-current="page">Биллинг</a>
+        <li class="nav-item"><a href="{% url 'item_list' %}" class="nav-link {% if request.path == item_list_url %}nav-active{% endif %}" aria-current="page">Мои товары</a>
+        <li class="nav-item">
+
+        <a href="{% url 'billing' %}" class="nav-link {% if request.path == billing_url %}nav-active{% endif %}" aria-current="page">Биллинг</a>
             {% if user.is_superuser %}
         <li>
             <a class="nav-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasAdmin"

@@ -1,48 +1,49 @@
 <div x-show="billing_tab === 'billing_tab1'" class="p-4">
     <!-- Plan Name -->
-    <h1 class="display-4 mb-4">Premium Plan</h1>
+    <h1 class="display-4 mb-4">Тариф БИЗНЕС (BACKEND)</h1>
 
     <!-- Current Balance -->
     <div class="mb-4">
-        <h4 class="text-body-secondary">Current Balance:</h4>
-        <div class="h2 mb-0">$120.00</div>
+        <h4 class="text-body-secondary">Текущий баланс:</h4>
+        <div class="h3 mb-0">$120.00 (BACKEND)</div>
         <!-- if not free plan -->
-        <small class="text-body-secondary">Следующая оплата: 15.09.2024</small>
+        <small class="text-body-secondary">Следующая оплата: 15.09.2024 (BACKEND)</small>
     </div>
 
     <!-- Quotas and Usage -->
     <div class="mb-4 pt-3">
-        <h5 class="text-muted mb-3">Usage Quotas</h5>
+        <h5 class="text-muted mb-3">Квоты и использование</h5>
         <ul class="list-unstyled">
-            <!-- Total Hours Allowed -->
+            <!-- Total Hours Allowed for demo users only-->
             <li class="mb-4">
                 <div class="d-flex justify-content-between">
-                    <span>Total Hours Allowed</span>
-                    <span class="text-muted">100 hours</span>
+                    <span>Осталось часов (демо)</span>
+                    <span class="text-muted">100 hours (BACKEND)</span>
                 </div>
                 <div class="progress">
                     <div class="progress-bar bg-success" role="progressbar" style="width: 40%;" aria-valuenow="40"
-                         aria-valuemin="0" aria-valuemax="100">40%
+                         aria-valuemin="0" aria-valuemax="100">40% (BACKEND)
                     </div>
                 </div>
             </li>
             <!-- SKUs Limit -->
             <li class="mb-4">
                 <div class="d-flex justify-content-between">
-                    <span>SKUs Limit</span>
-                    <span class="text-muted">500 SKUs</span>
+                    <span>Количество товаров</span>
+                    <span class="text-muted">500 SKUs (BACKEND)</span>
                 </div>
                 <div class="progress">
                     <div class="progress-bar bg-info" role="progressbar" style="width: 80%;" aria-valuenow="80"
-                         aria-valuemin="0" aria-valuemax="100">80%
+                         aria-valuemin="0" aria-valuemax="100">80% (BACKEND)
                     </div>
                 </div>
             </li>
             <!-- Parse Units Limit -->
             <li class="mb-4">
                 <div class="d-flex justify-content-between">
-                    <span>Parse Units Limit</span>
-                    <span class="text-muted">10,000 units</span>
+                    <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
+                          data-bs-title="Однократная проверка одного товара">Единиц проверки</span>
+                    <span class="text-muted">10,000 units (BACKEND)</span>
                 </div>
                 <div class="progress">
                     <div class="progress-bar bg-primary" role="progressbar" style="width: 75%;" aria-valuenow="75"
@@ -55,11 +56,19 @@
 
     <!-- Upgrade Suggestion -->
     <div class="mt-4 mb-4 text-center">
-        <p class="text-muted">Need more API calls? <a href="#" class="text-primary">Upgrade your plan</a></p>
+        <p class="text-muted">Нужно больше единиц проверки?
+{#            <a href="#" class="text-primary">Поменяйте ваш тариф</a>#}
+            <a href="#" class="nav-link d-inline text-primary" :class="{ 'active': billing_tab === 'billing_tab3' }"
+                   @click.prevent="billing_tab = 'billing_tab3'">Сравните тарифы</a>
+        </p>
     </div>
 
     <!-- Support Contact -->
     <div class="text-center">
-        <p class="text-muted">Need help? <a href="#" class="text-primary">Contact Support</a></p>
+        <p class="text-muted">Нужно помощь?
+            <a href="mailto:support@mpmonitor.ru" class="text-primary text-decoration-none" target="_blank">Свяжитесь с нами
+            <span class="material-symbols-sharp">open_in_new</span>
+            </a>
+        </p>
     </div>
 </div>
