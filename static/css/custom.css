@@ -6,12 +6,17 @@
     --bs-nav-link-color: rgba(0, 0, 0, 0.7);
 }
 
+/* Change the background color of the nav-link tabs on hover */
+/*.nav-link:hover {*/
+/*    background: rgba(189, 189, 189, 0.1);*/
+/*}*/
+
 .nav-link {
     padding-top: 0.5rem;
 }
 
 .nav-link.active {
-    background-image: linear-gradient(to bottom, rgba(13, 109, 253, 0.3) 0%, transparent 30%);
+    color: var(--bs-primary-text-emphasis)!important;
 }
 
 /* prevent new line in table's th */

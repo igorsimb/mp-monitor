@@ -88,6 +88,7 @@ class Tenant(models.Model):
     payment_plan = models.ForeignKey(
         PaymentPlan, on_delete=models.SET_NULL, default=PaymentPlan.get_default_payment_plan, null=True
     )
+    # balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     quota = models.ForeignKey(
         TenantQuota,
         on_delete=models.PROTECT,

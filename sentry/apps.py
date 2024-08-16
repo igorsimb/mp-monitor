@@ -27,7 +27,8 @@ class SentryConfig(AppConfig):
         Sentry initialization is moved to an application ready timeframe because it triggers circular imports
         with settings when used with type checking when django-stubs is enabled.
         """
-        if not settings.SENTRY_ENABLED:
+        sentry_enabled = getattr(settings, "SENTRY_ENABLED", False)
+        if not sentry_enabled:
             return
 
         sentry_sdk.init(

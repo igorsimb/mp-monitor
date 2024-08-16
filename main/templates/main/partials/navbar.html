@@ -9,6 +9,7 @@
 
     <ul class="nav nav-pills">
         <li class="nav-item"><a href="{% url 'item_list' %}" class="nav-link" aria-current="page">Мои товары</a>
+        <li class="nav-item"><a href="{% url 'billing' %}" class="nav-link" aria-current="page">Биллинг</a>
             {% if user.is_superuser %}
         <li>
             <a class="nav-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasAdmin"
@@ -35,6 +36,7 @@
 
     <ul class="nav nav-pills py-3">
         <li class="nav-item"><a href="{% url 'index' %}" class="nav-link" aria-current="page">Главная</a></li>
+        <li class="nav-item"><a href="{% url 'index' %}#pricing" class="nav-link" aria-current="page">Цены</a></li>
         <li class="nav-item"><a href="{% url 'index' %}#how_does_it_work" class="nav-link" aria-current="page">Как это работает?</a>
         </li>
         <li class="nav-item"><a href="{% url 'index' %}#faq" class="nav-link">FAQ</a></li>
