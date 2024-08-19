@@ -1,0 +1,23 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}
+    Платеж
+{% endblock title%}
+
+{% block content %}
+        <div class="row">
+            <div class="col-md-12">
+                <h1>Мой платеж</h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+{#                <h3>Платеж по тарифу {{ plan.name }} успешно оплачен</h3>#}
+                <h3>Платеж по тарифу успешно оплачен</h3>
+            </div>
+        </div>
+
+{% endblock content%}

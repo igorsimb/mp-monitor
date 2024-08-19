@@ -186,3 +186,37 @@ class Price(models.Model):
 
     def __str__(self) -> str:
         return str(self.value)
+
+
+# Create Transaction model with ForeignKey to Tenant
+# figure out what fields to add to Transaction model (see billing_form.html)
+
+
+class Payment(models.Model):
+    TESTING_CHOICES = (
+        ("1", _("1")),  # True
+        ("0", _("0")),  # False
+    )
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+    merchant = models.CharField(max_length=255, default="f29e4787-0c3b-4630-9340-5dcfcdc9f85d")
+    unix_timestamp = models.IntegerField()
+    signature = models.CharField(max_length=255, blank=True, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    testing = models.CharField(max_length=1, choices=TESTING_CHOICES, default="0")
+    description = models.CharField(max_length=255)
+    order_id = models.CharField(max_length=255, unique=True, blank=True)
+    client_email = models.CharField(max_length=255)
+    success_url = models.CharField(max_length=255, default="https://pay.modulbank.ru/success")
+    receipt_items = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Order {self.order_id}"
+
+    # def save(self, *args, **kwargs):
+    #     if not self.order_id:
+    #         self.order_id = self.generate_order_id()
+    #     super().save(*args, **kwargs)
+    #
+    # def generate_order_id(self) -> str:
+    #     return f"{self.tenant.id}-{uuid.uuid4().hex[:4]}"

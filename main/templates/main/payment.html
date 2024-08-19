@@ -1,0 +1,78 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}
+    Платеж
+{% endblock title %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Мой платеж</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <form method="post" action="https://pay.modulbank.ru/pay" target="_blank">
+                {% csrf_token %}
+                <h3>Платеж по тарифу {{ plan.name }}</h3>
+                <p>Сумма платежа: {{ plan.price }} руб.</p>
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Оплатить</button>
+            </form>
+        </div>
+    </div>
+
+    <hr>
+
+    <form action="https://pay.modulbank.ru/pay" method="post" target="_blank">
+        <p><strong>Заказ №43683694</strong><br>Сумма: 973 RUB</p>
+        <input type="submit" value="Оплатить заказ" class="btn btn-primary btn-outline">
+
+        <!-- Текущие дата и время на сервере в формате UNIX Time  -->
+        <input name="unix_timestamp" value="1724165817" type="hidden">
+
+        <!-- Случайная величина (необязательно) -->
+        <input name="salt" value="xafAFruTVrpwHKjvZoHvSVkUeMqZoefp" type="hidden">
+
+        <!-- Криптографическая подпись  -->
+        <input name="signature" value="891e6e5e3f59e212585bf05d2e3bd2a38ec392a3" type="hidden">
+
+        <!-- Идентификатор магазина (необязательно) -->
+        <input name="merchant" value="f29e4787-0c3b-4630-9340-5dcfcdc9f85d" type="hidden">
+
+        <!-- Сумма операции  -->
+        <input name="amount" value="973" type="hidden">
+
+        <!-- для тестовой транзакции, &quot;0&quot; или отстутствует для обычных (необязательно) -->
+        <input name="testing" value="1" type="hidden">
+
+        <!-- Описание заказа. Максимум 250 символов  -->
+        <input name="description" value="Заказ №43683693" type="hidden">
+
+        <!-- Идентификатор заказа в вашем магазине. Максимум 128 символов  -->
+        <input name="order_id" value="43683696" type="hidden">
+
+        <!-- Телефон клиента (необязательно) -->
+        <input name="client_phone" value="+7 (700) 675-87-89" type="hidden">
+
+        <!-- E-mail клиента (необязательно) -->
+        <input name="client_email" value="test@test.ru" type="hidden">
+
+        <!-- Имя и фамилия клиента (необязательно) -->
+        <input name="client_name" value="Тестов Тест Тестович" type="hidden">
+
+
+        <!-- Адрес страницы, куда направить пользователя, если платёж завершится успешно  -->
+        <input name="success_url" value="https://pay.modulbank.ru/success" type="hidden">
+
+
+        <!-- Позиции чека при Создание счета на оплату (обязательно, только если в ЛК включена удаленная регистрация чеков через онлайн-кассу) -->
+        <input name="receipt_items"
+               value='[{"discount_sum": 40, "name": "Товар 1", "payment_method": "full_prepayment", "payment_object": "commodity", "price": 48, "quantity": 10, "sno": "osn", "vat": "vat10"}, {"name": "Товар 2", "payment_method": "full_prepayment", "payment_object": "commodity", "price": 533, "quantity": 1, "sno": "osn", "vat": "vat10"}]'
+               type="hidden">
+
+    </form>
+{% endblock content %}

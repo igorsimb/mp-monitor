@@ -107,11 +107,13 @@
                                         class="fw-semibold text-success-emphasis">0.12 руб.</span></li>
                             </ul>
                         </div>
+                        {% if user.is_superuser %}
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <button type="button" class="w-100 btn btn-lg btn-primary">Сменить тариф</button>
+                            <a href="{% url 'payment' %}?plan_id=3" class="w-100 btn btn-lg btn-primary">Сменить тариф</a>
                             <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода оплаты</small>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

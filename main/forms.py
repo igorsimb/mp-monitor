@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.forms import ModelForm
 
-from main.models import Schedule
+from main.models import Schedule, Payment
 
 user = get_user_model()
 
@@ -56,3 +56,35 @@ class ScrapeIntervalForm(ModelForm):
                 for choice in self.fields["period"].choices
                 if choice[0] not in [Schedule.Period.SECONDS, Schedule.Period.MINUTES]
             ]
+
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = [
+            "merchant",
+            "unix_timestamp",
+            "amount",
+            "testing",
+            "description",
+            "order_id",
+            "client_email",
+            "success_url",
+            "receipt_items",
+            "signature",
+        ]
+        widgets = {
+            # "merchant": forms.HiddenInput(),
+            # "unix_timestamp": forms.HiddenInput(),
+            # "amount": forms.HiddenInput(),
+            # "testing": forms.HiddenInput(),
+            # "description": forms.HiddenInput(),
+            # "order_id": forms.HiddenInput(),
+            # "client_email": forms.HiddenInput(),
+            # "success_url": forms.HiddenInput(),
+            # "receipt_items": forms.HiddenInput(),
+            # "signature": forms.HiddenInput(),
+        }
+
+
+# TODO: add payment form to billing_tab_payment_plans
