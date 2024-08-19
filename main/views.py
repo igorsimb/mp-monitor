@@ -1,6 +1,9 @@
+import json
 import logging
-from datetime import timedelta
 
+from rich import print as pprint
+import uuid
+from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -18,8 +21,10 @@ from django_ratelimit.core import is_ratelimited
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 import config
+from accounts.models import PaymentPlan
+from mp_monitor import settings
 from .exceptions import QuotaExceededException
-from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm
+from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PaymentForm
 from .models import Item, Price
 from .utils import (
     uncheck_all_boxes,
@@ -38,6 +43,7 @@ from .utils import (
     get_user_quota,
     update_tenant_quota_for_max_allowed_sku,
     update_user_quota_for_allowed_parse_units,
+    MerchantSignatureGenerator,
 )
 
 user = get_user_model()
@@ -440,3 +446,128 @@ def billing_view(request: WSGIRequest) -> HttpResponse:
 # TODO:
 #   - billing page: display current balance (if user paid 5k, it should display 5k)
 #   - add balance field to Tenant model
+
+
+def _create_payment(request: WSGIRequest) -> HttpResponse:  # noqa: C901
+    """Creates a transaction for the current user."""
+    unix_timestamp = int(timezone.now().timestamp())
+    plan_id = request.GET.get("plan_id")
+    plan = get_object_or_404(PaymentPlan, id=plan_id)
+    order_id = f"{request.user.tenant.id}{str(uuid.uuid4().int)[:5]}"
+
+    if request.method == "POST":
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.tenant = request.user.tenant
+            payment.order_id = order_id
+            payment.amount = plan.price
+
+            # Collect the form data to generate the signature
+            form_data = {
+                "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
+                "unix_timestamp": payment.unix_timestamp,
+                "amount": str(payment.amount),
+                "testing": "1",
+                "description": payment.description,
+                "order_id": order_id,
+                "client_email": payment.client_email,
+                "success_url": payment.success_url,
+            }
+
+            generator = MerchantSignatureGenerator(settings.PAYMENT_TEST_SECRET_KEY)
+            payment.signature = generator.get_signature(form_data)
+
+            payment.save()
+            print(f"IGOR2 Success Payment\n {payment.merchant=}\n {payment.success_url=}\n {payment.signature=}\n ")
+            # Construct the redirect URL with query parameters
+            # payment_url = f"{payment.success_url}?transaction_id={payment.order_id}"
+
+            # Redirect the user to the payment gateway
+            # return HttpResponseRedirect(payment.success_url)
+
+            # Prepare the POST data to send to the bank
+            # post_data = {
+            #     "merchant": form_data["merchant"],
+            #     "unix_timestamp": form_data["unix_timestamp"],
+            #     "amount": form_data["amount"],
+            #     "testing": form_data["testing"],
+            #     "description": form_data["description"],
+            #     "order_id": form_data["order_id"],
+            #     "client_email": form_data["client_email"],
+            #     "success_url": form_data["success_url"],
+            #     "signature": payment.signature,
+            # }
+            #
+            # # Send the data to the bank's payment gateway
+            # try:
+            #     response = requests.post("https://pay.modulbank.ru/pay", data=post_data)
+            #     response.raise_for_status()
+            #     pprint(f"Good {response.status_code=}")
+            #     # return redirect("https://pay.modulbank.ru/pay")
+            # except requests.exceptions.RequestException as e:
+            #     print(f"Error sending payment data to the bank: {e}")
+            #     # Handle the error (log it, inform the user, etc.)
+            #     pprint(f"Bad {response.status_code=}")
+            #     pprint(response.text)
+            #     return HttpResponse(f"Error processing the payment. Please try again later. {e}", status=500)
+    else:
+        generator = MerchantSignatureGenerator(settings.PAYMENT_TEST_SECRET_KEY)
+        initial_data = {
+            "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
+            "unix_timestamp": unix_timestamp,
+            "amount": plan.price,
+            "testing": "1",
+            "description": f"Абонентская оплата. Тариф: {plan.name}",
+            "order_id": order_id,
+            "client_email": request.user.tenant.name,
+            "resuccess_url": "https://pay.modulbank.ru/success",
+        }
+        signature = generator.get_signature(initial_data)
+        initial_data["signature"] = signature
+        form = PaymentForm(initial=initial_data)
+        print("NO Payment")
+    return render(request, "main/payment.html", {"form": form, "plan": plan})
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def create_payment(request: WSGIRequest) -> HttpResponse:
+    unix_timestamp = int(timezone.now().timestamp())
+    plan_id = request.GET.get("plan_id")
+    plan = get_object_or_404(PaymentPlan, id=plan_id)
+    order_id = f"{request.user.tenant.id}{str(uuid.uuid4().int)[:5]}"
+    receipt_items = [
+        {
+            "name": str(plan.name),
+            "payment_method": "full_prepayment",
+            "payment_object": "service",
+            "price": str(plan.price),
+            "quantity": "1",
+            "sno": "osn",
+            "vat": "none",
+        },
+    ]
+    initial_data = {
+        "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
+        "unix_timestamp": unix_timestamp,
+        "amount": plan.price,
+        "testing": "1",
+        "description": f"Абонентская оплата. Тариф: {plan.name}",
+        "order_id": order_id,
+        "client_email": request.user.tenant.name,
+        # "success_url": f"{request.scheme}://{request.get_host()}/billing/payment-success/",
+        "success_url": "https://pay.modulbank.ru/success",
+        "receipt_items": json.dumps(receipt_items),
+    }
+    generator = MerchantSignatureGenerator(settings.PAYMENT_TEST_SECRET_KEY)
+    signature = generator.get_signature(initial_data)
+    print(f"IgorS Signature: {signature}\nKey: {settings.PAYMENT_TEST_SECRET_KEY}")
+    initial_data["signature"] = signature
+    pprint(f"IgorS Initial data: {initial_data}")
+    form = PaymentForm(initial=initial_data)
+    pprint(f"IgorS Form: {form}")
+    return render(request, "main/payment.html", {"form": form, "plan": plan})
+
+
+def payment_success(request: WSGIRequest) -> HttpResponse:
+    return render(request, "main/payment_success.html")

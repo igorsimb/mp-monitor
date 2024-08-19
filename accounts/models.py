@@ -38,10 +38,10 @@ class TenantQuota(models.Model):
 
 class PaymentPlan(models.Model):
     class PlanName(models.TextChoices):
-        FREE = "FREE", _("Free")
-        BUSINESS = "BUSINESS", _("Business")
-        PRO = "PROFESSIONAL", _("Professional")
-        CORPORATE = "CORPORATE", _("Corporate")
+        FREE = "БЕСПЛАТНЫЙ", _("FREE")
+        BUSINESS = "БИЗНЕС", _("BUSINESS")
+        PRO = "ПРОФЕССИОНАЛ", _("PROFESSIONAL")
+        CORPORATE = "КОРПОРАТИВНЫЙ", _("CORPORATE")
 
     name = models.CharField(max_length=20, choices=PlanName.choices)
     quotas = models.ForeignKey(TenantQuota, on_delete=models.PROTECT, null=True, blank=True)
@@ -53,7 +53,7 @@ class PaymentPlan(models.Model):
         return plan.id
 
     def __str__(self):
-        return self.name
+        return f"{self.name} (plan_id={self.id})"
 
 
 class TenantManager(models.Manager):
@@ -88,7 +88,7 @@ class Tenant(models.Model):
     payment_plan = models.ForeignKey(
         PaymentPlan, on_delete=models.SET_NULL, default=PaymentPlan.get_default_payment_plan, null=True
     )
-    # balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True, null=True)
     quota = models.ForeignKey(
         TenantQuota,
         on_delete=models.PROTECT,
@@ -97,6 +97,7 @@ class Tenant(models.Model):
         null=True,
         blank=True,
     )
+    billing_start_date = models.DateField(blank=True, null=True)
 
     objects = TenantManager()
     history = HistoricalRecords()

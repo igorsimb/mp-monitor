@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from accounts.models import PaymentPlan
-from main.models import Item, Price
+from main.models import Item, Price, Payment
 
 
 @admin.register(Item)
@@ -26,3 +26,4 @@ class PriceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(PaymentPlan)
+admin.site.register(Payment)
