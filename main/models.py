@@ -203,12 +203,12 @@ class Payment(models.Model):
     unix_timestamp = models.IntegerField()
     signature = models.CharField(max_length=255, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    testing = models.CharField(max_length=1, choices=TESTING_CHOICES, default="0")
+    testing = models.CharField(max_length=1, default="0")
     description = models.CharField(max_length=255)
     order_id = models.CharField(max_length=255, unique=True, blank=True)
     client_email = models.CharField(max_length=255)
     success_url = models.CharField(max_length=255, default="https://pay.modulbank.ru/success")
-    receipt_items = models.TextField(blank=True, null=True)
+    receipt_items = models.CharField(blank=True, null=True, max_length=2550)
 
     def __str__(self):
         return f"Order {self.order_id}"
