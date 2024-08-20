@@ -15,7 +15,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <form method="post" action="https://pay.modulbank.ru/pay" target="_blank">
+            <form method="post" action="https://pay.modulbank.ru/pay" target="_blank" content='text/html; charset=UTF-8'>
                 {% csrf_token %}
                 <h3>Платеж по тарифу {{ plan.name }}</h3>
                 <p>Сумма платежа: {{ plan.price }} руб.</p>
@@ -27,7 +27,7 @@
 
     <hr>
 
-    <form action="https://pay.modulbank.ru/pay" method="post" target="_blank">
+    <form action="https://pay.modulbank.ru/pay" method="post" target="_blank" content='text/html; charset=UTF-8'>
         {% csrf_token %}
         <p><strong>Заказ №43683694</strong><br>Сумма: 973 RUB</p>
         <input type="submit" value="Оплатить заказ" class="btn btn-primary btn-outline">

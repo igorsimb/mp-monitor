@@ -538,7 +538,7 @@ def create_payment(request: WSGIRequest) -> HttpResponse:
     order_id = f"{request.user.tenant.id}{str(uuid.uuid4().int)[:5]}"
     receipt_items = [
         {
-            "name": str(plan.name),
+            "name": plan.name,
             "payment_method": "full_prepayment",
             "payment_object": "service",
             "price": str(plan.price),
@@ -565,7 +565,7 @@ def create_payment(request: WSGIRequest) -> HttpResponse:
     initial_data["signature"] = signature
     pprint(f"IgorS Initial data: {initial_data}")
     form = PaymentForm(initial=initial_data)
-    pprint(f"IgorS Form: {form}")
+    # pprint(f"IgorS Form: {form}")
     return render(request, "main/payment.html", {"form": form, "plan": plan})
 
 

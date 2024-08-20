@@ -82,7 +82,7 @@ class PaymentForm(forms.ModelForm):
             # "order_id": forms.HiddenInput(),
             # "client_email": forms.HiddenInput(),
             # "success_url": forms.HiddenInput(),
-            # "receipt_items": forms.HiddenInput(),
+            # "receipt_items": forms.TextInput(),
             # "signature": forms.HiddenInput(),
         }
 
