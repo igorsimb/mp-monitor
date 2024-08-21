@@ -74,16 +74,16 @@ class PaymentForm(forms.ModelForm):
             "signature",
         ]
         widgets = {
-            # "merchant": forms.HiddenInput(),
-            # "unix_timestamp": forms.HiddenInput(),
-            # "amount": forms.HiddenInput(),
-            # "testing": forms.HiddenInput(),
-            # "description": forms.HiddenInput(),
-            # "order_id": forms.HiddenInput(),
-            # "client_email": forms.HiddenInput(),
-            # "success_url": forms.HiddenInput(),
-            # "receipt_items": forms.TextInput(),
-            # "signature": forms.HiddenInput(),
+            "merchant": forms.HiddenInput(),
+            "unix_timestamp": forms.HiddenInput(),
+            "amount": forms.HiddenInput(),
+            "testing": forms.HiddenInput(),
+            "description": forms.HiddenInput(),
+            "order_id": forms.HiddenInput(),
+            "client_email": forms.HiddenInput(),
+            "success_url": forms.HiddenInput(),
+            "receipt_items": forms.HiddenInput(),
+            "signature": forms.HiddenInput(),
         }
 
 

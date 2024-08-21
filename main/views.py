@@ -530,7 +530,11 @@ def _create_payment(request: WSGIRequest) -> HttpResponse:  # noqa: C901
     return render(request, "main/payment.html", {"form": form, "plan": plan})
 
 
-@user_passes_test(lambda u: u.is_superuser)
+def superuser_or_test_modul(user) -> bool:
+    return user.is_superuser or user.email == "test_modul@test.com"
+
+
+@user_passes_test(superuser_or_test_modul)
 def create_payment(request: WSGIRequest) -> HttpResponse:
     unix_timestamp = int(timezone.now().timestamp())
     plan_id = request.GET.get("plan_id")
@@ -550,7 +554,7 @@ def create_payment(request: WSGIRequest) -> HttpResponse:
     initial_data = {
         "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
         "unix_timestamp": unix_timestamp,
-        "amount": plan.price,
+        "amount": str(plan.price),
         "testing": "1",
         "description": f"Абонентская оплата. Тариф: {plan.name}",
         "order_id": order_id,
