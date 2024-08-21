@@ -27,7 +27,7 @@
         {% csrf_token %}
         <h3>Форма 2 (тестовая для проверки корректности платежа)</h3>
         <p><strong>Заказ №43683694</strong><br>Сумма: 973 RUB</p>
-        <input type="submit" value="Оплатить заказ" class="btn btn-primary btn-outline">
+        <button type="submit" value="Оплатить заказ" class="btn btn-primary btn-outline">Оплатить заказ</button>
 
         <!-- Текущие дата и время на сервере в формате UNIX Time  -->
         <input name="unix_timestamp" value="1724255682" type="hidden">
@@ -79,7 +79,7 @@
         {% csrf_token %}
         <h3>Форма 3 (реальный платеж)</h3>
         <p><strong>Заказ №1111</strong><br>Сумма: 1 RUB</p>
-        <input type="submit" value="Оплатить заказ" class="btn btn-primary btn-outline">
+        <button type="submit" value="Оплатить заказ" class="btn btn-primary btn-outline">Оплатить реальный заказ</button>
 
         <!-- Текущие дата и время на сервере в формате UNIX Time  -->
         <input name="unix_timestamp" value="1724255682" type="hidden">
