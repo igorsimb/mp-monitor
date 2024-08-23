@@ -4,8 +4,9 @@ import hashlib
 import logging
 import re
 import time
-from typing import Any
+from typing import Any, List, Dict
 from uuid import uuid4
+import uuid
 
 import httpx
 from django.contrib import messages
@@ -35,7 +36,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import config
 from accounts.models import TenantQuota, Tenant  # noqa
 from main.exceptions import InvalidSKUException, QuotaExceededException  # noqa
-from main.models import Item  # noqa
+from main.models import Item, Payment  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -315,7 +316,17 @@ def scrape_items_from_skus(skus: str, is_parser_active: bool = False) -> tuple[l
     return items_data, invalid_skus
 
 
-def update_or_create_items(request, items_data):
+def update_or_create_items(request: HttpRequest, items_data: List[Dict[str, Any]]) -> None:
+    """
+    Update existing items or create new ones for the user's tenant.
+
+    Args:
+        request (HttpRequest): The HTTP request object with user information.
+        items_data (List[Dict[str, Any]]): List of item data dictionaries.
+
+    Returns:
+        None
+    """
     logger.info("Update request=%s", request)
     for item_data in items_data:
         item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
@@ -823,3 +834,13 @@ class MerchantSignatureGenerator:
         """Calculate the signature based on the parameters."""
         raw_signature = self.get_raw_signature(params)
         return self.double_sha1(raw_signature)
+
+
+def create_unique_order_id(tenant_id: int, max_attempts: int = 10) -> str:
+    """Create a unique order ID for the payment for the given tenant."""
+    for _ in range(max_attempts):
+        order_id = f"{tenant_id}{str(uuid.uuid4().int)[:5]}"
+        if not Payment.objects.filter(order_id=order_id).exists():
+            return order_id
+    logger.error("Не удалось создать заказ для оплаты. Попробуйте еще раз. Tenant ID: %s", tenant_id)
+    raise ValueError("Не удалось создать заказ для оплаты. Попробуйте еще раз.")

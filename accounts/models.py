@@ -38,10 +38,16 @@ class TenantQuota(models.Model):
 
 class PaymentPlan(models.Model):
     class PlanName(models.TextChoices):
-        FREE = "БЕСПЛАТНЫЙ", _("FREE")
-        BUSINESS = "БИЗНЕС", _("BUSINESS")
-        PRO = "ПРОФЕССИОНАЛ", _("PROFESSIONAL")
-        CORPORATE = "КОРПОРАТИВНЫЙ", _("CORPORATE")
+        """
+        Plan names for the payment plans. To get the readable name, use payment_plan.get_name_display()
+        To compare plan names:
+        if payment_plan.name == PaymentPlan.PlanName.FREE
+        """
+
+        FREE = "1", _("БЕСПЛАТНЫЙ")
+        BUSINESS = "2", _("БИЗНЕС")
+        PRO = "3", _("ПРОФЕССИОНАЛ")
+        CORPORATE = "4", _("КОРПОРАТИВНЫЙ")
 
     name = models.CharField(max_length=20, choices=PlanName.choices)
     quotas = models.ForeignKey(TenantQuota, on_delete=models.PROTECT, null=True, blank=True)
@@ -53,7 +59,7 @@ class PaymentPlan(models.Model):
         return plan.id
 
     def __str__(self):
-        return f"{self.name} (plan_id={self.id})"
+        return f"{self.name} - {self.get_name_display()}"
 
 
 class TenantManager(models.Manager):
