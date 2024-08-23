@@ -110,7 +110,7 @@
                         {% if user.is_superuser or user.email == "test_modul@test.com" %}
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <a href="{% url 'payment' %}?plan_id=3" class="w-100 btn btn-lg btn-primary">Сменить тариф</a>
+                            <a href="{% url 'payment' %}?plan=3" class="w-100 btn btn-lg btn-primary">Сменить тариф</a>
                             <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода оплаты</small>
                         </div>
                         {% endif %}

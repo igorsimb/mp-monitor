@@ -1,6 +1,5 @@
 {% extends "main/base.html" %}
 {% load static %}
-{% load widget_tweaks %}
 
 {% block title %}
     Платеж
@@ -8,7 +7,7 @@
 
 {% block content %}
 
-    <div class="row">
+    {% comment %} <div class="row">
         <div class="col-md-12">
             <form method="post" action="https://pay.modulbank.ru/pay" target="_blank" content='text/html; charset=UTF-8'>
                 {% csrf_token %}
@@ -21,9 +20,9 @@
         </div>
     </div>
 
-    <hr>
+    <hr> {% endcomment %}
 
-    <form action="https://pay.modulbank.ru/pay" method="post" target="_blank" content='text/html; charset=UTF-8'>
+    {% comment %} <form action="https://pay.modulbank.ru/pay" method="post" target="_blank" content='text/html; charset=UTF-8'>
         {% csrf_token %}
         <h3>Форма 2 (тестовая для проверки корректности платежа)</h3>
         <p><strong>Заказ №43683694</strong><br>Сумма: 973 RUB</p>
@@ -124,4 +123,20 @@
                value='[{"name": "Товар 1", "payment_method": "full_prepayment", "payment_object": "commodity", "price": 1, "quantity": 1, "sno": "osn", "vat": "vat10"}]'
                type="hidden">
     </form>
+
+    <hr> {% endcomment %}
+
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <form method="post">
+                {% csrf_token %}
+                <h3>Оплата тарифа {{ plan.get_name_display }}</h3>
+                <p><strong>Сумма: {{ plan.price }} RUB</strong></p>
+                
+                {{ form.as_p }}
+                
+                <button type="submit" class="btn btn-primary mt-3">Оплатить</button>
+            </form>
+        </div>
+    </div>
 {% endblock content %}

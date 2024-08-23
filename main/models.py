@@ -209,6 +209,7 @@ class Payment(models.Model):
     client_email = models.CharField(max_length=255)
     success_url = models.CharField(max_length=255, default="https://pay.modulbank.ru/success")
     receipt_items = models.CharField(blank=True, null=True, max_length=2550)
+    # is_payment_successful = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Order {self.order_id}"
