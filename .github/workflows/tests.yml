@@ -21,6 +21,7 @@ jobs:
       SENTRY_DSN: 'dsn_example'
       LOCAL_DEVELOPMENT: 'True'
       PAYMENT_TEST_SECRET_KEY: 'fake_payment_test_secret_key'
+      PAYMENT_SECRET_KEY: 'fake_payment_secret_key'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

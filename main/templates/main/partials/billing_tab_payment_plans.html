@@ -16,6 +16,13 @@
 
 <section x-show="billing_tab === 'billing_tab3'" class="mt-5">
     <h2 class="h2 text-center display-6 fw-bold text-body-emphasis my-4">Тарифы и цены</h2>
+    
+
+    {% if user.is_superuser or user.email == "test_modul@test.com" %}
+                        <div>
+                            <a href="{% url 'payment' %}?plan=0" class="btn btn-outline-primary">Тестовый тариф за реальные деньги (1 руб.)</a>
+                        </div>
+        {% endif %}
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 my-5 text-center pricing-card-container">
 

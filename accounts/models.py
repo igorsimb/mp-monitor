@@ -44,6 +44,7 @@ class PaymentPlan(models.Model):
         if payment_plan.name == PaymentPlan.PlanName.FREE
         """
 
+        TEST = "0", _("ТЕСТОВЫЙ")
         FREE = "1", _("БЕСПЛАТНЫЙ")
         BUSINESS = "2", _("БИЗНЕС")
         PRO = "3", _("ПРОФЕССИОНАЛ")
