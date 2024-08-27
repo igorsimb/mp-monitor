@@ -1,19 +1,20 @@
 from django.urls import path
 
 from .views import (
+    create_payment_new,
     index,
     ItemListView,
     ItemDetailView,
     create_scrape_interval_task,
+    payment_success,
     update_scrape_interval,
     destroy_scrape_interval_task,
     scrape_items,
     update_items,
     oferta_view,
     billing_view,
-    # create_payment,
-    create_payment_new,
-    # payment_success,
+    # create_payment_new,
+    PaymentFormView,
 )
 
 urlpatterns = [
@@ -32,6 +33,7 @@ urlpatterns = [
     path("update_items/", update_items, name="update_items"),
     path("oferta/", oferta_view, name="oferta"),
     path("billing/", billing_view, name="billing"),
-    path("billing/payment/", create_payment_new, name="payment"),
-    # path("billing/payment-success/", payment_success, name="payment_success"),
+    path("billing/payment-frontend/", PaymentFormView.as_view(), name="payment_frontend"),
+    path("billing/payment-backend/", create_payment_new, name="payment_backend"),
+    path("billing/payment-success/", payment_success, name="payment_success"),
 ]

@@ -6,28 +6,36 @@
 {% endblock title %}
 
 {% block content %}
+    <h3 class="text-center">Backend. Signature, order id генерируются после отправки формы</h3>
     <div class="row">
-        <h3 class="text-center">Frontend. Все поля сгенерированы сразу на стороне клиента (открыты для удобства тестирования)</h3>
-        <div class="col-md-8 offset-md-3">
+    <div class="col-md-8 offset-md-3">
+        <div class="">
             {% if is_real_payment %}
                 <div class="alert alert-warning" role="alert">
                     <strong>Внимание!</strong> Это реальный платеж. С вашего счета будут списаны деньги.
                 </div>
             {% endif %}
-            <form method="post" action="https://pay.modulbank.ru/pay">
+            <form method="post">
                 {% csrf_token %}
                 <div class="bg-warning-subtle border-top border-bottom my-3 p-3">
-                <p>Оплата происходит на странице банка: https://pay.modulbank.ru/pay</p>
+                <p>Оплата происходит на странице этого сайта: {{ request.build_absolute_uri }} за счет
+                    рендеринга возвращаемого текста запроса (return HttpResponse(response.text))</p>
+                <p>Поля signature, order id генерируются после отправки формы</p>
                 <div>Проблемы:
-                <ul>
-                    <li>Реальные деньги:  <span class="text-danger">Некорректный источник запроса</span></li>
-                    <li>Тестовые деньги: <span class="text-danger">Server Error (500) после отправки формы</span></li>
-                </ul>
+                    <ul>
+                        <li>Реальные деньги:
+                            <span class="text-danger">Некорректный источник запроса</span>
+                        </li>
+                        <li>Тестовые деньги:
+                            <span class="text-success">Оплата проходит успешно</span>
+                        </li>
+
+                    </ul>
                 </div>
                 </div>
                 <p><strong>Сумма: {{ plan.price }} RUB</strong></p>
 
-                {{ form.as_p }}
+                {{ form_backend.as_p }}
 
                 <button type="submit" class="btn btn-primary mt-3">
                     {% if is_real_payment %}
@@ -40,3 +48,4 @@
         </div>
     </div>
 {% endblock content %}
+

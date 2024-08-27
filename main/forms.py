@@ -73,18 +73,18 @@ class PaymentForm(forms.ModelForm):
             "receipt_items",
             "signature",
         ]
-        widgets = {
-            "merchant": forms.HiddenInput(),
-            "unix_timestamp": forms.HiddenInput(),
-            "amount": forms.HiddenInput(),
-            "testing": forms.HiddenInput(),
-            "description": forms.HiddenInput(),
-            "order_id": forms.HiddenInput(),
-            "client_email": forms.HiddenInput(),
-            "success_url": forms.HiddenInput(),
-            "receipt_items": forms.HiddenInput(),
-            "signature": forms.HiddenInput(),
-        }
+        # widgets = {
+        #     "merchant": forms.HiddenInput(),
+        #     "unix_timestamp": forms.HiddenInput(),
+        #     "amount": forms.HiddenInput(),
+        #     "testing": forms.HiddenInput(),
+        #     "description": forms.HiddenInput(),
+        #     "order_id": forms.HiddenInput(),
+        #     "client_email": forms.HiddenInput(),
+        #     "success_url": forms.HiddenInput(),
+        #     "receipt_items": forms.HiddenInput(),
+        #     "signature": forms.HiddenInput(),
+        # }
 
 
 # TODO: add payment form to billing_tab_payment_plans

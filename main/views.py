@@ -1,8 +1,9 @@
 import json
 import logging
-import requests
-from rich import print as pprint
 from datetime import timedelta
+
+import requests
+from django import forms
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -13,11 +14,13 @@ from django.db import IntegrityError
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, FormView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django_ratelimit.core import is_ratelimited
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
+from rich import print as pprint
 
 import config
 from accounts.models import PaymentPlan
@@ -526,14 +529,93 @@ def create_payment_new(request: WSGIRequest) -> HttpResponse:
                 "unix_timestamp": unix_timestamp,
                 "client_email": request.user.tenant,
                 "receipt_items": receipt_items,
+                "testing": "0" if is_real_payment else "1",
                 # Add other initial values as needed
             }
         )
         pprint("Form not valid")
 
     context = {
-        "form": form,
+        "form_backend": form,
         "plan": plan,
         "is_real_payment": is_real_payment,
     }
-    return render(request, "main/payment.html", context)
+    return render(request, "main/payment-backend.html", context)
+
+
+class PaymentFormView(FormView):
+    template_name = "main/payment.html"
+    form_class = PaymentForm
+    # success_url = reverse_lazy('payment_success')  # Assuming you have a success page
+    success_url = "https://pay.modulbank.ru/success"  # Assuming you have a success page
+
+    def get_initial(self):
+        unix_timestamp = int(timezone.now().timestamp())
+        plan_name = self.request.GET.get("plan")
+        plan = get_object_or_404(PaymentPlan, name=plan_name)
+        plan_name_readable = plan.get_name_display()
+
+        receipt_items = json.dumps(
+            [
+                {
+                    "name": plan_name_readable,
+                    "payment_method": "full_prepayment",
+                    "payment_object": "service",
+                    "price": str(plan.price),
+                    "quantity": "1",
+                    "sno": "osn",
+                    "vat": "none",
+                }
+            ]
+        )
+
+        initial_data = {
+            "amount": str(plan.price),
+            "description": f"Абонентская оплата. Тариф: {plan_name_readable}",
+            "unix_timestamp": unix_timestamp,
+            "client_email": self.request.user.email,
+            "receipt_items": receipt_items,
+            # 'order_id': order_id,
+            "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
+            "testing": "1" if plan_name != "0" else "0",
+            # 'success_url': self.request.build_absolute_uri(reverse('payment_success')),
+            "success_url": self.success_url,
+        }
+        pprint(f"Initial data: {initial_data}")
+        return initial_data
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        initial_data = self.get_initial()
+        try:
+            order_id = create_unique_order_id(tenant_id=self.request.user.tenant.id)
+        except ValueError as e:
+            messages.error(self.request, str(e))
+            return HttpResponseRedirect(reverse("billing"))
+        initial_data["order_id"] = order_id
+
+        # Generate signature
+        is_real_payment = initial_data["testing"] == "0"
+        secret_key = settings.PAYMENT_SECRET_KEY if is_real_payment else settings.PAYMENT_TEST_SECRET_KEY
+        generator = MerchantSignatureGenerator(secret_key)
+        signature = generator.get_signature(initial_data)
+
+        # Update form with all necessary fields, including the signature
+        # form.fields['signature'] = forms.CharField(widget=forms.HiddenInput(), initial=signature)
+        form.fields["signature"] = forms.CharField(initial=signature)
+        print(f"Signature: {signature}")
+        for key, value in initial_data.items():
+            # form.fields[key] = forms.CharField(widget=forms.HiddenInput(), initial=value)
+            form.fields[key] = forms.CharField(initial=value)
+
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_real_payment"] = self.get_initial()["testing"] == "0"
+        context["plan"] = get_object_or_404(PaymentPlan, name=self.request.GET.get("plan"))
+        return context
+
+
+def payment_success(request: WSGIRequest) -> HttpResponse:
+    return render(request, "main/payment_success.html")
