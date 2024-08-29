@@ -59,3 +59,37 @@ function limitMaxLength(input) {
 // Bootstrap tooltips
 const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+
+/**
+ * Validates the SKUs input field and prevents form submission if it contains only whitespace or is empty.
+ */
+function validateSkusInput(formId, inputId, submitButtonId) {
+    // Get references to important DOM elements
+    const form = document.getElementById(formId);
+    const skusInput = document.getElementById(inputId);
+    const submitButton = document.getElementById(submitButtonId);
+
+    /**
+     * Checks if the SKUs input is valid and updates the submit button state.
+     */
+    function validateForm() {
+        // Check if the input contains non-whitespace characters
+        const isValid = skusInput.value.trim() !== '';
+        // Disable the submit button if the input is invalid
+        submitButton.disabled = !isValid;
+    }
+
+    // Validate the form on each input change
+    skusInput.addEventListener('input', validateForm);
+
+    // Prevent form submission if the input is invalid
+    form.addEventListener('submit', function(event) {
+        if (!skusInput.value.trim()) {
+            event.preventDefault();
+        }
+    });
+
+    // Perform initial validation
+    validateForm();
+}
