@@ -16,7 +16,7 @@
 }
 
 .nav-link.active {
-    color: var(--bs-primary-text-emphasis)!important;
+    color: var(--bs-primary-text-emphasis) !important;
 }
 
 .nav-link.nav-active {
@@ -319,9 +319,9 @@ shepherd-step-highlight {
 
 /* Hide the pattern on screens below 991px */
 @media (max-width: 991px) {
-  .pricing-card-container::after {
-    display: none;
-  }
+    .pricing-card-container::after {
+        display: none;
+    }
 }
 
 /* Pattern under the pricing cards END */

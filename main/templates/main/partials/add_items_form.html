@@ -13,11 +13,12 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="mb-3">
-                    <form method="POST" action="{% url 'scrape_item' skus=form.skus.value %}" id="addItemsForm">
+                    <form x-data="{ loadingIndicator: false, loadingIndicatorMessage: 'Добавляем' }"
+                          method="POST" action="{% url 'scrape_item' skus=form.skus.value %}" id="addItemsForm">
                         {% csrf_token %}
 
                         <label for="skus" class="form-label h2">Добавить новые товары для парсинга</label>
-                        {% render_field form.skus class="form-control add-items focus-ring focus-ring-remove border-secondary-subtle shadow shadow-sm mt-3" id="skus" rows="5" placeholder="101231520, 109670641, 31299196" %}
+                        {% render_field form.skus class="form-control add-items focus-ring focus-ring-remove border-secondary-subtle shadow shadow-sm mt-3" id="skus" rows="5" placeholder="101231520, 109670641, 31299196" required="required" %}
                         <div class="form-text text-body-secondary">{{ form.skus.help_text }}</div>
 
                         {% if user.is_demo_user and user_quota.max_allowed_skus <= 0 %}
@@ -29,7 +30,18 @@
                                 чтобы снять это ограничение.
                             </div>
                         {% else %}
-                            <button id="addItemsButton" type="submit" class="btn btn-primary rounded-pill my-3">Добавить</button>
+                            <button id="addItemsButton" type="submit" class="btn btn-primary rounded-pill my-3"
+                                    @click="loadingIndicator = true" x-show="!loadingIndicator">
+                                <span id="spinner" x-show="loadingIndicator"
+                                      class="htmx-loading-indicator spinner-border spinner-border-sm"
+                                      aria-hidden="true"></span>
+                                Добавить
+                            </button>
+                            <button x-show="loadingIndicator"
+                                    class="btn btn-primary rounded-pill my-3" disabled>
+                                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                <span role="status" x-text="loadingIndicatorMessage"></span>
+                            </button>
                         {% endif %}
                     </form>
                 </div>
@@ -37,3 +49,10 @@
         </div>
     </div>
 </div>
+
+<script>
+// if "skus" field is empty or contains only whitespace disable submit button
+document.addEventListener('DOMContentLoaded', function() {
+    validateSkusInput('addItemsForm', 'skus', 'addItemsButton');
+});
+</script>
