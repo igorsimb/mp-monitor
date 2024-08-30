@@ -341,3 +341,9 @@ shepherd-step-highlight {
 .price-card-height {
     height: 550px;
 }
+
+
+/* For dialogs */
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}

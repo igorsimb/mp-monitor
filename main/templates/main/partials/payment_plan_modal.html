@@ -1,0 +1,25 @@
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        {% if is_real_payment %}
+            <div class="alert alert-warning" role="alert">
+                <strong>Внимание!</strong> Это реальный платеж. С вашего счета будут списаны деньги.
+            </div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <h3>Оплата тарифа {{ plan.get_name_display }}</h3>
+            <p><strong>Сумма: {{ plan.price }} RUB</strong></p>
+
+            {{ form.as_p }}
+
+            <button type="submit" class="btn btn-primary mt-3">
+                {% if is_real_payment %}
+                    Перейти к оплате (Реальный платеж)
+                {% else %}
+                    Перейти к оплате (Тестовый платеж)
+                {% endif %}
+            </button>
+            <button id="close-button" type="button" class="btn btn-secondary mt-3">Закрыть</button>
+        </form>
+    </div>
+</div>

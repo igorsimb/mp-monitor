@@ -1,8 +1,8 @@
 import json
 import logging
-import requests
-from rich import print as pprint
 from datetime import timedelta
+
+import requests
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -18,6 +18,7 @@ from django.views.generic import ListView, DetailView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django_ratelimit.core import is_ratelimited
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
+from rich import print as pprint
 
 import config
 from accounts.models import PaymentPlan
@@ -438,9 +439,190 @@ def oferta_view(request: WSGIRequest) -> HttpResponse:
     return render(request, "main/oferta.html")
 
 
-@login_required
-def billing_view(request: WSGIRequest) -> HttpResponse:
-    return render(request, "main/billing.html")
+# this is a version that worked before HTMX
+# @login_required
+# def billing_view(request: WSGIRequest) -> HttpResponse:
+#     unix_timestamp = int(timezone.now().timestamp())
+#     # we need to get the plan name elsewhere
+#     plan_name = request.GET.get("plan", str(request.user.tenant.payment_plan.name))
+#     # plan_name = "3"
+#     plan = get_object_or_404(PaymentPlan, name=plan_name)
+#     plan_name_readable = plan.get_name_display()
+#     try:
+#         order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
+#     except ValueError as e:
+#         return HttpResponse(e, status=400)
+#
+#     # Determine if it's a real payment (PLAN 0) or a test payment
+#     is_real_payment = plan_name == "0"
+#
+#     receipt_items = json.dumps(
+#         [
+#             {
+#                 "name": plan_name_readable,
+#                 "payment_method": "full_prepayment",
+#                 "payment_object": "service",
+#                 "price": str(plan.price),
+#                 "quantity": "1",
+#                 "sno": "osn",
+#                 "vat": "none",
+#             }
+#         ]
+#     )
+#
+#     if request.method == "POST":
+#         form = PaymentForm(request.POST)
+#         if form.is_valid():
+#             payment = form.save(commit=False)
+#             payment.tenant = request.user.tenant
+#             payment.order_id = order_id
+#             payment.amount = plan.price
+#
+#             # Collect the form data to generate the signature
+#             params = {
+#                 "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
+#                 "unix_timestamp": payment.unix_timestamp,
+#                 "amount": str(payment.amount),
+#                 "testing": "0" if is_real_payment else "1",
+#                 "description": payment.description,
+#                 "order_id": order_id,
+#                 "client_email": payment.client_email,
+#                 "success_url": payment.success_url,
+#                 "receipt_items": receipt_items,
+#             }
+#
+#             # Use the appropriate secret key based on whether it's a real or test payment
+#             # Bug: using env var for PAYMENT_SECRET_KEY sometimes doesn't work when calculating the signature for real payment
+#             secret_key = settings.PAYMENT_SECRET_KEY if is_real_payment else settings.PAYMENT_TEST_SECRET_KEY
+#             generator = MerchantSignatureGenerator(secret_key)
+#             payment.signature = generator.get_signature(params)
+#             params["signature"] = payment.signature
+#
+#             # Send POST request to Modulbank
+#             response = requests.post("https://pay.modulbank.ru/pay", data=params)
+#             pprint(f"Igor1 {response.url=}")
+#
+#             if response.status_code == 200:
+#                 pprint(f"Igor2 Good {response.status_code=}")
+#                 payment.save()
+#                 return HttpResponse(response.text)
+#             else:
+#                 pprint(f"Igor3 {payment.signature=}\n{response.status_code=}")
+#                 return HttpResponse(response.text)
+#     else:
+#         form = PaymentForm(
+#             initial={
+#                 "amount": plan.price,
+#                 "description": f"Абонентская оплата. Тариф: {plan_name_readable}",
+#                 "unix_timestamp": unix_timestamp,
+#                 "client_email": request.user.tenant,
+#                 "receipt_items": receipt_items,
+#                 # Add other initial values as needed
+#             }
+#         )
+#         pprint("Form not valid")
+#
+#     context = {
+#         "form": form,
+#         "plan": plan,
+#         "is_real_payment": is_real_payment,
+#     }
+#     if request.htmx:
+#         # dialog_html = render_to_string("main/partials/payment_plan_modal.html", context)
+#         dialog_html = render_to_string("main/partials/payment_plan_modal.html", context)
+#         return HttpResponse(dialog_html)
+#         # return render(request, "main/partials/payment_plan_modal.html", context)
+#     return render(request, "main/billing.html", context)
+
+
+def billing_view(request):
+    plan_name = request.GET.get(
+        "plan", str(request.user.tenant.payment_plan.name)
+    )  # Default is the user's current plan
+    plan = get_object_or_404(PaymentPlan, name=plan_name)
+    unix_timestamp = int(timezone.now().timestamp())
+
+    try:
+        order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
+    except ValueError as e:
+        return HttpResponse(e, status=400)
+
+    # Determine if it's a real payment (PLAN 0) or a test payment
+    is_real_payment = plan_name == "0"
+
+    receipt_items = json.dumps(
+        [
+            {
+                "name": plan.get_name_display(),
+                "payment_method": "full_prepayment",
+                "payment_object": "service",
+                "price": str(plan.price),
+                "quantity": "1",
+                "sno": "osn",
+                "vat": "none",
+            }
+        ]
+    )
+
+    if request.method == "POST":
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.tenant = request.user.tenant
+            payment.order_id = order_id
+            payment.amount = plan.price
+
+            # Collect the form data to generate the signature
+            params = {
+                "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
+                "unix_timestamp": payment.unix_timestamp,
+                "amount": str(payment.amount),
+                "testing": "0" if is_real_payment else "1",
+                "description": payment.description,
+                "order_id": order_id,
+                "client_email": payment.client_email,
+                "success_url": payment.success_url,
+                "receipt_items": receipt_items,
+            }
+
+            # Use the appropriate secret key based on whether it's a real or test payment
+            secret_key = settings.PAYMENT_SECRET_KEY if is_real_payment else settings.PAYMENT_TEST_SECRET_KEY
+            generator = MerchantSignatureGenerator(secret_key)
+            payment.signature = generator.get_signature(params)
+            params["signature"] = payment.signature
+
+            # Send POST request to Modulbank
+            response = requests.post("https://pay.modulbank.ru/pay", data=params)
+            pprint(f"Igor1 {response.url=}")
+
+            if response.status_code == 200:
+                pprint(f"Igor2 Good {response.status_code=}")
+                payment.save()
+                return HttpResponse(response.text)
+            else:
+                pprint(f"Igor3 {payment.signature=}\n{response.status_code=}")
+                return HttpResponse(response.text)
+    else:
+        form = PaymentForm(
+            initial={
+                "amount": plan.price,
+                "description": f"Абонентская оплата. Тариф: {plan.get_name_display()}",
+                "unix_timestamp": unix_timestamp,
+                "client_email": request.user.tenant,
+                "receipt_items": receipt_items,
+            }
+        )
+
+    context = {
+        "form": form,
+        "plan": plan,
+        "is_real_payment": is_real_payment,
+    }
+
+    # if request.headers.get('HX-Request'):
+    if request.htmx:
+        return render(request, "main/partials/payment_plan_modal.html", context)
+    return render(request, "main/billing.html", context)
 
 
 def superuser_or_test_modul(user) -> bool:
