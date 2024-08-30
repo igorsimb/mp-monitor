@@ -16,41 +16,52 @@
 
 <section x-show="billing_tab === 'billing_tab3'" class="mt-5">
     <h2 class="h2 text-center display-6 fw-bold text-body-emphasis my-4">Тарифы и цены</h2>
-    
+
 
     {% if user.is_superuser or user.email == "test_modul@test.com" %}
-                        <div>
-                            <a href="{% url 'payment' %}?plan=0" class="btn btn-outline-primary">Тестовый тариф за реальные деньги (1 руб.)</a>
-                        </div>
-        {% endif %}
+        <div>
+            {#                            <a href="{% url 'payment' %}?plan=0" class="btn btn-outline-primary">Тестовый тариф за реальные деньги (1 руб.)</a>#}
+            <a href="#" class="btn btn-outline-primary">Тестовый тариф за реальные деньги (1 руб.)</a>
+        </div>
+    {% endif %}
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 my-5 text-center pricing-card-container">
 
         <!-- Free Plan -->
-        <div class="col px-0">
+        <div class="col px-1">
             <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
                 <div class="card-header py-3">
                     <h3 class="h3 my-0 fw-bold text-body-secondary">БЕСПЛАТНЫЙ</h3>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-column justify-content-between h-100">
-                        <div class="text-body-secondary">
+                        <div>
                             <h4 class="h2 card-title pricing-card-title mb-0">
                                 0<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
                             </h4>
-                            <div class="fw-light">/месяц</div>
-                            <ul class="list-unstyled my-4 ms-3 text-start">
-                                <li class="mb-3">Количество товаров - 50</li>
-                                <li>
-                                    <span class="tooltip-needed " data-bs-toggle="tooltip" data-bs-placement="top"
-                                          data-bs-title="Однократная проверка одного товара">Единиц проверки</span> -
-                                    5000
+                            <div class="text-body-secondary fw-light">/месяц</div>
+                            <ul class="list-unstyled mt-3 mb-4 ms-3 text-start ">
+                                <li>Количество товаров - 50</li>
+                                <li class="my-3">
+                            <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
+                                  data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 5000
                                 </li>
+                                <li>&nbsp;<br>&nbsp;</li>
+                                <li class="text-success mt-3">&nbsp;</li>
                             </ul>
                         </div>
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <a href="#" type="button" class="w-100 btn btn-lg btn-outline-secondary">Сменить тариф</a>
+                            <!-- TODO: add functionality to change the plan  -->
+                            <button class="w-100 btn btn-lg btn-outline-secondary"
+                                    hx-get="{% url 'billing' %}?plan=1"
+                                    hx-target="#payment-dialog"
+                                    hx-push-url="true"
+                                    hx-trigger="click"
+                                    hx-swap="innerHTML">Сменить тариф
+                            </button>
+                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода
+                                оплаты</small>
                         </div>
                     </div>
                 </div>
@@ -78,14 +89,28 @@
                                   data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 35 000
                                 </li>
                                 <li>Стоимость за проверку - 0.17 руб.</li>
+                                <li class="text-success mt-3 fw-semibold">&nbsp;</li>
                             </ul>
+                        </div>
+                        <!-- Don't show the button if this is the current plan -->
+                        <div>
+                            <hr class="opacity-25 w-50 mx-auto">
+                            <button class="w-100 btn btn-lg btn-primary disabled"
+                                    hx-get="{% url 'billing' %}?plan=2"
+                                    hx-target="#payment-dialog"
+                                    hx-push-url="true"
+                                    hx-trigger="click"
+                                    hx-swap="innerHTML">Сменить тариф
+                            </button>
+                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода
+                                оплаты</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Professional Plan (Best Value - Выгодно?)
+        <!-- Professional Plan
         TODO: use `fw-semibold text-success-emphasis` class only for plans that are more expensive
          than user's current plan and `text-body-secondary` for cheaper ones to encourage them to upgrade -->
         <div class="col px-0">
@@ -114,13 +139,18 @@
                                         class="fw-semibold text-success-emphasis">0.12 руб.</span></li>
                             </ul>
                         </div>
-                        {% if user.is_superuser or user.email == "test_modul@test.com" %}
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <a href="{% url 'payment' %}?plan=3" class="w-100 btn btn-lg btn-primary">Сменить тариф</a>
-                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода оплаты</small>
+                            <button class="w-100 btn btn-lg btn-primary"
+                                    hx-get="{% url 'billing' %}?plan=3"
+                                    hx-target="#payment-dialog"
+                                    hx-push-url="true"
+                                    hx-trigger="click"
+                                    hx-swap="innerHTML">Сменить тариф
+                            </button>
+                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода
+                                оплаты</small>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -140,7 +170,8 @@
                             </h4>
                             <div class="text-body-secondary fw-light">/месяц</div>
                             <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
-                                <li>Количество товаров - <span class="fw-semibold text-success-emphasis">5000</span></li>
+                                <li>Количество товаров - <span class="fw-semibold text-success-emphasis">5000</span>
+                                </li>
                                 <li class="my-3">
                             <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
                                   data-bs-title="Однократная проверка одного товара">Единиц проверки</span> -
@@ -153,8 +184,15 @@
                         </div>
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <button type="button" class="w-100 btn btn-lg btn-outline-primary">Сменить тариф</button>
-                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода оплаты</small>
+                            <button class="w-100 btn btn-lg btn-outline-primary"
+                                    hx-get="{% url 'billing' %}?plan=4"
+                                    hx-target="#payment-dialog"
+                                    hx-push-url="true"
+                                    hx-trigger="click"
+                                    hx-swap="innerHTML">Сменить тариф
+                            </button>
+                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода
+                                оплаты</small>
                         </div>
                     </div>
                 </div>
@@ -162,3 +200,87 @@
         </div>
     </div>
 </section>
+
+<!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog -->
+<!-- create a dialog with a backdrop and a close button -->
+
+
+{#<dialog>#}
+{#    <div class="row">#}
+{#        <div class="col-md-6 offset-md-3">#}
+{#            {% if is_real_payment %}#}
+{#                <div class="alert alert-warning" role="alert">#}
+{#                    <strong>Внимание!</strong> Это реальный платеж. С вашего счета будут списаны деньги.#}
+{#                </div>#}
+{#            {% endif %}#}
+{#            <form method="post">#}
+{#                {% csrf_token %}#}
+{#                <h3>Оплата тарифа {{ plan.get_name_display }}</h3>#}
+{#                <p><strong>Сумма: {{ plan.price }} RUB</strong></p>#}
+{##}
+{#                {{ form.as_p }}#}
+{##}
+{#                <button type="submit" class="btn btn-primary mt-3">#}
+{#                    {% if is_real_payment %}#}
+{#                        Оплатить (Реальный платеж)#}
+{#                    {% else %}#}
+{#                        Оплатить (Тестовый платеж)#}
+{#                    {% endif %}#}
+{#                </button>#}
+{#                <button id="close-button" type="button" class="btn btn-secondary mt-3">Закрыть</button>#}
+{#            </form>#}
+{#        </div>#}
+{#    </div>#}
+{#</dialog>#}
+
+<dialog id="payment-dialog">
+    <!-- Dialog content will be replaced by HTMX -->
+</dialog>
+
+<!-- The buttons to select the plan -->
+<button hx-get="/billing/?plan=1" hx-target="#payment-dialog" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML">
+    Plan = 1
+</button>
+<button hx-get="/billing/?plan=2" hx-target="#payment-dialog" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML">
+    Plan = 2
+</button>
+<button hx-get="/billing/?plan=3" hx-target="#payment-dialog" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML">
+    Plan = 3
+</button>
+<button hx-get="/billing/?plan=4" hx-target="#payment-dialog" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML">
+    Plan = 4
+</button>
+
+<script>
+    // Show the dialog when HTMX loads the content
+    document.body.addEventListener('htmx:afterSwap', (event) => {
+        if (event.detail.target.id === 'payment-dialog') {
+            document.querySelector("#payment-dialog").showModal();
+        }
+    });
+
+    // Close dialog functionality
+    document.addEventListener("click", function (event) {
+        if (event.target.id === "close-button") {
+            document.querySelector("#payment-dialog").close();
+            // remove the hx-push-url value from the url
+            window.history.pushState("", document.title, window.location.pathname);
+        }
+    });
+</script>
+
+{#<script>#}
+{#    const dialog = document.querySelector("dialog");#}
+{#    const showButton = document.querySelector("dialog + button");#}
+{#    const closeButton = document.querySelector("#close-button");#}
+{##}
+{#    // "Show the dialog" button opens the dialog modally#}
+{#    showButton.addEventListener("click", () => {#}
+{#        dialog.showModal();#}
+{#    });#}
+{##}
+{#    // "Close" button closes the dialog#}
+{#    closeButton.addEventListener("click", () => {#}
+{#        dialog.close();#}
+{#    });#}
+{#</script>#}
