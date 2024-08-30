@@ -30,7 +30,7 @@ class TenantQuota(models.Model):
                 "parse_units_limit": DEFAULT_QUOTAS[PlanType.FREE]["parse_units_limit"],
             },
         )
-        return quota.id
+        return quota
 
     def __str__(self):
         return self.name if self.name else f"SKUs: {self.skus_limit}, PUs:{self.parse_units_limit}"
@@ -57,7 +57,7 @@ class PaymentPlan(models.Model):
     @classmethod
     def get_default_payment_plan(cls) -> "PaymentPlan":
         plan, created = cls.objects.get_or_create(name=cls.PlanName.FREE)
-        return plan.id
+        return plan
 
     def __str__(self):
         return f"{self.name} - {self.get_name_display()}"

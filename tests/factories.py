@@ -22,7 +22,7 @@ class UserFactory(DjangoModelFactory):
     email = factory.Sequence(lambda n: f"user_{n}@testing.com")
     username = factory.Sequence(lambda n: f"user_{n}")
     password = factory.PostGenerationMethodCall("set_password", "password")
-    tenant = factory.RelatedFactory(TenantFactory, "name")
+    tenant = factory.RelatedFactory(TenantFactory)
 
 
 class IntervalScheduleFactory(DjangoModelFactory):
