@@ -542,6 +542,7 @@ def billing_view(request):
     plan = get_object_or_404(PaymentPlan, name=plan_name)
     unix_timestamp = int(timezone.now().timestamp())
 
+    # TODO: https://github.com/igorsimb/mp-monitor/issues/191
     try:
         order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
     except ValueError as e:
@@ -593,14 +594,12 @@ def billing_view(request):
 
             # Send POST request to Modulbank
             response = requests.post("https://pay.modulbank.ru/pay", data=params)
-            pprint(f"Igor1 {response.url=}")
 
             if response.status_code == 200:
-                pprint(f"Igor2 Good {response.status_code=}")
                 payment.save()
                 return HttpResponse(response.text)
             else:
-                pprint(f"Igor3 {payment.signature=}\n{response.status_code=}")
+                # TODO: improve handling when not 200 response (message, logging)
                 return HttpResponse(response.text)
     else:
         form = PaymentForm(
@@ -691,14 +690,11 @@ def create_payment_new(request: WSGIRequest) -> HttpResponse:
 
             # Send POST request to Modulbank
             response = requests.post("https://pay.modulbank.ru/pay", data=params)
-            pprint(f"Igor1 {response.url=}")
 
             if response.status_code == 200:
-                pprint(f"Igor2 Good {response.status_code=}")
                 payment.save()
                 return HttpResponse(response.text)
             else:
-                pprint(f"Igor3 {payment.signature=}\n{response.status_code=}")
                 return HttpResponse(response.text)
     else:
         form = PaymentForm(

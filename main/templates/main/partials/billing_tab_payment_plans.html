@@ -1,27 +1,17 @@
-{#<div x-show="billing_tab === 'billing_tab3'">#}
-{#    <h2 class="mb-3">Payment Plans</h2>#}
-{#    <form>#}
-{#        <div class="mb-3">#}
-{#            <label for="planSelect" class="form-label">Select a Plan</label>#}
-{#            <select class="form-select" id="planSelect">#}
-{#                <option value="basic">Basic - $20/month</option>#}
-{#                <option value="standard">Standard - $35/month</option>#}
-{#                <option value="premium" selected>Premium - $50/month</option>#}
-{#            </select>#}
-{#        </div>#}
-{#        <button type="submit" class="btn btn-primary">Switch Plan</button>#}
-{#    </form>#}
-{#</div>#}
-
-
 <section x-show="billing_tab === 'billing_tab3'" class="mt-5">
     <h2 class="h2 text-center display-6 fw-bold text-body-emphasis my-4">Тарифы и цены</h2>
 
 
     {% if user.is_superuser or user.email == "test_modul@test.com" %}
         <div>
-            {#                            <a href="{% url 'payment' %}?plan=0" class="btn btn-outline-primary">Тестовый тариф за реальные деньги (1 руб.)</a>#}
-            <a href="#" class="btn btn-outline-primary">Тестовый тариф за реальные деньги (1 руб.)</a>
+            <button class="btn btn-outline-primary pay-button"
+                    hx-get="{% url 'billing' %}?plan=0"
+                    hx-target="#payment-dialog"
+                    hx-push-url="true"
+                    hx-trigger="click"
+                    hx-disabled-elt="this"
+                    hx-swap="innerHTML">Тестовый тариф за реальные деньги (1 руб.)
+            </button>
         </div>
     {% endif %}
 
@@ -53,15 +43,14 @@
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
                             <!-- TODO: add functionality to change the plan  -->
-                            <button class="w-100 btn btn-lg btn-outline-secondary"
+                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button"
                                     hx-get="{% url 'billing' %}?plan=1"
                                     hx-target="#payment-dialog"
                                     hx-push-url="true"
                                     hx-trigger="click"
+                                    hx-disabled-elt="this"
                                     hx-swap="innerHTML">Сменить тариф
                             </button>
-                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода
-                                оплаты</small>
                         </div>
                     </div>
                 </div>
@@ -92,18 +81,17 @@
                                 <li class="text-success mt-3 fw-semibold">&nbsp;</li>
                             </ul>
                         </div>
-                        <!-- Don't show the button if this is the current plan -->
+                        <!-- TODO: Don't show / disable the button if this is the current plan -->
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <button class="w-100 btn btn-lg btn-primary disabled"
+                            <button class="w-100 btn btn-lg btn-primary pay-button"
                                     hx-get="{% url 'billing' %}?plan=2"
                                     hx-target="#payment-dialog"
                                     hx-push-url="true"
                                     hx-trigger="click"
+                                    hx-disabled-elt="this"
                                     hx-swap="innerHTML">Сменить тариф
                             </button>
-                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода
-                                оплаты</small>
                         </div>
                     </div>
                 </div>
@@ -141,15 +129,14 @@
                         </div>
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <button class="w-100 btn btn-lg btn-primary"
+                            <button class="w-100 btn btn-lg btn-primary pay-button"
                                     hx-get="{% url 'billing' %}?plan=3"
                                     hx-target="#payment-dialog"
                                     hx-push-url="true"
                                     hx-trigger="click"
+                                    hx-disabled-elt="this"
                                     hx-swap="innerHTML">Сменить тариф
                             </button>
-                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода
-                                оплаты</small>
                         </div>
                     </div>
                 </div>
@@ -184,15 +171,14 @@
                         </div>
                         <div>
                             <hr class="opacity-25 w-50 mx-auto">
-                            <button class="w-100 btn btn-lg btn-outline-primary"
+                            <button class="w-100 btn btn-lg btn-outline-primary pay-button"
                                     hx-get="{% url 'billing' %}?plan=4"
                                     hx-target="#payment-dialog"
                                     hx-push-url="true"
                                     hx-trigger="click"
+                                    hx-disabled-elt="this"
                                     hx-swap="innerHTML">Сменить тариф
                             </button>
-                            <small class="mt-2 text-muted fs-6">Смена произойдет в начале следующего периода
-                                оплаты</small>
                         </div>
                     </div>
                 </div>
@@ -202,54 +188,9 @@
 </section>
 
 <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog -->
-<!-- create a dialog with a backdrop and a close button -->
-
-
-{#<dialog>#}
-{#    <div class="row">#}
-{#        <div class="col-md-6 offset-md-3">#}
-{#            {% if is_real_payment %}#}
-{#                <div class="alert alert-warning" role="alert">#}
-{#                    <strong>Внимание!</strong> Это реальный платеж. С вашего счета будут списаны деньги.#}
-{#                </div>#}
-{#            {% endif %}#}
-{#            <form method="post">#}
-{#                {% csrf_token %}#}
-{#                <h3>Оплата тарифа {{ plan.get_name_display }}</h3>#}
-{#                <p><strong>Сумма: {{ plan.price }} RUB</strong></p>#}
-{##}
-{#                {{ form.as_p }}#}
-{##}
-{#                <button type="submit" class="btn btn-primary mt-3">#}
-{#                    {% if is_real_payment %}#}
-{#                        Оплатить (Реальный платеж)#}
-{#                    {% else %}#}
-{#                        Оплатить (Тестовый платеж)#}
-{#                    {% endif %}#}
-{#                </button>#}
-{#                <button id="close-button" type="button" class="btn btn-secondary mt-3">Закрыть</button>#}
-{#            </form>#}
-{#        </div>#}
-{#    </div>#}
-{#</dialog>#}
-
-<dialog id="payment-dialog">
+<dialog id="payment-dialog" class="pt-0 px-0 rounded-3 border-1">
     <!-- Dialog content will be replaced by HTMX -->
 </dialog>
-
-<!-- The buttons to select the plan -->
-<button hx-get="/billing/?plan=1" hx-target="#payment-dialog" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML">
-    Plan = 1
-</button>
-<button hx-get="/billing/?plan=2" hx-target="#payment-dialog" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML">
-    Plan = 2
-</button>
-<button hx-get="/billing/?plan=3" hx-target="#payment-dialog" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML">
-    Plan = 3
-</button>
-<button hx-get="/billing/?plan=4" hx-target="#payment-dialog" hx-push-url="true" hx-trigger="click" hx-swap="innerHTML">
-    Plan = 4
-</button>
 
 <script>
     // Show the dialog when HTMX loads the content
@@ -269,18 +210,3 @@
     });
 </script>
 
-{#<script>#}
-{#    const dialog = document.querySelector("dialog");#}
-{#    const showButton = document.querySelector("dialog + button");#}
-{#    const closeButton = document.querySelector("#close-button");#}
-{##}
-{#    // "Show the dialog" button opens the dialog modally#}
-{#    showButton.addEventListener("click", () => {#}
-{#        dialog.showModal();#}
-{#    });#}
-{##}
-{#    // "Close" button closes the dialog#}
-{#    closeButton.addEventListener("click", () => {#}
-{#        dialog.close();#}
-{#    });#}
-{#</script>#}
