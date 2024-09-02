@@ -1,5 +1,5 @@
 :root {
-    font-family: 'Roboto', sans-serif;
+    font-family: system-ui, 'Roboto', sans-serif;
 }
 
 .nav {
@@ -51,7 +51,8 @@ Source: https://www.youtube.com/watch?v=81pnuZFarRw
     clip-path: inset(0 -100vmax);
 }
 
-.material-symbols-sharp, .custom-material-icon {
+.material-symbols-sharp,
+.custom-material-icon {
     display: inline-flex;
     vertical-align: text-bottom;
     font-size: 1.2rem;
@@ -247,7 +248,8 @@ source: https://uiverse.io/Pradeepsaranbishnoi/jolly-robin-0 */
 
 /* Shepherd tour START */
 
-.shepherd-element { /* overrides only the max-width, everything else is inherited from shepherd.css */
+.shepherd-element {
+    /* overrides only the max-width, everything else is inherited from shepherd.css */
     max-width: 500px;
     border: solid 1px #16202D;
     /*background: lightyellow;*/
@@ -314,7 +316,8 @@ shepherd-step-highlight {
     background-image: radial-gradient(rgba(12, 12, 12, 0.171) 6px, transparent 0);
     background-size: 25px 25px;
     background-position: -5px -5px;
-    z-index: -1; /* Place the pseudo-element behind the cards */
+    z-index: -1;
+    /* Place the pseudo-element behind the cards */
 }
 
 /* Hide the pattern on screens below 991px */
@@ -344,6 +347,57 @@ shepherd-step-highlight {
 
 
 /* For dialogs */
+
+/* add animation to the hover scale effect */
+.pay-button {
+    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    will-change: transform;
+}
+
+.pay-button:hover {
+    transform: translateY(-2px); /* Slight upward movement */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Open state of the dialog */
+dialog[open] {
+    opacity: 1;
+    transform: translateY(0); /* End in the middle */
+    transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+}
+
+/* Closed state of the dialog */
+dialog {
+    opacity: 0;
+    transform: translateY(40px); /* Start slightly above */
+    transition: transform 0.4s ease-in, opacity 0.4s ease-in;
+}
+
+
+/* Before-open state */
+@starting-style {
+    dialog[open] {
+        opacity: 0;
+        transform: translateY(-40px);
+        /* Start slightly below */
+    }
+}
+
+/* Fade-in the :backdrop when the dialog modal is promoted to the top layer */
 dialog::backdrop {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgb(0 0 0 / 0%);
+    transition: display 0.4s allow-discrete, overlay 0.4s allow-discrete, background-color 0.4s;
+}
+
+dialog[open]::backdrop {
+    background-color: rgb(0 0 0 / 70%);
+}
+
+/* This starting-style rule cannot be nested inside the above selector
+because the nesting selector cannot represent pseudo-elements. */
+@starting-style {
+    dialog[open]::backdrop {
+        background-color: rgb(0 0 0 / 0%);
+    }
 }

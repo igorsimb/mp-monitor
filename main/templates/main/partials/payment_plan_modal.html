@@ -1,25 +1,36 @@
-<div class="row">
-    <div class="col-md-6 offset-md-3">
+<div class="modal-content">
+    <div class="modal-header border-bottom">
+        <h5 class="modal-title my-2 ps-3">Оплата тарифа</h5>
+        <button type="button" class="btn-close pe-4" id="close-button" aria-label="Close"></button>
+    </div>
+    <div class="modal-body border-bottom pb-3">
+        <h5 class="text-center my-3">{{ plan.get_name_display }}</h5>
         {% if is_real_payment %}
-            <div class="alert alert-warning" role="alert">
+            <div class="alert alert-warning mx-3 my-3" role="alert">
                 <strong>Внимание!</strong> Это реальный платеж. С вашего счета будут списаны деньги.
             </div>
         {% endif %}
+        <div class="mx-3">Сумма: <span class="fs-5 fw-semibold">{{ plan.price|floatformat:0 }}</span>
+        <span class="material-symbols-sharp text-body-secondary">currency_ruble</span>
+        </div>
+        <small class="mx-3 text-body-secondary fs-6">Смена тарифа произойдет в начале следующего периода оплаты</small>
+    </div>
+    <div class="modal-footer mx-3">
         <form method="post">
             {% csrf_token %}
-            <h3>Оплата тарифа {{ plan.get_name_display }}</h3>
-            <p><strong>Сумма: {{ plan.price }} RUB</strong></p>
-
             {{ form.as_p }}
 
-            <button type="submit" class="btn btn-primary mt-3">
-                {% if is_real_payment %}
-                    Перейти к оплате (Реальный платеж)
-                {% else %}
-                    Перейти к оплате (Тестовый платеж)
-                {% endif %}
-            </button>
-            <button id="close-button" type="button" class="btn btn-secondary mt-3">Закрыть</button>
+            <div class="d-flex justify-content-between mt-3">
+                <button type="submit" class="btn btn-success bg-gradient py-2 shadow flex-grow-1 me-2 pay-button" autofocus>
+                    {% if is_real_payment %}
+                        Перейти к оплате (Реальный платеж)
+                    {% else %}
+                        Перейти к оплате (Тестовый платеж)
+                    {% endif %}
+                </button>
+                <button type="button"  class="btn btn-outline-secondary" id="close-button">Закрыть</button>
+            </div>
+
         </form>
     </div>
 </div>
