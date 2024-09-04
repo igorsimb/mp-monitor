@@ -84,7 +84,10 @@
                 {{ form.non_field_errors }}
                 <div class="col-12 form-floating">
                     {% render_field form.email class="form-control border-secondary-subtle shadow shadow-sm" id="email" placeholder="example@site.com" %}
-                    <label for="email" class="ms-2">Почта</label>
+
+                    <label for="email" class="ms-2">
+                        <span class="material-symbols-sharp fs-5">mail</span> Почта
+                    </label>
                 </div>
                 {% if form.email.errors %}
                     <ul class="ms-3">
@@ -96,7 +99,9 @@
 
                 <div class="col-12 form-floating">
                     {% render_field form.password1 class="form-control border-secondary-subtle shadow shadow-sm" id="password1" minlength="8" placeholder="Пароль" %}
-                    <label for="password1" class="ms-2">Пароль</label>
+                    <label for="password1" class="ms-2">
+                        <span class="material-symbols-sharp fs-5">lock</span> Пароль
+                    </label>
                 </div>
                 {% if form.password1.errors %}
                     <ul class="ms-3">
@@ -108,7 +113,9 @@
 
                 <div class="col-12 form-floating">
                     {% render_field form.password2 class="form-control border-secondary-subtle shadow shadow-sm" id="password2" minlength="8" placeholder="Подтвердите пароль" %}
-                    <label for="password2" class="ms-2">Подтвердите пароль</label>
+                    <label for="password2" class="ms-2">
+                        <span class="material-symbols-sharp fs-5">lock</span> Подтвердите пароль
+                    </label>
                 </div>
                 {% if form.password2.errors %}
                     <ul class="ms-3">
@@ -125,7 +132,7 @@
                 </div>
 
                 <div class="col-12">
-                    <small>Уже есть аккаунт? <a href="{% url 'account_login' %}">Войти</a></small>
+                    <small class="text-body-secondary">Уже есть аккаунт? <a href="{% url 'account_login' %}">Войти</a></small>
                 </div>
 
                 {#                 Button for logging in with google account#}

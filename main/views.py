@@ -535,6 +535,12 @@ def oferta_view(request: WSGIRequest) -> HttpResponse:
 #     return render(request, "main/billing.html", context)
 
 
+def superuser_or_test_modul(user) -> bool:
+    return user.is_superuser or user.email == "test_modul@test.com"
+
+
+@login_required
+@user_passes_test(superuser_or_test_modul)
 def billing_view(request):
     plan_name = request.GET.get(
         "plan", str(request.user.tenant.payment_plan.name)
@@ -622,10 +628,6 @@ def billing_view(request):
     if request.htmx:
         return render(request, "main/partials/payment_plan_modal.html", context)
     return render(request, "main/billing.html", context)
-
-
-def superuser_or_test_modul(user) -> bool:
-    return user.is_superuser or user.email == "test_modul@test.com"
 
 
 # TODO:

@@ -5,8 +5,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.dispatch import Signal
 
-from accounts.models import add_user_to_group
 from accounts.models import Tenant
+from accounts.models import add_user_to_group, PaymentPlan
+from config import DEFAULT_QUOTAS, PlanType
 from tests.factories import UserFactory, TenantQuotaFactory, TenantFactory
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,34 @@ class TestUserModel:
         existing_tenant = Tenant.objects.create(name="existing_tenant")
         user = User.objects.create(username="testuser3", password="testpassword", tenant=existing_tenant)
         assert user.tenant == existing_tenant
+
+
+class TestTenantModel:
+    def test_tenant_creation(self):
+        tenant = TenantFactory()
+        assert tenant is not None
+
+    def test_switch_plan(self):
+        tenant = TenantFactory()
+        plan = PaymentPlan.objects.create(name="2")
+        plan.save()
+        logger.debug("Tenant Old Plan: %s (%s)" % (tenant.payment_plan.name, type(tenant.payment_plan.name)))
+        plan.refresh_from_db()
+        tenant.switch_plan(new_plan="2")
+        tenant.save()
+        tenant.refresh_from_db()
+        logger.debug("Tenant New Plan: %s" % tenant.payment_plan.name)
+        assert tenant.quota.name == PaymentPlan.PlanName.BUSINESS
+
+    def test_tenant_new_plan_quota_is_correct(self):
+        tenant = TenantFactory()
+        old_plan = tenant.payment_plan
+        new_plan = PaymentPlan.objects.create(name="2")
+        tenant.switch_plan(new_plan="2")
+
+        assert old_plan != new_plan
+        assert tenant.quota.skus_limit == DEFAULT_QUOTAS[PlanType.BUSINESS.value]["skus_limit"]
+        assert tenant.quota.parse_units_limit == DEFAULT_QUOTAS[PlanType.BUSINESS.value]["parse_units_limit"]
 
 
 @pytest.fixture

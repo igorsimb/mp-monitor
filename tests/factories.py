@@ -2,6 +2,7 @@ import factory
 from factory.django import DjangoModelFactory
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
+from config import DEFAULT_QUOTAS, PlanType
 from main.models import Item
 from accounts.models import Tenant, TenantQuota
 from mp_monitor import settings
@@ -57,6 +58,6 @@ class TenantQuotaFactory(DjangoModelFactory):
         model = TenantQuota
 
     name = factory.Sequence(lambda n: f"test_quota_{n+1}")
-    total_hours_allowed = 10
-    skus_limit = 10
-    parse_units_limit = 100
+    total_hours_allowed = DEFAULT_QUOTAS[PlanType.FREE.value]["total_hours_allowed"]
+    skus_limit = DEFAULT_QUOTAS[PlanType.FREE.value]["skus_limit"]
+    parse_units_limit = DEFAULT_QUOTAS[PlanType.FREE.value]["parse_units_limit"]

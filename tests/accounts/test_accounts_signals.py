@@ -26,12 +26,12 @@ def test_default_plan_quota_is_assigned() -> None:
 def test_default_plan_quota_is_correct() -> None:
     """Test that the default quota is the same as in config.py file."""
     tenant = TenantFactory()
-    assert tenant.quota.skus_limit == DEFAULT_QUOTAS[PlanType.FREE]["skus_limit"]
-    assert tenant.quota.parse_units_limit == DEFAULT_QUOTAS[PlanType.FREE]["parse_units_limit"]
+    assert tenant.quota.skus_limit == DEFAULT_QUOTAS[PlanType.FREE.value]["skus_limit"]
+    assert tenant.quota.parse_units_limit == DEFAULT_QUOTAS[PlanType.FREE.value]["parse_units_limit"]
 
 
 def test_not_default_plan_quota_is_not_correct() -> None:
     """Test that the default quota is not BUSINESS plan quota from config.py file."""
     tenant = TenantFactory()
-    assert tenant.quota.skus_limit != DEFAULT_QUOTAS[PlanType.BUSINESS]["skus_limit"]
-    assert tenant.quota.parse_units_limit != DEFAULT_QUOTAS[PlanType.BUSINESS]["parse_units_limit"]
+    assert tenant.quota.skus_limit != DEFAULT_QUOTAS[PlanType.BUSINESS.value]["skus_limit"]
+    assert tenant.quota.parse_units_limit != DEFAULT_QUOTAS[PlanType.BUSINESS.value]["parse_units_limit"]
