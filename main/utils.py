@@ -34,7 +34,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 import config
-from accounts.models import TenantQuota, Tenant  # noqa
+from accounts.models import TenantQuota, Tenant, PaymentPlan  # noqa
 from main.exceptions import InvalidSKUException, QuotaExceededException  # noqa
 from main.models import Item, Payment  # noqa
 
@@ -628,10 +628,7 @@ def get_user_quota(user: User) -> TenantQuota | None:
         user_quota.scheduled_updates
     """
     try:
-        # user_quota = TenantQuota.objects.get(user=user)
         user_quota = user.tenant.quota
-        logger.info("User quota found: %s", user_quota)
-        # print(f"BLEH: {user_quota.skus_limit=}, {user.tenant=}")
     except TenantQuota.DoesNotExist:
         user_quota = None
 

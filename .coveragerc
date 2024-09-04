@@ -9,6 +9,7 @@ omit =
     mp_monitor\asgi.py
     mp_monitor\wsgi.py
     mp_monitor\settings.py
+    main\scripts\*
 
 [report]
 skip_covered = True

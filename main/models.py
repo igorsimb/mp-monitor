@@ -152,6 +152,7 @@ class Schedule(models.Model):
         default="interval",
         choices=[("interval", "Интервал"), ("cronjob", "CronJob")],
     )
+    # TODO: https://github.com/igorsimb/mp-monitor/issues/195
     interval_value = models.IntegerField(
         verbose_name="Каждые", validators=[MinValueValidator(1)], blank=True, null=True
     )

@@ -14,6 +14,7 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 
 from accounts.models import TenantQuota
+from config import DEFAULT_QUOTAS, PlanType
 from factories import IntervalScheduleFactory, PeriodicTaskFactory, UserFactory
 from main.forms import ScrapeForm, ScrapeIntervalForm
 from main.models import Item
@@ -379,9 +380,9 @@ class TestScrapeItemsView:
         my_user = UserFactory()
         my_user.tenant.quota = TenantQuotaFactory()
         assert my_user.tenant.quota is not None
-        assert my_user.tenant.quota.total_hours_allowed == 10
-        assert my_user.tenant.quota.skus_limit == 10
-        assert my_user.tenant.quota.parse_units_limit == 100
+        assert my_user.tenant.quota.total_hours_allowed == DEFAULT_QUOTAS[PlanType.FREE.value]["total_hours_allowed"]
+        assert my_user.tenant.quota.skus_limit == DEFAULT_QUOTAS[PlanType.FREE.value]["skus_limit"]
+        assert my_user.tenant.quota.parse_units_limit == DEFAULT_QUOTAS[PlanType.FREE.value]["parse_units_limit"]
 
     def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user

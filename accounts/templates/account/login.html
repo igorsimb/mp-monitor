@@ -90,7 +90,9 @@
 
                 <div class="col-12 form-floating">
                     {% render_field form.login class="form-control border-secondary-subtle shadow shadow-sm" id="login" placeholder="example@site.com" %}
-                    <label for="login" class="ms-2">Почта</label>
+                    <label for="login" class="ms-2">
+                        <span class="material-symbols-sharp fs-5">mail</span> Почта
+                    </label>
                 </div>
                 {% if form.email.errors %}
                     <ul class="ms-3">
@@ -102,7 +104,9 @@
 
                 <div class="col-12 form-floating">
                     {% render_field form.password class="form-control border-secondary-subtle shadow shadow-sm" id="password" minlength="8" placeholder="Пароль" %}
-                    <label for="password" class="ms-2">Пароль</label>
+                    <label for="password" class="ms-2">
+                        <span class="material-symbols-sharp fs-5">lock</span> Пароль
+                    </label>
                 </div>
                 {% if form.password1.errors %}
                     <ul class="ms-3">
@@ -119,7 +123,7 @@
                 </div>
 
                 <div class="col-12">
-                    <small>Еще нет аккаунта? <a href="{% url 'account_signup' %}">Зарегистрироваться</a></small>
+                    <small class="text-body-secondary">Еще нет аккаунта? <a href="{% url 'account_signup' %}">Зарегистрироваться</a></small>
                 </div>
 
                 {# Button for logging in with google account #}

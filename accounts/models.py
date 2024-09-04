@@ -1,6 +1,8 @@
+import logging
+
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import Group
-from django.db import models
+from django.db import models, transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -9,9 +11,18 @@ from simple_history.models import HistoricalRecords
 
 from config import DEMO_USER_HOURS_ALLOWED, DEFAULT_QUOTAS, PlanType
 
+logger = logging.getLogger(__name__)
+
 
 class TenantQuota(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)
+    class QuotaName(models.TextChoices):
+        TEST = "0", _("КВОТА ТЕСТОВАЯ")
+        FREE = "1", _("КВОТА БЕСПЛАТНАЯ")
+        BUSINESS = "2", _("КВОТА БИЗНЕС")
+        PRO = "3", _("КВОТА ПРОФЕССИОНАЛ")
+        CORPORATE = "4", _("КВОТА КОРПОРАТИВНАЯ")
+
+    name = models.CharField(max_length=255, choices=QuotaName.choices, blank=True, null=True)
     total_hours_allowed = models.PositiveIntegerField(default=24 * 60, blank=True, null=True)
     skus_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
     parse_units_limit = models.PositiveIntegerField(default=10, blank=True, null=True)
@@ -20,20 +31,36 @@ class TenantQuota(models.Model):
         verbose_name = "Квота"
         verbose_name_plural = "Квоты"
 
+    # @classmethod
+    # def get_default_quota(cls) -> "TenantQuota":
+    #     quota, created = TenantQuota.objects.get_or_create(
+    #         name=PlanType.FREE.value,
+    #         defaults={
+    #             "total_hours_allowed": DEFAULT_QUOTAS[PlanType.FREE]["total_hours_allowed"],
+    #             "skus_limit": DEFAULT_QUOTAS[PlanType.FREE]["skus_limit"],
+    #             "parse_units_limit": DEFAULT_QUOTAS[PlanType.FREE]["parse_units_limit"],
+    #         },
+    #     )
+    #     return quota
+
     @classmethod
-    def get_default_quota(cls) -> "TenantQuota":
+    def get_quota(cls, plan: str):
         quota, created = TenantQuota.objects.get_or_create(
-            name=PlanType.FREE.value,
+            name=plan,
             defaults={
-                "total_hours_allowed": DEFAULT_QUOTAS[PlanType.FREE]["total_hours_allowed"],
-                "skus_limit": DEFAULT_QUOTAS[PlanType.FREE]["skus_limit"],
-                "parse_units_limit": DEFAULT_QUOTAS[PlanType.FREE]["parse_units_limit"],
+                "total_hours_allowed": DEFAULT_QUOTAS[plan]["total_hours_allowed"],
+                "skus_limit": DEFAULT_QUOTAS[plan]["skus_limit"],
+                "parse_units_limit": DEFAULT_QUOTAS[plan]["parse_units_limit"],
             },
         )
         return quota
 
+    @classmethod
+    def get_default_quota(cls):
+        return cls.get_quota(plan=PlanType.FREE.value)
+
     def __str__(self):
-        return self.name if self.name else f"SKUs: {self.skus_limit}, PUs:{self.parse_units_limit}"
+        return f"{self.name} - {self.get_name_display()}"
 
 
 class PaymentPlan(models.Model):
@@ -44,14 +71,14 @@ class PaymentPlan(models.Model):
         if payment_plan.name == PaymentPlan.PlanName.FREE
         """
 
-        TEST = "0", _("ТЕСТОВЫЙ")
-        FREE = "1", _("БЕСПЛАТНЫЙ")
-        BUSINESS = "2", _("БИЗНЕС")
-        PRO = "3", _("ПРОФЕССИОНАЛ")
-        CORPORATE = "4", _("КОРПОРАТИВНЫЙ")
+        TEST = "0", _("ПЛАН ТЕСТОВЫЙ")
+        FREE = "1", _("ПЛАН БЕСПЛАТНЫЙ")
+        BUSINESS = "2", _("ПЛАН БИЗНЕС")
+        PRO = "3", _("ПЛАН ПРОФЕССИОНАЛ")
+        CORPORATE = "4", _("ПЛАН КОРПОРАТИВНЫЙ")
 
     name = models.CharField(max_length=20, choices=PlanName.choices)
-    quotas = models.ForeignKey(TenantQuota, on_delete=models.PROTECT, null=True, blank=True)
+    quotas = models.ForeignKey(TenantQuota, on_delete=models.SET_NULL, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     @classmethod
@@ -60,7 +87,7 @@ class PaymentPlan(models.Model):
         return plan
 
     def __str__(self):
-        return f"{self.name} - {self.get_name_display()}"
+        return f"{self.name} - {self.get_name_display()}"  # pragma: no cover
 
 
 class TenantManager(models.Manager):
@@ -98,7 +125,7 @@ class Tenant(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True, null=True)
     quota = models.ForeignKey(
         TenantQuota,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         default=TenantQuota.get_default_quota,
         related_name="tenants",
         null=True,
@@ -120,18 +147,43 @@ class Tenant(models.Model):
     def __str__(self):  # pylint: disable=invalid-str-returned
         return self.name
 
+    @transaction.atomic
+    def switch_plan(self, new_plan: str) -> None:
+        """
+        Switches the tenant's payment plan to the specified plan.
 
-# To be used in signals.py. Create a TenantQuota object for each tenant upon creation.
-# @receiver(post_save, sender=Tenant)
-# def create_tenant_quota(sender, instance, created, **kwargs):  # type: ignore  # pylint: disable=[unused-argument]
-#     if created:
-#         TenantQuota.objects.create
+        Args:
+            new_plan (str): The name of the new plan to switch to.
 
-# To be used in signals.py
-# @receiver(post_save, sender=Tenant)
-# def set_default_payment_plan(sender, instance, created, **kwargs):  # type: ignore  # pylint: disable=[unused-argument]
-#     if created:
-#         PaymentPlan.objects.create(name="Free", pa)
+        Raises:
+            ObjectDoesNotExist: If the specified plan does not exist.
+            ValueError: If an invalid plan is provided.
+        """
+        try:
+            new_plan = PaymentPlan.objects.get(name=new_plan)
+        except PaymentPlan.DoesNotExist:
+            logger.error("Attempted to switch to non-existent plan: %s", new_plan)
+            raise ValueError(f"Invalid plan: {new_plan}") from None
+
+        old_plan_name = self.payment_plan.get_name_display()
+        logger.info("Switching plan from '%s' to '%s'", old_plan_name, new_plan.get_name_display())
+
+        self.payment_plan = new_plan
+        self._update_quota_for_plan(new_plan)
+        self.save()
+        logger.info("Successfully switched plan for tenant '%s' to '%s'", self.name, new_plan.get_name_display())
+
+    def _update_quota_for_plan(self, new_plan) -> None:
+        """
+        Update the tenant's quota based on the new payment plan.
+
+        Args:
+            new_plan (PaymentPlan): The new plan object.
+        """
+        if new_plan.name == PaymentPlan.PlanName.FREE.value:
+            self.quota = TenantQuota.get_default_quota()  # Default quota for free plans
+        else:
+            self.quota = TenantQuota.get_quota(plan=new_plan.name)
 
 
 class User(AbstractUser):
