@@ -156,7 +156,7 @@ class Tenant(models.Model):
             new_plan (str): The name of the new plan to switch to.
 
         Raises:
-            ObjectDoesNotExist: If the specified plan does not exist.
+            DoesNotExist: If the specified plan does not exist.
             ValueError: If an invalid plan is provided.
         """
         try:
