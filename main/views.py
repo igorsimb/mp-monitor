@@ -1,4 +1,5 @@
 import json
+import locale
 import logging
 from datetime import timedelta
 
@@ -21,10 +22,11 @@ from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 from rich import print as pprint
 
 import config
+import main.plotly_charts as plotly_charts
 from accounts.models import PaymentPlan
 from mp_monitor import settings
 from .exceptions import QuotaExceededException
-from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PaymentForm
+from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PaymentForm, PriceHistoryDateForm
 from .models import Item, Price
 from .utils import (
     create_unique_order_id,
@@ -49,6 +51,7 @@ from .utils import (
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
+locale.setlocale(locale.LC_TIME, "ru_RU.UTF-8")  # Set the locale to Russian
 
 
 def index(request):
@@ -133,6 +136,9 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
 
         prices = Price.objects.filter(item=self.object)
+        start_date = self.request.GET.get("start_date")
+        end_date = self.request.GET.get("end_date")
+
         paginator = Paginator(prices, items_per_page)
         page_number = self.request.GET.get("page")
         prices_paginated = paginator.get_page(page_number)
@@ -152,7 +158,10 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
             remaining_minutes = (remaining_time.seconds % 3600) // 60
             context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
 
-        context["prices"] = prices_paginated
+        context["price_history_date_form"] = PriceHistoryDateForm()
+        context["start_date"] = start_date
+        context["end_date"] = end_date
+        context["prices_paginated"] = prices_paginated
         context["item_updated_at"] = item_updated_at
         context["price_created_at"] = price_created_at
         context["tenant_quota"] = tenant_quota
@@ -172,6 +181,33 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
             self.get_object().name,
         )
         return super().get(request, *args, **kwargs)
+
+
+def load_chart(request, sku):
+    """
+    Load and return a Plotly chart for a specific item's price history.
+
+    This view function retrieves the price history for a given item (identified by its SKU),
+    generates a Plotly chart, and returns it as an HTTP response. The chart can be filtered
+    by start and end dates if provided in the request.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        sku (str): The Stock Keeping Unit (SKU) of the item.
+
+    Notes:
+        - The function expects the user to be authenticated and have a associated tenant.
+        - Start and end dates for filtering can be provided as GET parameters.
+        - The chart is generated using the create_price_history_chart function from plotly_charts module.
+        - in template use HTMX to render it on load, e.g.: hx-get="{% url 'load_chart' item.sku %}" hx-trigger="load"
+    """
+    item = get_object_or_404(Item, sku=sku, tenant=request.user.tenant)
+    prices = Price.objects.filter(item=item)
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    price_history_chart = plotly_charts.create_price_history_chart(prices, start_date, end_date)
+    return HttpResponse(price_history_chart)
 
 
 # TODO: consider renaming this function to add_new_items or something similar
@@ -635,7 +671,7 @@ def billing_view(request):
 #   - add balance field to Tenant model
 @user_passes_test(superuser_or_test_modul)
 @login_required
-def create_payment_new(request: WSGIRequest) -> HttpResponse:
+def create_payment(request: WSGIRequest) -> HttpResponse:
     unix_timestamp = int(timezone.now().timestamp())
     plan_name = request.GET.get("plan")
     plan = get_object_or_404(PaymentPlan, name=plan_name)
