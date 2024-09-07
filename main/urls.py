@@ -11,9 +11,9 @@ from .views import (
     update_items,
     oferta_view,
     billing_view,
-    # create_payment,
-    create_payment_new,
+    create_payment,
     # payment_success,
+    load_chart,
 )
 
 urlpatterns = [
@@ -26,12 +26,12 @@ urlpatterns = [
         destroy_scrape_interval_task,
         name="destroy_scrape_interval",
     ),
-    # path("<str:username>/<str:slug>/", ItemDetailView.as_view(), name="item_detail"),
     path("items/<str:slug>/", ItemDetailView.as_view(), name="item_detail"),
     path("scrape/<str:skus>/", scrape_items, name="scrape_item"),
     path("update_items/", update_items, name="update_items"),
     path("oferta/", oferta_view, name="oferta"),
     path("billing/", billing_view, name="billing"),
-    path("billing/payment/", create_payment_new, name="payment"),
+    path("billing/payment/", create_payment, name="payment"),
     # path("billing/payment-success/", payment_success, name="payment_success"),
+    path("load-chart/<str:sku>/", load_chart, name="load_chart"),
 ]

@@ -1,21 +1,21 @@
 {% extends "main/base.html" %}
-
 {% load guardian_tags %}
+{% load widget_tweaks %}
 
 {% block content %}
 
     <div class="container">
         {% if request.user.is_demo_user %}
             <div class="text-center text-danger">
-               <h2 class="h2 text-danger">
-                Демо. Имеются определенные ограничения
-                <a title="Кликните для получения информации об ограничениях"
-                   class="material-symbols-sharp text-secondary text-decoration-none"
-                   style="vertical-align: middle;cursor: pointer;"
-                   data-bs-toggle="offcanvas" href="#offcanvasDemo" role="button" aria-controls="offcanvasDemo">
-                    info
-                </a>
-            </h2>
+                <h2 class="h2 text-danger">
+                    Демо. Имеются определенные ограничения
+                    <a title="Кликните для получения информации об ограничениях"
+                       class="material-symbols-sharp text-secondary text-decoration-none"
+                       style="vertical-align: middle;cursor: pointer;"
+                       data-bs-toggle="offcanvas" href="#offcanvasDemo" role="button" aria-controls="offcanvasDemo">
+                        info
+                    </a>
+                </h2>
                 <small class="">По окончанию демо все данные будут удалены</small>
             </div>
             {% include "main/partials/demo_user_quota.html" %}
@@ -35,54 +35,106 @@
             </ol>
         </nav>
 
-        <div class="card border-primary">
-            <div class="card-header text-center h3 text-bg-primary bg-gradient">
-                {{ item.name }}
-            </div>
-            <div class="mx-3 mt-1">
-                <a href="https://www.wildberries.ru/catalog/{{ item.sku }}/detail.aspx"
-                   class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
-                   title="Посмотреть товар на Wildberries" target="_blank">
-                    Страница товара на WB<span class="material-symbols-sharp">open_in_new</span>
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="row justify-content-around mb-4">
+        <h3 class="text-start my-4">{{ item.name }}</h3>
 
-                    <div class="col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5 item-price-card">
-                        <div>Текущая цена</div>
-                        <div class="fw-bold">{{ item.price }}</div>
-                    </div>
+        <!-- PRICE CARDS -->
+        <div class="row justify-content-between mb-4 gx-4">
+            <div class="col-md-3 mb-3">
+                <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
+                    <span class="material-symbols-sharp flavor-icon">currency_ruble</span>
+                    <div class="fw-bold fs-1">{{ item.price }}</div>
+                    <div class="text-body-secondary fs-6">Текущая цена</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
+                    <span class="material-symbols-sharp flavor-icon">functions</span>
+                    <div class="fw-bold fs-1">{{ item.avg_price }}</div>
+                    <div class="text-body-secondary fs-6">Средняя цена</div>
+                </div>
+            </div>
 
-                    <div class="col-3 card p-2 text-center  bg-secondary-subtle bg-gradient fs-5 item-price-card">
-                        <div>Средняя цена</div>
-                        <div class="fw-bold">{{ item.avg_price }}</div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
+                    <span class="material-symbols-sharp flavor-icon">keyboard_double_arrow_up</span>
+                    <div class="fw-bold fs-1">{{ item.max_price }}</div>
+                    <div class="text-body-secondary fs-6 tooltip-needed" data-bs-toggle="tooltip"
+                         data-bs-placement="bottom"
+                         data-bs-title="{{ item.max_price_date }}">Максимальная цена
                     </div>
                 </div>
-
-                <div class="row justify-content-around mb-3">
-
-                    <div class="col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5 item-price-card">
-                        <div>Максимальная цена</div>
-                        <div class="fw-bold">{{ item.max_price }}</div>
-                        <span class="text-body-tertiary fs-6">({{ item.max_price_date }})</span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
+                    <span class="material-symbols-sharp flavor-icon">keyboard_double_arrow_down</span>
+                    <div class="fw-bold fs-1">{{ item.min_price }}</div>
+                    <div class="text-body-secondary fs-6 tooltip-needed" data-bs-toggle="tooltip"
+                         data-bs-placement="bottom"
+                         data-bs-title="{{ item.min_price_date }}">Минимальная цена
                     </div>
-
-                    <div class="col-3 card p-2 text-center bg-secondary-subtle bg-gradient fs-5 item-price-card">
-                        <div>Минимальная цена</div>
-                        <div class="fw-bold">{{ item.min_price }}</div>
-                        <span class="text-body-tertiary fs-6">({{ item.min_price_date }})</span>
-                    </div>
-
                 </div>
             </div>
         </div>
 
-        <div class="d-inline-flex p-0 m-0">
-            <div class="h3 mt-5 text-center">История цен</div>
+
+        <div class="position-relative mb-4">
+            <!-- PRICE HISTORY CHART 
+                Triggering the chart on page load with spinner reduces page load time significantly -->
+            <div class="my-4" style="height: 400px;" id="chart-container"
+                 hx-get="{% url 'load_chart' item.sku %}"
+                 hx-trigger="load"
+                 hx-swap="innerHTML transition:true"
+            >
+                <div style="height: 400px; position: relative; background: transparent;">
+                    <div class="position-absolute top-50 start-50 translate-middle text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Загружаем...</span>
+                        </div>
+                        <div class="mt-2">Загружаем...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRICE HISTORY FILTER FORM -->
+            <div class="price-history-filter bg-white p-3 rounded shadow-sm mt-4">
+                <h5 class="mb-3 fs-6 fw-bold">Фильтры</h5>
+                <!-- hx-get intercepts the form's action, but we are keeping "action=" as a fallback in case HTMX fails -->
+                <form method="GET" action="{% url 'item_detail' item.sku %}"
+                      hx-get="{% url 'load_chart' item.sku %}"
+                      hx-target="#chart-container"
+                      hx-swap="innerHTML transition:true"
+                >
+                    <div class="mb-2">
+                        {% render_field price_history_date_form.start_date class="form-control form-control-sm" id="start_date" value=start_date placeholder="Начальная дата" %}
+                    </div>
+                    <div class="mb-2">
+                        {% render_field price_history_date_form.end_date class="form-control form-control-sm" id="end_date" value=end_date placeholder="Конечная дата" %}
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-sm btn-outline-primary me-2 flex-fill">
+                            <span class="material-symbols-sharp">filter_alt</span>
+                        </button>
+                        <!-- hx-on listens for the htmx:beforeRequest event and resets the form fields before the request is made -->
+                        <button type="button"
+                                data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Сбросить фильтры"
+                                class="btn btn-sm btn-outline-secondary"
+                                hx-get="{% url 'load_chart' item.sku %}"
+                                hx-target="#chart-container"
+                                hx-swap="innerHTML transition:true"
+                                hx-on="htmx:beforeRequest: this.closest('form').reset();"
+                        >
+                            <span class="material-symbols-sharp">clear</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <table class="table table-hover border border-dark-subtle">
-            <thead>
+
+        <!-- PRICE HISTORY TABLE -->
+        <div class="h3 text-center my-4">История цен</div>
+        <table class="table table-hover table-striped border-light">
+            <thead class="text-muted">
             <tr>
                 <th>Дата</th>
                 <th>Цена</th>
@@ -90,28 +142,24 @@
             </tr>
             </thead>
             <tbody>
-            {% for price in prices %}
-                <tr class="{{ price.table_class }}">
+            {% for price in prices_paginated %}
+                <tr>
                     <td>{{ price.created_at }}</td>
-                    {#  https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#cut #}
                     <td>{% if not item.is_in_stock and price.updated_at|date:"U" == price.created_at|date:"U" %}
-                        <span class="text-bg-danger p-1">Нет в наличии</span>
+                        <span class="text-bg-danger p-1 rounded">Нет в наличии</span>
                     {% else %}
                         {{ price.value }}
                     {% endif %}
                     </td>
                     <td>
-                        {#                        {{ price.trend }} {{ price.percent_change|floatformat }}%#}
-
                         {% if price.percent_change > 0 %}
-                            <span class="material-symbols-sharp">trending_up</span>
-                            {{ price.percent_change|floatformat }}%
+                            <span class="material-symbols-sharp text-success">trending_up</span>
+                            <span class="fw-bold text-success">{{ price.percent_change|floatformat }}%</span>
                         {% elif price.percent_change < 0 %}
-                            <span class="material-symbols-sharp">trending_down</span>
-                            {{ price.percent_change|floatformat }}%
+                            <span class="material-symbols-sharp text-danger">trending_down</span>
+                            <span class="fw-bold text-danger">{{ price.percent_change|floatformat }}%</span>
                         {% endif %}
                     </td>
-
                 </tr>
             {% endfor %}
             </tbody>
@@ -119,48 +167,53 @@
 
 
         <!-- PAGINATION -->
-        {% if prices.paginator.num_pages > 1 %}
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
+        {% with prices_paginated as prices %}
+            {% if prices.paginator.num_pages > 1 %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
 
-                {% if prices.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1" title="Первая страница">
-                            <span class="material-symbols-sharp">first_page</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ prices.previous_page_number }}" title="Предыдущая страница">
-                            &laquo;
-                        </a>
-                    </li>
-                {% endif %}
+                        {% if prices.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1" title="Первая страница">
+                                    <span class="material-symbols-sharp">first_page</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ prices.previous_page_number }}"
+                                   title="Предыдущая страница">
+                                    &laquo;
+                                </a>
+                            </li>
+                        {% endif %}
 
-                {% for num in prices.paginator.page_range %}
-                    {% if prices.number == num %}
-                        <li class="page-item">
-                            <a class="page-link active" href="?page={{ num }}">{{ num }}</a>
-                        </li>
-                    {% elif num > prices.number|add:'-3' and num < prices.number|add:'3' %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                        </li>
-                    {% endif %}
-                {% endfor %}
+                        {% for num in prices.paginator.page_range %}
+                            {% if prices.number == num %}
+                                <li class="page-item">
+                                    <a class="page-link active" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% elif num > prices.number|add:'-3' and num < prices.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
 
-                {% if prices.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ prices.next_page_number }}" title="Следующая страница">&raquo;</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ prices.paginator.num_pages }}" title="Последняя страница">
-                            <span class="material-symbols-sharp">last_page</span>
-                        </a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
+                        {% if prices.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ prices.next_page_number }}"
+                                   title="Следующая страница">&raquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ prices.paginator.num_pages }}"
+                                   title="Последняя страница">
+                                    <span class="material-symbols-sharp">last_page</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% endwith %}
     </div>
 
 {% endblock content %}

@@ -37,6 +37,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install Russian locale
+        run: |
+          sudo locale-gen ru_RU.UTF-8
+          sudo update-locale
+
       - name: Perform migrations
         run: |
           python manage.py makemigrations

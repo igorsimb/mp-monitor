@@ -242,7 +242,7 @@ class TestItemDetailView:
             price=100,
         )
 
-    @pytest.mark.parametrize("expected_context_item", ["item", "prices"])
+    @pytest.mark.parametrize("expected_context_item", ["item", "prices_paginated"])
     def test_item_present_in_context(
         self, request_with_user: WSGIRequest, item: Item, expected_context_item: str
     ) -> None:

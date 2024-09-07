@@ -88,3 +88,8 @@ class PaymentForm(forms.ModelForm):
 
 
 # TODO: add payment form to billing_tab_payment_plans
+
+
+class PriceHistoryDateForm(forms.Form):
+    start_date = forms.DateField(label="Дата начала", widget=forms.DateInput(attrs={"type": "date"}))
+    end_date = forms.DateField(label="Дата окончания", widget=forms.DateInput(attrs={"type": "date"}))

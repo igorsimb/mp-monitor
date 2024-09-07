@@ -176,7 +176,8 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
         params={"appType": 1, "curr": "rub", "dest": -455203, "nm": sku},
     )
     # pylint: disable=line-too-long
-    headers = {
+
+    headers = {  # noqa
         "User-Agent": (
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         ),
@@ -194,7 +195,7 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     # https://github.com/federicoazzu/five_decorators/tree/main/decorators
     while retry_count < config.MAX_RETRIES:
         try:
-            response = httpx.get(url, headers=headers, timeout=60)
+            response = httpx.get(url, timeout=60)
             response.raise_for_status()
             data = response.json()
             if data:
