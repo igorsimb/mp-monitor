@@ -1,6 +1,7 @@
 {% extends "main/base.html" %}
 {% load guardian_tags %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block content %}
 
@@ -35,7 +36,17 @@
             </ol>
         </nav>
 
-        <h3 class="text-start my-4">{{ item.name }}</h3>
+        <h3 class="text-start mt-4 mb-2">{{ item.name }}</h3>
+
+        <!-- External link to Wildberries -->
+        <div class="mb-4">
+            <a href="https://www.wildberries.ru/catalog/{{ item.sku }}/detail.aspx" target="_blank"
+               class="link-primary text-decoration-none" title="Страница товара на Wildberries">
+                <img src="{% static 'img/wb_logo.png' %}" class="wb-logo" alt="Wildberries">
+                wildberries.ru
+                <span class="material-symbols-sharp fs-6">open_in_new</span>
+            </a>
+        </div>
 
         <!-- PRICE CARDS -->
         <div class="row justify-content-between mb-4 gx-4">

@@ -451,3 +451,13 @@ because the nesting selector cannot represent pseudo-elements. */
         margin-top: 1rem;
     }
 }
+
+.wb-logo {
+    max-width: 16px;
+    max-height: 16px;
+    opacity: 0.86;
+}
+
+.wb-logo:hover {
+    opacity: 1;
+}
