@@ -14,8 +14,9 @@
         <li class="nav-item"><a href="{% url 'item_list' %}" class="nav-link {% if request.path == item_list_url %}nav-active{% endif %}" aria-current="page">Мои товары</a>
         <li class="nav-item">
 
-        <a href="{% url 'billing' %}" class="nav-link {% if request.path == billing_url %}nav-active{% endif %}" aria-current="page">Биллинг</a>
+
             {% if user.is_superuser %}
+                <a href="{% url 'billing' %}" class="nav-link {% if request.path == billing_url %}nav-active{% endif %}" aria-current="page">Биллинг</a>
         <li>
             <a class="nav-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasAdmin"
                aria-controls="offcanvasAdmin">admin
