@@ -333,6 +333,12 @@ class TestScrapeItemsView:
                                     "basicPriceU": data["salePriceU"],
                                     "basicSale": 30,
                                 },
+                                "sizes": [
+                                    {
+                                        "stocks": ["3"],
+                                        "price": {"basic": data["salePriceU"], "total": data["salePriceU"]},
+                                    }
+                                ],
                             }
                         ]
                     },

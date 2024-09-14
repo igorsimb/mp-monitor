@@ -38,6 +38,7 @@ class TestScrapeIntervalTask:
                     "basicPriceU": "salePriceU",
                     "basicSale": "basicSale",
                 },
+                "sizes": [{"stocks": ["3"], "price": {"basic": 10000, "total": 10000}}],
             },
             self.sku2: {
                 "name": self.name2,
@@ -54,6 +55,7 @@ class TestScrapeIntervalTask:
                     "basicPriceU": "salePriceU",
                     "basicSale": "basicSale",
                 },
+                "sizes": [{"stocks": ["3"], "price": {"basic": 15000, "total": 15000}}],
             },
         }
 
@@ -83,6 +85,12 @@ class TestScrapeIntervalTask:
                                     "basicPriceU": data["salePriceU"],
                                     "sale": data["basicSale"],
                                 },
+                                "sizes": [
+                                    {
+                                        "stocks": ["3"],
+                                        "price": {"basic": data["salePriceU"], "total": data["salePriceU"]},
+                                    }
+                                ],
                             }
                         ]
                     },
@@ -92,7 +100,7 @@ class TestScrapeIntervalTask:
 
             mock_response.request = httpx.Request(
                 method="GET",
-                url=f"https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={sku}",
+                url=f"https://card.wb.ru/cards/v2/detail?appType=1&curr=rub&nm={sku}",
             )
 
             mock_responses.append(mock_response)

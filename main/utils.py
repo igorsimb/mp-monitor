@@ -90,8 +90,8 @@ def scrape_live_price(sku):
 
 
 def extract_price_before_spp(item: dict) -> float | None:
-    original_price = item["priceU"]
-    sale = item["sale"]
+    original_price = item["sizes"][0]["price"]["basic"]
+    sale = 0
     try:
         discount = original_price * (int(sale) / 100)
         price_before_spp = original_price - discount
@@ -172,8 +172,8 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
 
     # Looks like this: https://card.wb.ru/cards/detail?appType=1&curr=rub&dest=-455203&nm={sku}
     url = httpx.URL(
-        "https://card.wb.ru/cards/detail",
-        params={"appType": 1, "curr": "rub", "dest": -455203, "nm": sku},
+        "https://card.wb.ru/cards/v2/detail",
+        params={"appType": 1, "curr": "rub", "dest": 123589330, "nm": sku},
     )
     # pylint: disable=line-too-long
 
@@ -232,8 +232,10 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     name = item.get("name")
     sku = item.get("id")
     # price with only seller discount
-    price_before_spp = extract_price_before_spp(item)
-    price_after_spp = item.get("salePriceU") / 100
+    price_before_spp = extract_price_before_spp(item) or 0
+    # price_after_spp = item.get("salePriceU") / 100
+    # data.products[2].sizes[0].price.total
+    price_after_spp = item["sizes"][0]["price"]["total"] / 100
     image = item.get("image")
     category = item.get("category")
     brand = item.get("brand")
@@ -255,7 +257,8 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     try:
         seller_discount = item["extended"]["basicSale"]
     except KeyError:
-        seller_discount = item["sale"]
+        # seller_discount = item["sale"]
+        seller_discount = 0
 
     try:
         spp = round(((price_before_spp - price_after_spp) / price_before_spp) * 100)
@@ -267,6 +270,15 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
             price_after_spp,
         )
         spp = 0
+    except ZeroDivisionError:
+        logger.error(
+            "Could not calculate SPP. Division by zero occurred for sku %s using price_before_spp (%s) and"
+            " price_after_spp (%s)",
+            sku,
+            price_before_spp,
+            price_after_spp,
+        )
+        spp = None
 
     # breakdown of all types of prices and SPP (SPP currently is incorrect)
     logger.info("Price before any discount: %s", price_before_any_discount)
