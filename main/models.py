@@ -95,20 +95,50 @@ class Item(models.Model):
         min_price_date = Price.objects.filter(item=self, value=min_price).latest("created_at").created_at
         return min_price_date
 
+    # def price_percent_change(self) -> float:
+    #     # In item list template  {{ item.price_percent_change }}
+    #     prices = Price.objects.filter(Q(item=self))
+    #     for i in range(len(prices)):
+    #         try:
+    #             previous_price = prices[i + 1].value
+    #             current_price = prices[i].value
+    #             percent_change = ((current_price - previous_price) / previous_price) * 100
+    #             prices[i].percent_change = round(percent_change, 2)
+    #             return prices[i].percent_change
+    #         except (IndexError, InvalidOperation, DivisionByZero):
+    #             prices[i].percent_change = 0
+    #         except TypeError:
+    #             logger.warning("Can't compare price to NoneType")
+
     def price_percent_change(self) -> float:
-        # In item list template  {{ item.price_percent_change }}
-        prices = Price.objects.filter(Q(item=self))
-        for i in range(len(prices)):
-            try:
-                previous_price = prices[i + 1].value
-                current_price = prices[i].value
-                percent_change = ((current_price - previous_price) / previous_price) * 100
-                prices[i].percent_change = round(percent_change, 2)
-                return prices[i].percent_change
-            except (IndexError, InvalidOperation, DivisionByZero):
-                prices[i].percent_change = 0
-            except TypeError:
-                logger.warning("Can't compare price to NoneType")
+        """
+        Calculates the percentage change in price for the item and compares it to the tenant's price_change_threshold.
+
+        Returns:
+            float: The percentage change in price.
+        """
+        prices = Price.objects.filter(Q(item=self)).order_by("-created_at")
+
+        # Check if there are at least two price records to calculate a percent change
+        if prices.count() < 2:
+            return 0
+
+        try:
+            current_price = prices[0].value
+            previous_price = prices[1].value
+
+            percent_change = ((current_price - previous_price) / previous_price) * 100
+
+            # Get tenant-specific threshold, default to 0
+            threshold = self.tenant.price_change_threshold or 0
+
+            # If the change exceeds the threshold, return it
+            if abs(percent_change) >= threshold:
+                return round(percent_change, 2)
+            return 0
+        except (InvalidOperation, DivisionByZero, TypeError) as e:
+            logger.warning("Error calculating price percent change: %s", e)
+            return 0
 
     def save(self, *args, **kwargs):  # type: ignore
         super().save(*args, **kwargs)

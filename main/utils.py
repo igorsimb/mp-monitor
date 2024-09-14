@@ -7,7 +7,6 @@ import time
 from typing import Any, List, Dict
 from uuid import uuid4
 import uuid
-
 import httpx
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -90,6 +89,7 @@ def scrape_live_price(sku):
 
 
 def extract_price_before_spp(item: dict) -> float | None:
+    # original_price = item["priceU"]
     original_price = item["sizes"][0]["price"]["basic"]
     sale = 0
     try:

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     # Local
     "accounts.apps.AccountsConfig",
     "main.apps.MainConfig",
+    "notifier.apps.NotifierConfig",
     "sentry",
 ]
 
@@ -169,10 +170,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 # Email
-
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="anymail.backends.sendgrid.EmailBackend")
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# EMAIL_BACKEND = env("EMAIL_BACKEND", default="anymail.backends.sendgrid.EmailBackend")
 DEFAULT_FROM_FIELD = "noreply@mpmonitor.ru"
-SERVER_EMAIL = "noreply@mpmonitor.ru"
+# SERVER_EMAIL = "noreply@mpmonitor.ru"
 
 
 # LOGGING

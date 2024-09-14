@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <p>Уважаемый (-ая) {{ tenant.name }},</p>
+    <p>Были изменены цены на следующие товары:</p>
+    <table>
+        <tr>
+            <th>Товар</th>
+            <th>Старая Цена</th>
+            <th>Новая Цена</th>
+            <th>Процент Изменения</th>
+        </tr>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.old_price }}</td>
+            <td>{{ item.new_price }}</td>
+            <td>{{ item.percent_change }}%</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p>С уважением,<br>команда MP Monitor</p>
+</body>
+</html>

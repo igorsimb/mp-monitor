@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 user = get_user_model()
 
 
-# Currently not used, see: https://github.com/igorsimb/mp-monitor/issues/114
+# Currently not used in code, see: https://github.com/igorsimb/mp-monitor/issues/114
 @shared_task(bind=True)
 def scrape_interval_task(self, tenant_id: int, selected_item_ids: list[int]) -> None:  # pylint: disable=[unused-argument]
     items = Item.objects.filter(id__in=selected_item_ids)
