@@ -133,6 +133,10 @@ class Tenant(models.Model):
     )
     billing_start_date = models.DateField(blank=True, null=True)
 
+    price_change_threshold = models.DecimalField(
+        max_digits=6, decimal_places=0, default=0, help_text="Процент изменения цены для уведомлений (напр, 5%)"
+    )
+
     objects = TenantManager()
     history = HistoricalRecords()
 
