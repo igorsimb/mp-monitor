@@ -22,6 +22,10 @@ jobs:
       LOCAL_DEVELOPMENT: 'True'
       PAYMENT_TEST_SECRET_KEY: 'fake_payment_test_secret_key'
       PAYMENT_SECRET_KEY: 'fake_payment_secret_key'
+      EMAIL_HOST: 'fake_email_host'
+      EMAIL_HOST_USER: 'fake_email_host_user'
+      EMAIL_HOST_PASSWORD: 'fake_email_host_password'
+      DEFAULT_FROM_FIELD: 'fake_default_from_field'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

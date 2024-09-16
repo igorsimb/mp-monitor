@@ -7,6 +7,13 @@ from accounts.models import Tenant
 
 @shared_task
 def send_price_change_email(tenant_id, items_data):
+    """
+    Send an email notification to all users of a tenant about the price change of their items.
+
+    Args:
+        tenant_id (int): The ID of the tenant.
+        items_data (list): A list of dictionaries containing the data for the items that have changed their prices.
+    """
     tenant = Tenant.objects.get(id=tenant_id)
     email_subject = "Цена товаров изменилась"
     email_recipients = [user.email for user in tenant.users.all()]
@@ -19,7 +26,7 @@ def send_price_change_email(tenant_id, items_data):
     send_mail(
         subject=email_subject,
         message="",
-        from_email="no-reply@mpmonitor.ru",
+        from_email="info@mpmonitor.ru",
         recipient_list=email_recipients,
         html_message=email_content,
     )
