@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
 
 from accounts.models import Tenant
+# from notifier.signals import price_updated
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +122,7 @@ class Item(models.Model):
 
         # Check if there are at least two price records to calculate a percent change
         if prices.count() < 2:
-            return 0
+            return 0.0
 
         try:
             current_price = prices[0].value
@@ -130,20 +131,24 @@ class Item(models.Model):
             percent_change = ((current_price - previous_price) / previous_price) * 100
 
             # Get tenant-specific threshold, default to 0
-            threshold = self.tenant.price_change_threshold or 0
+            threshold = self.tenant.price_change_threshold or 0.00
 
             # If the change exceeds the threshold, return it
             if abs(percent_change) >= threshold:
                 return round(percent_change, 2)
-            return 0
+            return 0.0
         except (InvalidOperation, DivisionByZero, TypeError) as e:
             logger.warning("Error calculating price percent change: %s", e)
-            return 0
+            return 0.0
 
     def save(self, *args, **kwargs):  # type: ignore
         super().save(*args, **kwargs)
-        # Price.objects.create(item=self, value=self.price, created_at=timezone.now())
         Price.objects.create(item=self, value=self.price)
+        # Trigger the custom signal after creating the Price, so that check_price_change works with the updated price
+        # Without it, the signal would be triggered before the Price is created, and hence work with the old price
+        from notifier.signals import price_updated  # Local import to avoid circular import
+
+        price_updated.send(sender=self.__class__, instance=self)
 
 
 # TODO: move to signals.py
