@@ -1,7 +1,11 @@
+import logging
+
 from django.dispatch import receiver, Signal
 
 from main.models import Item, Price
 from .tasks import send_price_change_email
+
+logger = logging.getLogger(__name__)
 
 price_updated = Signal()
 
@@ -23,7 +27,11 @@ def check_price_change(sender, instance, **kwargs):
 
     prices = Price.objects.filter(item=instance).order_by("-created_at")[:2]
 
-    if len(prices) == 2:
+    if len(prices) <= 1:
+        logger.info("Not enough prices to calculate percent change. Skipping price change notification.")
+        return
+
+    elif len(prices) == 2:
         current_price = prices[0].value  # Latest price
         previous_price = prices[1].value  # Previous price
         percent_change = ((current_price - previous_price) / previous_price) * 100

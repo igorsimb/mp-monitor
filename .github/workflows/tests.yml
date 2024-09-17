@@ -25,7 +25,7 @@ jobs:
       EMAIL_HOST: 'fake_email_host'
       EMAIL_HOST_USER: 'fake_email_host_user'
       EMAIL_HOST_PASSWORD: 'fake_email_host_password'
-      DEFAULT_FROM_FIELD: 'fake_default_from_field'
+      DEFAULT_FROM_EMAIL: 'fake_default_from_email'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
