@@ -1,7 +1,8 @@
-import os
 from pathlib import Path
 
+import certifi
 import environ
+import os
 from django.contrib.messages import constants as message_constants
 from django.utils import timezone
 
@@ -21,12 +22,11 @@ env = environ.Env(
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
-
+os.environ["SSL_CERT_FILE"] = certifi.where()
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = ["mpmonitor.ru", "www.mpmonitor.ru", "127.0.4.47:58322", "localhost", "127.0.0.1"]
 LOCAL_DEVELOPMENT = env("LOCAL_DEVELOPMENT")
-
 
 # Application definition
 
@@ -179,6 +179,7 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
 
+
 # LOGGING
 
 
@@ -304,13 +305,11 @@ CELERY_RESULT_SERIALIZER = "json"
 # let celery know to use our new scheduler when running celery beat
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
-
 # django-anymail
 ANYMAIL = {
     "SENDGRID_API_KEY": env("SENDGRID_API_KEY"),
 }
 EMAIL_SENDGRID_REPLY_TO = env("EMAIL_SENDGRID_REPLY_TO")
-
 
 # Security
 CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE")
@@ -322,7 +321,6 @@ SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE")
 
 #  django deploy check is not recognizing the correct SECRET_KEY from .env, silencing this warning
 SILENCED_SYSTEM_CHECKS: list[str] = ["security.W009"]
-
 
 # sentry-sdk
 SENTRY_ENABLED = env.bool("SENTRY_ENABLED", default=False)
