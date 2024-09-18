@@ -46,7 +46,7 @@ class Item(models.Model):
     is_parser_active = models.BooleanField(default=False)
     schedule = models.CharField(max_length=255, null=True, blank=True)
     is_in_stock = models.BooleanField(default=True)
-    # is_notifier_active = models.BooleanField(default=False)
+    is_notifier_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -48,4 +48,8 @@ def check_price_change(sender, instance, **kwargs):
                     "percent_change": round(percent_change, 2),
                 }
             ]
-            send_price_change_email.delay(instance.tenant.id, items_data)
+            if instance.is_notifier_active:
+                logger.info("Price change notification triggered for item '%s'. Email sent.", instance.name)
+                send_price_change_email.delay(instance.tenant.id, items_data)
+            else:
+                logger.info("Price change notification is disabled for item '%s'. Email not sent.", instance.name)
