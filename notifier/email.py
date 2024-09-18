@@ -1,6 +1,11 @@
 """
 Custom email backend for Django.
 Source: https://stackoverflow.com/questions/75269008/getting-ssl-error-when-sending-email-via-django
+How to use:
+in settings.py:
+EMAIL_BACKEND = "notifier.email.EmailBackend"
+
+WARNING! This disables hostname verification, which is a security risk. Avoid using it in production if possible.
 
 """
 
