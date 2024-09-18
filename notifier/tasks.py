@@ -1,8 +1,11 @@
+import logging
 from celery import shared_task
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
 from accounts.models import Tenant
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -22,7 +25,7 @@ def send_price_change_email(tenant_id, items_data):
     email_content = render_to_string(
         "notifier/emails/price_change_notification.html", {"tenant": tenant, "items": items_data}
     )
-
+    logger.info(f"Sending email to {email_recipients} with subject '{email_subject}'")
     send_mail(
         subject=email_subject,
         message="",
