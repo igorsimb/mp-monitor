@@ -170,9 +170,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 # Email
-# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_USE_TLS = True
+if LOCAL_DEVELOPMENT:
+    # EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_USE_TLS = False
+else:
+    EMAIL_BACKEND = "notifier.email.EmailBackend"
+    EMAIL_USE_TLS = True
 EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
