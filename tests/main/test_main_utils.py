@@ -8,12 +8,12 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.test import RequestFactory
 from django.utils.safestring import mark_safe
-from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory
 from pytest_mock import MockerFixture
 
 import config
 from accounts.models import Tenant
-from main.exceptions import InvalidSKUException
+from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory, TenantFactory
+from main.exceptions import InvalidSKUException, PlanScheduleLimitationException
 from main.models import Item
 from main.utils import (
     uncheck_all_boxes,
@@ -26,6 +26,7 @@ from main.utils import (
     show_invalid_skus_message,
     activate_parsing_for_selected_items,
     get_interval_russian_translation,
+    check_plan_schedule_limitations,
 )
 
 logger = logging.getLogger(__name__)
@@ -591,6 +592,28 @@ class TestGetIntervalRussianTranslation:
         task = PeriodicTaskFactory(interval=IntervalScheduleFactory(every=every, period=period))
         result = get_interval_russian_translation(task)
         assert result == expected
+
+
+class TestCheckPlanLimitations:
+    @pytest.fixture
+    def tenant_free_plan(self) -> Tenant:
+        """New tenant's default plan is FREE"""
+        tenant = TenantFactory()
+        return tenant
+
+    def test_free_plan_wrong_min_interval_raises_exception(self, tenant_free_plan: Tenant) -> None:
+        logger.info("Checking that FREE plan's interval cannot be less than 24 hours...")
+        with pytest.raises(PlanScheduleLimitationException) as excinfo:
+            check_plan_schedule_limitations(tenant=tenant_free_plan, period="hours", interval=23)
+        assert "ограничения бесплатного тарифа" in str(excinfo.value).lower()
+
+    def test_free_plan_correct_min_interval_does_not_raise_exception(self, tenant_free_plan: Tenant) -> None:
+        interval_value = 24
+        try:
+            logger.info("Checking that FREE plan's interval can be %s hours...", interval_value)
+            check_plan_schedule_limitations(tenant=tenant_free_plan, period="hours", interval=interval_value)
+        except PlanScheduleLimitationException as e:
+            assert False, f"Plan limitation exception raised, but it should not have: {e}"
 
 
 # TODO: scheduled updates quota will be removed in the near future

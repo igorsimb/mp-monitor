@@ -1,3 +1,6 @@
+from accounts.models import Tenant
+
+
 class InvalidSKUException(Exception):
     """Exception raised for invalid SKUs."""
 
@@ -33,3 +36,38 @@ class QuotaExceededException(Exception):
 
     def __str__(self):
         return f"Quota exceeded: {self.quota_type} - Message: {self.message}"
+
+
+class PlanScheduleLimitationException(Exception):
+    """
+    Exception raised for violating plan schedule limitations.
+
+    Attributes:
+        tenant (Tenant): The tenant associated with the plan limitation.
+        plan (str): The name of the plan associated with the plan limitation.
+        period (str): The time unit (e.g., "hours", "days")
+        interval (int): The interval value (e.g., 7, 24, 48)
+        message (str): The error message.
+
+    Example:
+        if request.user.tenant.payment_plan.name == PaymentPlan.PlanName.FREE.value:
+            if period == "hours" and interval < 24:
+                raise PlanScheduleLimitationException(
+                    request.user.tenant,
+                    plan=request.user.tenant.payment_plan.name,
+                    period=period,
+                    interval=interval,
+                    message="Ограничения бесплатного тарифа. Установите интервал не менее 24 часов",
+                    )
+    """
+
+    def __init__(self, tenant: Tenant, plan: str, period: str, interval: int, message: str = None):
+        super().__init__(tenant, period, interval)
+        self.tenant = tenant
+        self.plan = plan
+        self.period = period
+        self.interval = interval
+        self.message = message
+
+    def __str__(self):
+        return self.message
