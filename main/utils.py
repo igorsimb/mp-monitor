@@ -34,7 +34,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 import config
 from accounts.models import TenantQuota, Tenant, PaymentPlan  # noqa
-from main.exceptions import InvalidSKUException, QuotaExceededException  # noqa
+from main.exceptions import InvalidSKUException, QuotaExceededException, PlanScheduleLimitationException  # noqa
 from main.models import Item, Payment  # noqa
 
 logger = logging.getLogger(__name__)
@@ -620,6 +620,30 @@ def get_interval_russian_translation(periodic_task: PeriodicTask) -> str:
         return f"{every} {time_unit_name}"
     else:
         return f"{every} {time_unit_number} {time_unit_name}"
+
+
+def check_plan_schedule_limitations(tenant: Tenant, period: str, interval: int) -> None:
+    """
+    Checks if the user has violated the plan limitations.
+
+    Args:
+        tenant (Tenant): The tenant object.
+        period (str): The time unit (e.g., "hours", "days")
+        interval (int): The interval value (e.g., 7, 24, 48)
+
+    Raises:
+        PlanScheduleLimitationException: If the user has violated the plan limitations.
+    """
+    # Currently, we only have schedule limitations for the FREE plan
+    if tenant.payment_plan.name == PaymentPlan.PlanName.FREE.value:
+        if period == "hours" and interval < 24:
+            raise PlanScheduleLimitationException(
+                tenant,
+                plan=tenant.payment_plan.name,
+                period=period,
+                interval=interval,
+                message="Ограничения бесплатного тарифа. Установите интервал не менее 24 часов",
+            )
 
 
 def get_user_quota(user: User) -> TenantQuota | None:

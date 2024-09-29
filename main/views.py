@@ -25,7 +25,7 @@ import config
 import main.plotly_charts as plotly_charts
 from accounts.models import PaymentPlan
 from mp_monitor import settings
-from .exceptions import QuotaExceededException
+from .exceptions import QuotaExceededException, PlanScheduleLimitationException
 from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PaymentForm, PriceHistoryDateForm
 from .models import Item, Price
 from .utils import (
@@ -47,6 +47,7 @@ from .utils import (
     update_tenant_quota_for_max_allowed_sku,
     update_user_quota_for_allowed_parse_units,
     MerchantSignatureGenerator,
+    check_plan_schedule_limitations,
 )
 
 user = get_user_model()
@@ -327,7 +328,14 @@ def create_scrape_interval_task(
             interval = scrape_interval_form.cleaned_data["interval_value"]
             period = scrape_interval_form.cleaned_data["period"]
 
+            # Limit the interval to 24 hours for free users
+            # if request.user.tenant.payment_plan.name == PaymentPlan.PlanName.FREE.value:
+            #     if period == "hours" and interval < 24:
+            #         messages.error(request, "Ограничения бесплатного тарифа. Установите интервал не менее 24 часов")
+            #         return redirect("item_list")
+
             try:
+                check_plan_schedule_limitations(request.user.tenant, period, interval)
                 schedule, created = IntervalSchedule.objects.get_or_create(
                     every=interval,
                     period=getattr(IntervalSchedule, period.upper()),  # IntervalSchedule.SECONDS, MINUTES, HOURS, etc
@@ -347,6 +355,11 @@ def create_scrape_interval_task(
                     "Ошибка создания расписания. Убедитесь, что выбрана единица времени (например, часы, дни).",
                 )
                 return redirect("item_list")
+
+            except PlanScheduleLimitationException as e:
+                messages.error(request, e.message)
+                return redirect("item_list")
+
             if created:
                 logger.info(
                     "Interval created with schedule: every %s %s",
