@@ -35,7 +35,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import config
 from accounts.models import TenantQuota, Tenant, PaymentPlan  # noqa
 from main.exceptions import InvalidSKUException, QuotaExceededException, PlanScheduleLimitationException  # noqa
-from main.models import Item, Payment  # noqa
+from main.models import Item, Payment, Order  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -871,10 +871,10 @@ class MerchantSignatureGenerator:
 
 
 def create_unique_order_id(tenant_id: int, max_attempts: int = 10) -> str:
-    """Create a unique order ID for the payment for the given tenant."""
+    """Create a unique order ID for the given tenant."""
     for _ in range(max_attempts):
         order_id = f"{tenant_id}{str(uuid.uuid4().int)[:5]}"
-        if not Payment.objects.filter(order_id=order_id).exists():
+        if not Order.objects.filter(order_id=order_id).exists():
             return order_id
     logger.error("Не удалось создать заказ для оплаты. Попробуйте еще раз. Tenant ID: %s", tenant_id)
     raise ValueError("Не удалось создать заказ для оплаты. Попробуйте еще раз.")
