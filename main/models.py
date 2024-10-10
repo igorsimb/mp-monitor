@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
 
 from accounts.models import Tenant
+
 # from notifier.signals import price_updated
 
 logger = logging.getLogger(__name__)
@@ -229,6 +230,27 @@ class Price(models.Model):
 # figure out what fields to add to Transaction model (see billing_form.html)
 
 
+class Order(models.Model):
+    class OrderStatus(models.TextChoices):
+        PENDING = "PENDING", _("Pending")
+        PAID = "PAID", _("Paid")
+        PROCESSING = "PROCESSING", _("Processing")
+        COMPLETED = "COMPLETED", _("Completed")
+        CANCELED = "CANCELED", _("Canceled")
+        FAILED = "FAILED", _("Failed")
+        REFUNDED = "REFUNDED", _("Refunded")
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+    order_id = models.CharField(max_length=255, unique=True, blank=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
+
+    def __str__(self) -> str:
+        return f"Order {self.order_id} ({self.get_status_display()})"
+
+
 class Payment(models.Model):
     TESTING_CHOICES = (
         ("1", _("1")),  # True
@@ -236,25 +258,22 @@ class Payment(models.Model):
     )
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
-    merchant = models.CharField(max_length=255, default="f29e4787-0c3b-4630-9340-5dcfcdc9f85d")
-    unix_timestamp = models.IntegerField()
-    signature = models.CharField(max_length=255, blank=True, null=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments")
+    merchant = models.CharField(max_length=255, default="200000001392761")
+    terminal_key = models.CharField(max_length=255, default="test")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_id = models.CharField(max_length=255, unique=True, blank=True)  # Unique id'er for payment processor
+    # In the form: <input class="payform-tbank-row" type="text" placeholder="ФИО плательщика" name="name">
+    client_name = models.CharField(max_length=255, null=True, blank=True, help_text="ФИО плательщика")
+    client_email = models.CharField(max_length=255)  # in the form: name="email"
+    client_phone = models.CharField(max_length=15, null=True, blank=True)  # in the form: name="phone"
     testing = models.CharField(max_length=1, default="0")
-    description = models.CharField(max_length=255)
-    order_id = models.CharField(max_length=255, unique=True, blank=True)
-    client_email = models.CharField(max_length=255)
-    success_url = models.CharField(max_length=255, default="https://pay.modulbank.ru/success")
-    receipt_items = models.CharField(blank=True, null=True, max_length=2550)
-    # is_payment_successful = models.BooleanField(default=False)
+    is_successful = models.BooleanField(default=False)
+
+    # currently not used
+    # receipt_items = models.CharField(blank=True, null=True, max_length=2550)  # currently not used
+    # success_url = models.CharField(max_length=255, default="https://securepay.tinkoff.ru/html/payForm/success.html")
+    # fail_url = models.CharField(max_length=255, default="https://securepay.tinkoff.ru/html/payForm/fail.html")
 
     def __str__(self):
-        return f"Order {self.order_id}"
-
-    # def save(self, *args, **kwargs):
-    #     if not self.order_id:
-    #         self.order_id = self.generate_order_id()
-    #     super().save(*args, **kwargs)
-    #
-    # def generate_order_id(self) -> str:
-    #     return f"{self.tenant.id}-{uuid.uuid4().hex[:4]}"
+        return f"Payment {self.payment_id} for Order {self.order.order_id}"
