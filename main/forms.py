@@ -58,32 +58,62 @@ class ScrapeIntervalForm(ModelForm):
             ]
 
 
+# class PaymentForm(forms.ModelForm):
+#     class Meta:
+#         model = Payment
+#         fields = [
+#             "merchant",
+#             "unix_timestamp",
+#             "amount",
+#             "testing",
+#             "description",
+#             "order_id",
+#             "client_email",
+#             "success_url",
+#             "receipt_items",
+#             "signature",
+#         ]
+#         widgets = {
+#             "merchant": forms.HiddenInput(),
+#             "unix_timestamp": forms.HiddenInput(),
+#             "amount": forms.HiddenInput(),
+#             "testing": forms.HiddenInput(),
+#             "description": forms.HiddenInput(),
+#             "order_id": forms.HiddenInput(),
+#             "client_email": forms.HiddenInput(),
+#             "success_url": forms.HiddenInput(),
+#             "receipt_items": forms.HiddenInput(),
+#             "signature": forms.HiddenInput(),
+#         }
+
+
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
         fields = [
-            "merchant",
-            "unix_timestamp",
+            "order",
+            "terminal_key",
             "amount",
-            "testing",
-            "description",
-            "order_id",
+            "client_name",
             "client_email",
-            "success_url",
-            "receipt_items",
-            "signature",
+            "client_phone",
+            # "success_url",
+            # "receipt_items",
+            # "signature",
+            # "testing",
         ]
         widgets = {
-            "merchant": forms.HiddenInput(),
-            "unix_timestamp": forms.HiddenInput(),
-            "amount": forms.HiddenInput(),
-            "testing": forms.HiddenInput(),
-            "description": forms.HiddenInput(),
-            "order_id": forms.HiddenInput(),
-            "client_email": forms.HiddenInput(),
-            "success_url": forms.HiddenInput(),
-            "receipt_items": forms.HiddenInput(),
-            "signature": forms.HiddenInput(),
+            "terminal_key": forms.HiddenInput(),
+            # "amount": forms.HiddenInput(),
+            # "order_id": forms.HiddenInput(),
+            # "description": forms.HiddenInput(),
+            # "client_name": forms.HiddenInput(),
+            # "client_email": forms.HiddenInput(),
+            # "client_phone": forms.HiddenInput(),
+            # "success_url": forms.HiddenInput(),
+            # "receipt_items": forms.HiddenInput(),
+            # "signature": forms.HiddenInput(),
+            # "testing": forms.HiddenInput(),
         }
 
 
