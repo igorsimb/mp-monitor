@@ -244,8 +244,8 @@ LOGGING = {
     },
     "loggers": {
         "": {
-            # "handlers": ["info_log", "console"],
-            "handlers": ["console"],
+            "handlers": ["info_log", "console"],
+            # "handlers": ["console"],
             "level": "INFO",
             "propagate": True,
         },
