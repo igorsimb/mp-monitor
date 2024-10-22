@@ -231,6 +231,11 @@ class Price(models.Model):
 
 
 class Order(models.Model):
+    """
+    A purchase or transaction initiated by a tenant.
+    Tracks all details about what a tenant is paying for and status of the overall process.
+    """
+
     class OrderStatus(models.TextChoices):
         PENDING = "PENDING", _("Pending")
         PAID = "PAID", _("Paid")
@@ -242,38 +247,42 @@ class Order(models.Model):
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     order_id = models.CharField(max_length=255, unique=True, blank=True)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
 
     def __str__(self) -> str:
-        return f"Order {self.order_id} ({self.get_status_display()})"
+        return f"Order {self.order_id} - {self.amount}"
 
 
 class Payment(models.Model):
+    """
+    A payment attempt or successful transaction for an Order.
+    Each payment is linked to an Order and is associated with the tenant making
+    the payment.
+    """
+
     TESTING_CHOICES = (
         ("1", _("1")),  # True
         ("0", _("0")),  # False
     )
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
     merchant = models.CharField(max_length=255, default="200000001392761")
     terminal_key = models.CharField(max_length=255, default="test")
+    payment_id = models.CharField(max_length=255, unique=True, blank=True)  # Tinkoff's unique identifier
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_id = models.CharField(max_length=255, unique=True, blank=True)  # Unique id'er for payment processor
     # In the form: <input class="payform-tbank-row" type="text" placeholder="ФИО плательщика" name="name">
     client_name = models.CharField(max_length=255, null=True, blank=True, help_text="ФИО плательщика")
-    client_email = models.CharField(max_length=255)  # in the form: name="email"
-    client_phone = models.CharField(max_length=15, null=True, blank=True)  # in the form: name="phone"
-    testing = models.CharField(max_length=1, default="0")
+    client_email = models.CharField(max_length=255)
+    client_phone = models.CharField(max_length=15, null=True, blank=True)
+    testing = models.CharField(max_length=1, default="0", choices=TESTING_CHOICES)
     is_successful = models.BooleanField(default=False)
 
-    # currently not used
-    # receipt_items = models.CharField(blank=True, null=True, max_length=2550)  # currently not used
-    # success_url = models.CharField(max_length=255, default="https://securepay.tinkoff.ru/html/payForm/success.html")
-    # fail_url = models.CharField(max_length=255, default="https://securepay.tinkoff.ru/html/payForm/fail.html")
-
     def __str__(self):
-        return f"Payment {self.payment_id} for Order {self.order.order_id}"
+        return f"Payment {self.payment_id} - {self.amount}"
+
+    class Meta:
+        ordering = ["-id"]
