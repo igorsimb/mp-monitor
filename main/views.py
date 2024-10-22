@@ -601,7 +601,7 @@ def billing_view(request):
     order = Order.objects.create(
         tenant=request.user.tenant,
         order_id=order_id,
-        total_amount=plan.price,
+        amount=plan.price,
         description=f"Order for payment plan {plan.name}",
         status=Order.OrderStatus.PENDING,
     )

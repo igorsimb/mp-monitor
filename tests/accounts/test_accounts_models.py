@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -70,6 +71,49 @@ class TestTenantModel:
         assert old_plan != new_plan
         assert tenant.quota.skus_limit == DEFAULT_QUOTAS[PlanType.BUSINESS.value]["skus_limit"]
         assert tenant.quota.parse_units_limit == DEFAULT_QUOTAS[PlanType.BUSINESS.value]["parse_units_limit"]
+
+    def test_add_to_balance(self):
+        """
+        Check if the balance is updated correctly when a new payment is made.
+        """
+        tenant = TenantFactory()
+        tenant.add_to_balance(Decimal("10.00"))
+        assert tenant.balance == Decimal("10.00")
+
+    def test_add_negative_to_balance(self):
+        """
+        Check ValueError is raised when trying to add a negative amount to the balance.
+        """
+        tenant = TenantFactory()
+        with pytest.raises(ValueError):
+            tenant.add_to_balance(Decimal("-10.00"))
+
+    def test_deduct_from_balance(self):
+        """
+        Check if the balance is updated correctly when deducting an amount from the balance.
+        """
+        tenant = TenantFactory()
+        tenant.balance = Decimal("15.00")
+        tenant.deduct_from_balance(Decimal("10.00"))
+        assert tenant.balance == Decimal("5.00")
+
+    def test_deduct_negative_from_balance(self):
+        """
+        Check ValueError is raised when trying to deduct a negative amount from the balance.
+        """
+        tenant = TenantFactory()
+        tenant.balance = Decimal("10.00")
+        with pytest.raises(ValueError):
+            tenant.deduct_from_balance(Decimal("-10.00"))
+
+    def test_deduct_more_than_balance(self):
+        """
+        Check ValueError is raised when trying to deduct more than the balance.
+        """
+        tenant = TenantFactory()
+        tenant.balance = Decimal("10.00")
+        with pytest.raises(ValueError):
+            tenant.deduct_from_balance(Decimal("20.00"))
 
 
 @pytest.fixture

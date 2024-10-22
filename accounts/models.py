@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import Group
@@ -188,6 +189,26 @@ class Tenant(models.Model):
             self.quota = TenantQuota.get_default_quota()  # Default quota for free plans
         else:
             self.quota = TenantQuota.get_quota(plan=new_plan.name)
+
+    def add_to_balance(self, amount: Decimal) -> None:
+        """
+        Add the given amount to the tenant's balance. Only allows positive amounts.
+        """
+        if amount < 0:
+            raise ValueError("Cannot add a negative amount to the balance.")
+        self.balance += amount
+        self.save()
+
+    def deduct_from_balance(self, amount: Decimal) -> None:
+        """
+        Deduct the given amount from the tenant's balance, ensuring the balance doesn't go negative.
+        """
+        if amount < 0:
+            raise ValueError("Cannot deduct a negative amount from the balance.")
+        if self.balance < amount:
+            raise ValueError("Insufficient balance to deduct the requested amount.")
+        self.balance -= amount
+        self.save()
 
 
 class User(AbstractUser):
