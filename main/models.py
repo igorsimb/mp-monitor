@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
 
 from accounts.models import Tenant
+from mp_monitor import settings
 
 # from notifier.signals import price_updated
 
@@ -245,10 +246,22 @@ class Order(models.Model):
         FAILED = "FAILED", _("Failed")
         REFUNDED = "REFUNDED", _("Refunded")
 
+    class OrderIntent(models.TextChoices):
+        """
+        The intent of the order.
+        :Example:
+            if order.order_intent == Order.OrderIntent.ADD_TO_BALANCE:
+                # do something
+        """
+
+        SWITCH_PLAN = "SWITCH_PLAN", _("Switch plan")
+        ADD_TO_BALANCE = "ADD_TO_BALANCE", _("Add to balance")
+
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     order_id = models.CharField(max_length=255, unique=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.CharField(max_length=255, blank=True, null=True)
+    order_intent = models.CharField(max_length=20, choices=OrderIntent.choices, default=OrderIntent.ADD_TO_BALANCE)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
 
@@ -270,8 +283,8 @@ class Payment(models.Model):
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
-    merchant = models.CharField(max_length=255, default="200000001392761")
-    terminal_key = models.CharField(max_length=255, default="test")
+    merchant = models.CharField(max_length=255, default=settings.TINKOFF_MERCHANT_ID)
+    terminal_key = models.CharField(max_length=255, default=settings.TINKOFF_TERMINAL_KEY_TEST)
     payment_id = models.CharField(max_length=255, unique=True, blank=True)  # Tinkoff's unique identifier
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     # In the form: <input class="payform-tbank-row" type="text" placeholder="ФИО плательщика" name="name">

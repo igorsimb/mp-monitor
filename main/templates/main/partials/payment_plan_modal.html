@@ -30,7 +30,8 @@
                    value="{{ plan.price|floatformat:0 }}" required disabled>
             <input class="payform-tbank-row" type="hidden" placeholder="Номер заказа" name="order"
                    value="{{ order_id }}">
-            <input class="payform-tbank-row" type="hidden" placeholder="Описание заказа" name="description" value="">
+            <input class="payform-tbank-row" type="hidden" placeholder="Описание заказа" name="description"
+                   value="{{ plan.name }}">
             <input class="payform-tbank-row" type="hidden" placeholder="ФИО плательщика" name="name">
             <input class="payform-tbank-row" type="hidden" placeholder="E-mail" name="email" value="{{ user.email }}">
             <input class="payform-tbank-row" type="hidden" placeholder="Контактный телефон" name="phone">

@@ -27,6 +27,7 @@ jobs:
       EMAIL_HOST_PASSWORD: 'fake_email_host_password'
       DEFAULT_FROM_EMAIL: 'fake_default_from_email'
       EMAIL_PORT: '587'
+      TINKOFF_MERCHANT_ID: 'fake_tinkoff_merchant_id'
       TINKOFF_TERMINAL_KEY_TEST: 'fake_key_test'
       TINKOFF_TERMINAL_PASSWORD_TEST: 'fake_password_test'
       TINKOFF_TERMINAL_KEY: 'fake_key'

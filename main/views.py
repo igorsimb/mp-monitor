@@ -27,6 +27,7 @@ from mp_monitor import settings
 from .exceptions import QuotaExceededException, PlanScheduleLimitationException
 from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm
 from .models import Item, Price, Order
+from .payment_utils import validate_callback_data, update_payment_records
 from .utils import (
     create_unique_order_id,
     uncheck_all_boxes,
@@ -602,8 +603,9 @@ def billing_view(request):
         tenant=request.user.tenant,
         order_id=order_id,
         amount=plan.price,
-        description=f"Order for payment plan {plan.name}",
+        description=plan.name,
         status=Order.OrderStatus.PENDING,
+        order_intent=Order.OrderIntent.SWITCH_PLAN,
     )
 
     # Determine if it's a real payment (PLAN 0) or a test payment
@@ -624,35 +626,38 @@ def billing_view(request):
 
 
 @csrf_exempt
-def payment_callback(request):
+def payment_callback(request):  # TODO: remove this, if payment_callback_view works
     if request.method == "POST":
         try:
             # Parse the incoming JSON data
             data = json.loads(request.body)
             logger.info(f"Payment data: {data}")
 
+            # token (Token) - howto: https://www.tbank.ru/kassa/dev/payments/#section/Token
+
             # Extract relevant information from the callback
-            success = data.get("Success")
-            error_code = data.get("ErrorCode")
+            # create util funtion for it `validate_callback_data` (checking token, terminal_key, etc.)
             terminal_key = data.get("TerminalKey")
-            payment_status = data.get("Status")
-            payment_id = data.get("PaymentId")
             order_id = data.get("OrderId")
+            success = data.get("Success")  # True/False
+            payment_status = data.get("Status")  # must be CONFIRMED
+            payment_id = data.get("PaymentId")
+            error_code = data.get("ErrorCode")  # must be 0
             amount = data.get("Amount")
-            payment_url = data.get("PaymentURL")
+            token = data.get("Token")  # noqa
 
             # Log the received data for debugging
             logger.info(
                 f"Payment callback received: Success: {success}, ErrorCode: {error_code}, "
                 f"TerminalKey: {terminal_key}, Status: {payment_status}, PaymentId: {payment_id}, "
-                f"OrderId: {order_id}, Amount: {amount}, PaymentURL: {payment_url}"
+                f"OrderId: {order_id}, Amount: {amount}"
             )
 
             # Print the data to the console (optional, for debugging during development)
             print(
                 f"Payment callback received: Success: {success}, ErrorCode: {error_code}, "
                 f"TerminalKey: {terminal_key}, Status: {payment_status}, PaymentId: {payment_id}, "
-                f"OrderId: {order_id}, Amount: {amount}, PaymentURL: {payment_url}"
+                f"OrderId: {order_id}, Amount: {amount}"
             )
 
             return JsonResponse({"status": "success"}, status=200)
@@ -662,6 +667,39 @@ def payment_callback(request):
             return JsonResponse({"error": "Server error"}, status=500)
 
     return JsonResponse({"error": "Invalid method"}, status=405)
+
+
+@csrf_exempt
+def payment_callback_view(request):
+    if request.method == "POST":
+        try:
+            callback_data = json.loads(request.body)
+            logger.info(
+                "Received payment callback",
+                extra={
+                    "order_id": callback_data.get("OrderId"),
+                    "payment_id": callback_data.get("PaymentId"),
+                    "status": callback_data.get("Status"),
+                },
+            )
+        except json.JSONDecodeError as e:
+            logger.error("JSON decode error: %s", e)
+            return JsonResponse({"status": "invalid", "error": "Invalid JSON format"}, status=400)
+
+        try:
+            order = Order.objects.get(order_id=callback_data["OrderId"])
+        except Order.DoesNotExist:
+            return JsonResponse({"status": "invalid", "error": "Order not found"}, status=404)
+
+        is_valid, error_message = validate_callback_data(callback_data, order)
+        if is_valid:
+            logger.info("Payment callback data validation successful. Updating payment records...")
+            update_payment_records(data=callback_data, order=order)
+            logger.info("Payment records updated successfully.")
+            return JsonResponse({"status": "success"})
+        else:
+            logger.error("Payment callback data validation failed: %s", error_message)
+            return JsonResponse({"status": "invalid"}, status=400)
 
 
 # TODO:

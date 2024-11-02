@@ -72,11 +72,11 @@ class PaymentPlan(models.Model):
         if payment_plan.name == PaymentPlan.PlanName.FREE
         """
 
-        TEST = "0", _("ПЛАН ТЕСТОВЫЙ")
-        FREE = "1", _("ПЛАН БЕСПЛАТНЫЙ")
-        BUSINESS = "2", _("ПЛАН БИЗНЕС")
-        PRO = "3", _("ПЛАН ПРОФЕССИОНАЛ")
-        CORPORATE = "4", _("ПЛАН КОРПОРАТИВНЫЙ")
+        TEST = "0", _("ТЕСТОВЫЙ")
+        FREE = "1", _("БЕСПЛАТНЫЙ")
+        BUSINESS = "2", _("БИЗНЕС")
+        PRO = "3", _("ПРОФЕССИОНАЛ")
+        CORPORATE = "4", _("КОРПОРАТИВНЫЙ")
 
     name = models.CharField(max_length=20, choices=PlanName.choices)
     quotas = models.ForeignKey(TenantQuota, on_delete=models.SET_NULL, null=True, blank=True)
@@ -163,6 +163,10 @@ class Tenant(models.Model):
         Raises:
             DoesNotExist: If the specified plan does not exist.
             ValueError: If an invalid plan is provided.
+
+        :Example:
+            tenant.switch_plan("2")
+            Switching plan to PaymentPlan.PlanName.BUSINESS
         """
         try:
             new_plan = PaymentPlan.objects.get(name=new_plan)
