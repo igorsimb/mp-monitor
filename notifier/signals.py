@@ -1,3 +1,4 @@
+import decimal
 import logging
 
 from django.dispatch import receiver, Signal
@@ -34,7 +35,13 @@ def check_price_change(sender, instance, **kwargs):
     elif len(prices) == 2:
         current_price = prices[0].value  # Latest price
         previous_price = prices[1].value  # Previous price
-        percent_change = ((current_price - previous_price) / previous_price) * 100
+        try:
+            percent_change = ((current_price - previous_price) / previous_price) * 100
+        except decimal.InvalidOperation as e:
+            logger.error(
+                "Division by zero occurred while calculating percent change. Skipping price change notification. %s", e
+            )
+            return
         print(f"Previous price: {previous_price}, current price: {current_price}, percent change: {percent_change}")
 
         threshold = instance.tenant.price_change_threshold or 0.00
