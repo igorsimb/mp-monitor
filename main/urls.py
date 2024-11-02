@@ -11,7 +11,7 @@ from .views import (
     update_items,
     oferta_view,
     billing_view,
-    payment_callback,
+    payment_callback_view,
     # create_payment,
     # payment_success,
     load_chart,
@@ -36,5 +36,5 @@ urlpatterns = [
     # path("billing/payment-success/", payment_success, name="payment_success"),
     path("load-chart/<str:sku>/", load_chart, name="load_chart"),
     # payment callback (to be created)
-    path("payment/callback/", payment_callback, name="payment_callback"),
+    path("payment/callback/", payment_callback_view, name="payment_callback"),
 ]

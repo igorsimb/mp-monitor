@@ -4,7 +4,7 @@ from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 from config import DEFAULT_QUOTAS, PlanType
 from main.models import Item
-from accounts.models import Tenant, TenantQuota
+from accounts.models import Tenant, TenantQuota, PaymentPlan
 from mp_monitor import settings
 
 
@@ -61,3 +61,11 @@ class TenantQuotaFactory(DjangoModelFactory):
     total_hours_allowed = DEFAULT_QUOTAS[PlanType.FREE.value]["total_hours_allowed"]
     skus_limit = DEFAULT_QUOTAS[PlanType.FREE.value]["skus_limit"]
     parse_units_limit = DEFAULT_QUOTAS[PlanType.FREE.value]["parse_units_limit"]
+
+
+class PaymentPlanFactory(DjangoModelFactory):
+    class Meta:
+        model = PaymentPlan
+
+    name = PaymentPlan.PlanName.BUSINESS.value
+    price = 6000

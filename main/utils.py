@@ -491,7 +491,7 @@ def calculate_percentage_change(prices: Page) -> None:
         except TypeError:
             logger.warning("Can't compare price to NoneType")
             prices[i].percent_change = 100
-        except decimal.DivisionByZero:
+        except (decimal.DivisionByZero, decimal.InvalidOperation):
             logger.warning("Can't divide by zero")
             prices[i].percent_change = 100
 
