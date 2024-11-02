@@ -90,9 +90,9 @@ def scrape_live_price(sku):
 
 def extract_price_before_spp(item: dict) -> float | None:
     # original_price = item["priceU"]
-    original_price = item["sizes"][0]["price"]["basic"]
     sale = 0
     try:
+        original_price = item["sizes"][0]["price"]["basic"]
         discount = original_price * (int(sale) / 100)
         price_before_spp = original_price - discount
         logger.info("Price before SPP = %s", price_before_spp)
@@ -235,7 +235,10 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     price_before_spp = extract_price_before_spp(item) or 0
     # price_after_spp = item.get("salePriceU") / 100
     # data.products[2].sizes[0].price.total
-    price_after_spp = item["sizes"][0]["price"]["total"] / 100
+    try:
+        price_after_spp = item["sizes"][0]["price"]["total"] / 100
+    except KeyError:
+        price_after_spp = 0
     image = item.get("image")
     category = item.get("category")
     brand = item.get("brand")
