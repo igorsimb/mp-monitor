@@ -89,6 +89,8 @@ def update_payment_records(data: dict[str, Any], order: Order) -> None:
     order.save()
 
     amount_rubles = data["Amount"] / 100  # Kopecks to Rubles
+    amount_rubles = Decimal(str(amount_rubles))
+    logger.debug("amount_rubles has been converted to decimal type: %s", type(amount_rubles))
 
     Payment.objects.create(
         tenant=order.tenant,
