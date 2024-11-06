@@ -674,14 +674,7 @@ def payment_callback_view(request):
     if request.method == "POST":
         try:
             callback_data = json.loads(request.body)
-            logger.info(
-                "Received payment callback",
-                extra={
-                    "order_id": callback_data.get("OrderId"),
-                    "payment_id": callback_data.get("PaymentId"),
-                    "status": callback_data.get("Status"),
-                },
-            )
+            logger.info("Received payment callback")
         except json.JSONDecodeError as e:
             logger.error("JSON decode error: %s", e)
             return JsonResponse({"status": "invalid", "error": "Invalid JSON format"}, status=400)

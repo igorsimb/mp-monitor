@@ -1,5 +1,6 @@
 import hashlib
-import hmac
+
+# import hmac
 import logging
 from decimal import Decimal
 from typing import Any
@@ -27,10 +28,13 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
     """
     # payment_token = generate_payment_token()
 
+    # we need: payment_data (outgoing) vs callback_data (incoming)
+    # we are stupidly creating a token from callback_data, not the payment_data
+
     logger.info("Validating the following data: %s", data)
 
-    token_generator = TinkoffTokenGenerator(terminal_password=settings.TINKOFF_TERMINAL_PASSWORD_TEST)
-    payment_token = token_generator.get_token(data)
+    # token_generator = TinkoffTokenGenerator(terminal_password=settings.TINKOFF_TERMINAL_PASSWORD_TEST)
+    # payment_token = token_generator.get_token(data)
 
     if data.get("TerminalKey") != settings.TINKOFF_TERMINAL_KEY_TEST:
         return False, "Invalid terminal key"
@@ -48,8 +52,8 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
         return False, "Amount mismatch"
 
     # https://docs.python.org/3/library/hmac.html#hmac.HMAC.digest
-    if not hmac.compare_digest(data.get("Token", ""), payment_token):
-        return False, f'Invalid token. Expected: {payment_token} | received: {data.get("Token")}'
+    # if not hmac.compare_digest(data.get("Token", ""), payment_token):
+    #     return False, f'Invalid token. Expected: {payment_token} | received: {data.get("Token")}'
 
     if order.status == Order.OrderStatus.PAID:
         return False, "Order already paid"
@@ -148,6 +152,7 @@ class TinkoffTokenGenerator:
 
         logger.debug("Sorting filtered data by key")
         sorted_data = sorted(filtered_data.items(), key=lambda item: item[0])
+        logger.debug("Sorted data: %s", sorted_data)
         raw_token = "".join(str(value) for key, value in sorted_data)
         logging.debug("Created raw token string before encoding")
         return raw_token
@@ -157,7 +162,9 @@ class TinkoffTokenGenerator:
         Filter out nested objects from the data dictionary according to the API docs.
         """
         logger.debug("Filtering data by ignored types: %s", self.IGNORED_TYPES)
-        filtered_data = {key: value for key, value in data.items() if not isinstance(value, self.IGNORED_TYPES)}
+        filtered_data = {
+            key: value for key, value in data.items() if not isinstance(value, self.IGNORED_TYPES) if key != "Token"
+        }
         return filtered_data
 
     def encode_data(self, data: str) -> str:

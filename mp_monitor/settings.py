@@ -244,9 +244,9 @@ LOGGING = {
     },
     "loggers": {
         "": {
-            "handlers": ["info_log", "console"],
+            "handlers": ["debug_log", "info_log", "console"],
             # "handlers": ["console"],
-            "level": "INFO",
+            "level": "DEBUG",
             "propagate": True,
         },
         # "django": {
