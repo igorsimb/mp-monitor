@@ -141,7 +141,7 @@ class Item(models.Model):
                 return round(percent_change, 2)
             return 0.0
         except (InvalidOperation, DivisionByZero, TypeError) as e:
-            logger.warning("Error calculating price percent change: %s", e)
+            logger.warning("Price percent change returned 0.0 due to: %s", e)
             return 0.0
 
     def save(self, *args, **kwargs):  # type: ignore

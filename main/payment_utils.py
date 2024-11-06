@@ -27,6 +27,8 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
     """
     # payment_token = generate_payment_token()
 
+    logger.info("Validating the following data: %s", data)
+
     token_generator = TinkoffTokenGenerator(terminal_password=settings.TINKOFF_TERMINAL_PASSWORD_TEST)
     payment_token = token_generator.get_token(data)
 
@@ -40,18 +42,19 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
         return False, "Payment failed"
 
     if data.get("Status") != "CONFIRMED":
-        return False, "Invalid payment status"
+        return False, f'Invalid payment status, received: {data.get("Status")}'
 
     if data.get("Amount") != int(Decimal(order.amount) * 100):  # Convert rubles to kopecks
         return False, "Amount mismatch"
 
     # https://docs.python.org/3/library/hmac.html#hmac.HMAC.digest
     if not hmac.compare_digest(data.get("Token", ""), payment_token):
-        return False, "Invalid token"
+        return False, f'Invalid token. Expected: {payment_token} | received: {data.get("Status")}'
 
     if order.status == Order.OrderStatus.PAID:
         return False, "Order already paid"
 
+    logger.info("Data validated successfully")
     return True, None
 
 
