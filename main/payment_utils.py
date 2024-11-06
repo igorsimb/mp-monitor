@@ -41,7 +41,7 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
     if data.get("Success", False) is False:
         return False, "Payment failed"
 
-    if data.get("Status") != "CONFIRMED":
+    if data.get("Status") not in ["CONFIRMED", "AUTHORIZED"]:
         return False, f'Invalid payment status, received: {data.get("Status")}'
 
     if data.get("Amount") != int(Decimal(order.amount) * 100):  # Convert rubles to kopecks
@@ -49,7 +49,7 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
 
     # https://docs.python.org/3/library/hmac.html#hmac.HMAC.digest
     if not hmac.compare_digest(data.get("Token", ""), payment_token):
-        return False, f'Invalid token. Expected: {payment_token} | received: {data.get("Status")}'
+        return False, f'Invalid token. Expected: {payment_token} | received: {data.get("Token")}'
 
     if order.status == Order.OrderStatus.PAID:
         return False, "Order already paid"
