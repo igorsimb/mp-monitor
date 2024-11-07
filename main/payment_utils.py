@@ -57,6 +57,7 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
     if not hmac.compare_digest(data.get("Token", ""), payment_token):
         return False, f'Invalid token. Expected: {payment_token} | received: {data.get("Token")}'
 
+    logger.debug("Checking if order is already paid: %s", order.status)
     if order.status == Order.OrderStatus.PAID:
         return False, "Order already paid"
 
@@ -94,6 +95,7 @@ def update_payment_records(data: dict[str, Any], order: Order) -> None:
     amount_rubles = Decimal(str(amount_rubles))
     logger.debug("amount_rubles has been converted to decimal type: %s", type(amount_rubles))
 
+    logger.debug("Creating payment record...")
     Payment.objects.create(
         tenant=order.tenant,
         order=order,
@@ -105,6 +107,7 @@ def update_payment_records(data: dict[str, Any], order: Order) -> None:
     )
 
     # if order.order_intent == Order.OrderIntent.ADD_TO_BALANCE:
+    logger.debug("Adding order amount to tenant balance...")
     order.tenant.add_to_balance(amount_rubles)
     if order.order_intent == Order.OrderIntent.SWITCH_PLAN:
         plan_name = order.description
