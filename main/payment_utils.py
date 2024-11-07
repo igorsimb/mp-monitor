@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 
 # import hmac
 import logging
@@ -52,9 +53,8 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
         return False, "Amount mismatch"
 
     # https://docs.python.org/3/library/hmac.html#hmac.HMAC.digest
-    # if not hmac.compare_digest(data.get("Token", ""), payment_token):
     logger.debug("Comparing incoming token (%s) with generated token (%s)", data.get("Token"), payment_token)
-    if not data.get("Token") == payment_token:
+    if not hmac.compare_digest(data.get("Token", ""), payment_token):
         return False, f'Invalid token. Expected: {payment_token} | received: {data.get("Token")}'
 
     if order.status == Order.OrderStatus.PAID:
@@ -113,12 +113,6 @@ def update_payment_records(data: dict[str, Any], order: Order) -> None:
     order.tenant.save()
 
 
-# def generate_payment_token() -> str:
-#     # howto: https://www.tbank.ru/kassa/dev/payments/#section/Token
-#     token = "test_token"
-#     return token
-
-
 class TinkoffTokenGenerator:
     """
     API reference: https://www.tbank.ru/kassa/dev/payments/#section/Token
@@ -167,14 +161,34 @@ class TinkoffTokenGenerator:
         """
         Filter out nested objects from the data dictionary according to the API docs.
         """
+        processed_data = self.convert_boolean_values_to_strings(data)
+
         logger.debug("Filtering data by ignored types: %s", self.IGNORED_TYPES)
         filtered_data = {
-            key: value for key, value in data.items() if not isinstance(value, self.IGNORED_TYPES) if key != "Token"
+            key: value
+            for key, value in processed_data.items()
+            if not isinstance(value, self.IGNORED_TYPES)
+            if key != "Token"
         }
         logger.debug("Filtered data: %s", filtered_data)
         return filtered_data
 
-    def encode_data(self, data: str) -> str:
+    @staticmethod
+    def convert_boolean_values_to_strings(data: dict) -> dict:
+        """
+        Convert boolean values in the incoming data to lowercase strings.
+        This is necessary because the API expects boolean values to be lowercase.
+
+        :Example:
+            'Success': True -> 'Success': 'true'
+        """
+        logger.debug("Converting boolean values to strings...")
+        processed_data = {key: str(value).lower() if isinstance(value, bool) else value for key, value in data.items()}
+        logger.debug("Processed data: %s", processed_data)
+        return processed_data
+
+    @staticmethod
+    def encode_data(data: str) -> str:
         """
         Encode the concatenated string using SHA-256.
         """
@@ -189,20 +203,3 @@ class TinkoffTokenGenerator:
         """
         raw_token = self.get_raw_token(data)
         return self.encode_data(raw_token)
-
-
-# if __name__ == "__main__":
-# from main.payment_utils import TinkoffTokenGenerator
-# data2 = {
-#     "TerminalKey": "1321054611234DEMO",
-#     "OrderId": "201709",
-#     "Success": "true",
-#     "Status": "AUTHORIZED",
-#     "PaymentId": "8742591",
-#     "ErrorCode": "0",
-#     "Amount": "9855",
-#     "CardId": "322264",
-#     "Pan": "430000******0777",
-#     "ExpDate": "1122",
-# "RebillId": "101709"
-# }
