@@ -24,7 +24,7 @@
         {#        <form class="payform-tbank" name="payform-tbank" onsubmit="pay(this); return false;">#}
         <form class="" name="payform-tbank" onsubmit="pay(this); return false;">
             <input class="payform-tbank-row" type="hidden" name="terminalkey" value={{ terminal_key }}>
-            <input class="payform-tbank-row" type="hidden" name="frame" value="false">
+{#            <input class="payform-tbank-row" type="hidden" name="frame" value="false">#}
             <input class="payform-tbank-row" type="hidden" name="language" value="ru">
             <input class="payform-tbank-row" type="hidden" placeholder="Сумма заказа" name="amount"
                    value="{{ plan.price|floatformat:0 }}" required disabled>
