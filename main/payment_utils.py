@@ -115,7 +115,7 @@ def update_payment_records(data: dict[str, Any], order: Order) -> None:
     )
 
     # if order.order_intent == Order.OrderIntent.ADD_TO_BALANCE:
-    logger.debug("Adding order amount to tenant balance...")
+    logger.debug("Adding %s rub. to tenant balance...", amount_rubles)
     order.tenant.add_to_balance(amount_rubles)
     if order.order_intent == Order.OrderIntent.SWITCH_PLAN:
         plan_name = order.description

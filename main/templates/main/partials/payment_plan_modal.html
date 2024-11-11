@@ -18,22 +18,21 @@
         <small class="mx-3 text-body-secondary fs-6">Смена тарифа произойдет в начале следующего периода оплаты</small>
     </div>
     <div class="modal-footer mx-3">
-        {#        <form method="post">#}
-        {#            {% csrf_token %}#}
-        {#            {{ form.as_p }}#}
-        {#        <form class="payform-tbank" name="payform-tbank" onsubmit="pay(this); return false;">#}
-        <form class="" name="payform-tbank" onsubmit="pay(this); return false;">
-            <input class="payform-tbank-row" type="hidden" name="terminalkey" value={{ terminal_key }}>
-{#            <input class="payform-tbank-row" type="hidden" name="frame" value="false">#}
+
+        <form class="" name="payform-tbank" id="payform-tbank">
+            <input class="payform-tbank-row" type="hidden" name="terminalkey" value="{{ terminal_key }}">
+            <input class="payform-tbank-row" type="hidden" name="frame" value="false">
             <input class="payform-tbank-row" type="hidden" name="language" value="ru">
+            <input class="payform-tbank-row" type="hidden" name="receipt" value="">
             <input class="payform-tbank-row" type="hidden" placeholder="Сумма заказа" name="amount"
-                   value="{{ plan.price|floatformat:0 }}" required disabled>
+                   value="{{ plan.price|floatformat:0 }}" required>
             <input class="payform-tbank-row" type="hidden" placeholder="Номер заказа" name="order"
                    value="{{ order_id }}">
             <input class="payform-tbank-row" type="hidden" placeholder="Описание заказа" name="description"
-                   value="{{ plan.name }}">
+                   value='Тариф "{{ plan.get_name_display }}"'>
             <input class="payform-tbank-row" type="hidden" placeholder="ФИО плательщика" name="name">
-            <input class="payform-tbank-row" type="hidden" placeholder="E-mail" name="email" value="{{ user.email }}">
+            <input class="payform-tbank-row" type="hidden" placeholder="E-mail" name="email"
+                   value="{{ user.email }}">
             <input class="payform-tbank-row" type="hidden" placeholder="Контактный телефон" name="phone">
 
 
@@ -52,3 +51,35 @@
         </form>
     </div>
 </div>
+
+<script type="text/javascript">
+    const TPF = document.getElementById("payform-tbank");
+
+    TPF.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const {description, amount, email, phone, receipt} = TPF;
+
+        if (receipt) {
+            if (!email.value && !phone.value)
+                return alert("Поле E-mail или Phone не должно быть пустым");
+            TPF.receipt.value = JSON.stringify({
+                "EmailCompany": "info@mpmonitor.ru",
+                "Taxation": "usn_income",
+                "FfdVersion": "1.2",
+                "Items": [
+                    {
+                        "Name": 'Тариф "{{ plan.get_name_display }}"' || "Оплата",
+                        "Price": amount.value + '00',
+                        "Quantity": 1.00,
+                        "Amount": amount.value + '00',
+                        "PaymentMethod": "full_payment",
+                        "PaymentObject": "service",
+                        "Tax": "none",
+                        "MeasurementUnit": "pc"
+                    }
+                ]
+            });
+        }
+        pay(TPF);
+    })
+</script>
