@@ -599,13 +599,15 @@ def billing_view(request):
     except ValueError as e:
         return HttpResponse(e, status=400)
 
-    order = Order.objects.create(
+    order, _ = Order.objects.get_or_create(
         tenant=request.user.tenant,
         order_id=order_id,
-        amount=plan.price,
-        description=plan.name,
-        status=Order.OrderStatus.PENDING,
-        order_intent=Order.OrderIntent.SWITCH_PLAN,
+        defaults={
+            "amount": plan.price,
+            "description": plan.name,
+            "status": Order.OrderStatus.PENDING,
+            "order_intent": Order.OrderIntent.SWITCH_PLAN,
+        },
     )
 
     # Determine if it's a real payment (PLAN 0) or a test payment
