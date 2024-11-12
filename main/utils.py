@@ -878,6 +878,7 @@ def create_unique_order_id(tenant_id: int, max_attempts: int = 10) -> str:
     for _ in range(max_attempts):
         order_id = f"{tenant_id}{str(uuid.uuid4().int)[:5]}"
         if not Order.objects.filter(order_id=order_id).exists():
+            logger.debug("Created new order ID: %s", order_id)
             return order_id
     logger.error("Не удалось создать заказ для оплаты. Попробуйте еще раз. Tenant ID: %s", tenant_id)
     raise ValueError("Не удалось создать заказ для оплаты. Попробуйте еще раз.")

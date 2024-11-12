@@ -1,7 +1,6 @@
 import hashlib
 import hmac
 
-# import hmac
 import logging
 from decimal import Decimal
 from typing import Any
@@ -27,12 +26,8 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
                                     indicating success or failure, and the second
                                     value is an optional error message.
     """
-    # payment_token = generate_payment_token()
 
-    # we need: payment_data (outgoing) vs callback_data (incoming)
-    # we are stupidly creating a token from callback_data, not the payment_data
-
-    logger.info("Validating the following data: %s", data)
+    logger.info("Validating the callback following data...")
 
     logger.debug("Checking payment status...")
     if data.get("Status") != "CONFIRMED":
@@ -49,7 +44,7 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
     if data.get("OrderId") != order.order_id:
         return False, "Invalid order ID"
 
-    logger.debug("Checking if payment failed...")
+    logger.debug("Checking for Payment field status...")
     if data.get("Success", False) is False:
         return False, "Payment failed"
 
@@ -60,9 +55,9 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
     token_generator = TinkoffTokenGenerator(terminal_password=settings.TINKOFF_TERMINAL_PASSWORD_TEST)
     payment_token = token_generator.get_token(data)
     # https://docs.python.org/3/library/hmac.html#hmac.HMAC.digest
-    logger.debug("Comparing incoming token (%s) with generated token (%s)", data.get("Token"), payment_token)
+    logger.debug("Validating token...")
     if not hmac.compare_digest(data.get("Token", ""), payment_token):
-        return False, f'Invalid token. Expected: {payment_token} | received: {data.get("Token")}'
+        return False, "Invalid token"
 
     logger.debug("Checking if order is already paid: %s", order.status)
     if order.status == Order.OrderStatus.PAID:
@@ -128,23 +123,28 @@ class TinkoffTokenGenerator:
     """
     API reference: https://www.tbank.ru/kassa/dev/payments/#section/Token
 
-    Generate a token for Tinkoff payments based on the terminal_password.
+    Generate a token for validating Tinkoff payments based on the terminal_password.
     "terminal_password" - get it from the merchant dashboard
 
     :Example:
     terminal_password=settings.TINKOFF_TERMINAL_PASSWORD_TEST
 
     data = {
-        "TerminalKey": settings.TINKOFF_TERMINAL_KEY_TEST,
-        "Amount": 555,
-        "OrderId": 12345,
-        "Description": "test_plan",
-    }
+            "TerminalKey": "TERMINAL_KEY_EXAMPLE",
+            "OrderId": "279498",
+            "Success": True,
+            "Status": "AUTHORIZED",
+            "PaymentId": 5278152875,
+            "ErrorCode": "0",
+            "Amount": 599000,
+            "CardId": 493814601,
+            "Pan": "XXXX****XXXX1234",
+            "ExpDate": "1210",
+            "Token": "EXAMPLE_TOKEN",
+        }
 
     generator = TinkoffTokenGenerator(terminal_password)
     print(generator.get_token(data))
-    Output:
-    >> e1c791483be08b74ec63d5b36a6cc429a6385678db126559af21343760cba340
     """
 
     IGNORED_TYPES = (dict, list, tuple)  # Ensures that only non-nested objects are used for token generation
@@ -157,15 +157,15 @@ class TinkoffTokenGenerator:
         Generate a raw token by concatenating values sorted by key.
         """
         logger.debug("Creating raw token from data...")
-        logger.debug("Adding test password to data: %s", self.password)
+        logger.debug("Adding test password to data...")
         data["Password"] = self.password
         filtered_data = self.filter_data_by_ignored_types(data)
 
-        logger.debug("Sorting filtered data by key")
+        logger.debug("Sorting filtered data by key...")
         sorted_data = sorted(filtered_data.items(), key=lambda item: item[0])
-        logger.debug("Sorted data: %s", sorted_data)
+        logger.debug("Data successfully sorted by key.")
         raw_token = "".join(str(value) for key, value in sorted_data)
-        logging.debug("Created raw token string before encoding: %s", raw_token)
+        logging.debug("Created raw token string before encoding.")
         return raw_token
 
     def filter_data_by_ignored_types(self, data: dict) -> dict:
@@ -174,14 +174,14 @@ class TinkoffTokenGenerator:
         """
         processed_data = self.convert_boolean_values_to_strings(data)
 
-        logger.debug("Filtering data by ignored types: %s", self.IGNORED_TYPES)
+        logger.debug("Filtering data by ignored types...")
         filtered_data = {
             key: value
             for key, value in processed_data.items()
             if not isinstance(value, self.IGNORED_TYPES)
             if key != "Token"
         }
-        logger.debug("Filtered data: %s", filtered_data)
+        logger.debug("Data successfully filtered by ignored types.")
         return filtered_data
 
     @staticmethod
@@ -195,7 +195,7 @@ class TinkoffTokenGenerator:
         """
         logger.debug("Converting boolean values to strings...")
         processed_data = {key: str(value).lower() if isinstance(value, bool) else value for key, value in data.items()}
-        logger.debug("Processed data: %s", processed_data)
+        logger.debug("Boolean values successfully converted to strings.")
         return processed_data
 
     @staticmethod
@@ -205,7 +205,7 @@ class TinkoffTokenGenerator:
         """
         logger.debug("Encoding raw token string")
         encoded_data = hashlib.sha256(data.encode("utf-8")).hexdigest()
-        logger.debug("Encoded data: %s", encoded_data)
+        logger.debug("Raw token string successfully encoded.")
         return encoded_data
 
     def get_token(self, data: dict) -> str:
