@@ -2,17 +2,81 @@
     <h2 class="h2 text-center display-6 fw-bold text-body-emphasis my-4">Тарифы и цены!</h2>
 
 
-    {% if user.is_superuser or user.email == "test_modul@test.com" %}
-        <div>
-            <button class="btn btn-outline-primary pay-button"
-                    hx-get="{% url 'billing' %}?plan=0"
-                    hx-target="#payment-dialog"
-                    hx-push-url="true"
-                    hx-trigger="click"
-                    hx-disabled-elt="this"
-                    hx-swap="innerHTML">Тестовый тариф за реальные деньги (1 руб.)
-            </button>
-        </div>
+{#    {% if user.is_superuser %}#}
+{#        <div>#}
+{#            <button class="btn btn-outline-primary pay-button"#}
+{#                    hx-get="{% url 'billing' %}?plan=0"#}
+{#                    hx-target="#payment-dialog"#}
+{#                    hx-push-url="true"#}
+{#                    hx-trigger="click"#}
+{#                    hx-disabled-elt="this"#}
+{#                    hx-swap="innerHTML">Тестовый тариф за реальные деньги (1 руб.)#}
+{#            </button>#}
+{#        </div>#}
+{#    {% endif %}#}
+
+    {% if user.is_superuser %}
+        <script src="https://securepay.tinkoff.ru/html/payForm/js/tinkoff_v2.js"></script>
+       <form class="" name="payform-tbank" id="payform-tbank">
+            <input class="payform-tbank-row" type="hidden" name="terminalkey" value="{{ terminal_key }}">
+            <input class="payform-tbank-row" type="hidden" name="frame" value="false">
+            <input class="payform-tbank-row" type="hidden" name="language" value="ru">
+            <input class="payform-tbank-row" type="hidden" name="receipt" value="">
+            <input class="payform-tbank-row" type="text" placeholder="Сумма заказа" name="amount"
+                   value="{{ plan.price|floatformat:0 }}" required>
+            <input class="payform-tbank-row" type="hidden" placeholder="Номер заказа" name="order"
+                   value="{{ order_id }}">
+            <input class="payform-tbank-row" type="hidden" placeholder="Описание заказа" name="description"
+                   value='Тариф "{{ plan.get_name_display }}"'>
+            <input class="payform-tbank-row" type="hidden" placeholder="ФИО плательщика" name="name">
+            <input class="payform-tbank-row" type="hidden" placeholder="E-mail" name="email"
+                   value="{{ user.email }}">
+            <input class="payform-tbank-row" type="hidden" placeholder="Контактный телефон" name="phone">
+
+
+            <div class="d-flex justify-content-between mt-3">
+                <button type="submit" class="btn btn-success bg-gradient py-2 shadow flex-grow-1 me-2 pay-button"
+                        autofocus>
+                    {% if is_real_payment %}
+                        Перейти к оплате (Реальный платеж)
+                    {% else %}
+                        Перейти к оплате (Тестовый платеж)
+                    {% endif %}
+                </button>
+            </div>
+
+        </form>
+        <script type="text/javascript">
+    const TPF = document.getElementById("payform-tbank");
+
+    TPF.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const {description, amount, email, phone, receipt} = TPF;
+
+        if (receipt) {
+            if (!email.value && !phone.value)
+                return alert("Поле E-mail или Phone не должно быть пустым");
+            TPF.receipt.value = JSON.stringify({
+                "EmailCompany": "info@mpmonitor.ru",
+                "Taxation": "usn_income",
+                "FfdVersion": "1.2",
+                "Items": [
+                    {
+                        "Name": 'Тариф "{{ plan.get_name_display }}"' || "Оплата",
+                        "Price": amount.value + '00',
+                        "Quantity": 1.00,
+                        "Amount": amount.value + '00',
+                        "PaymentMethod": "full_payment",
+                        "PaymentObject": "service",
+                        "Tax": "none",
+                        "MeasurementUnit": "pc"
+                    }
+                ]
+            });
+        }
+        pay(TPF);
+    })
+</script>
     {% endif %}
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 my-5 text-center pricing-card-container">

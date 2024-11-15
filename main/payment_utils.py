@@ -29,30 +29,31 @@ def validate_callback_data(data: dict, order: Order) -> tuple[bool, str | None]:
 
     logger.info("Validating the callback following data...")
 
-    logger.debug("Checking payment status...")
-    if data.get("Status") != "CONFIRMED":
-        return (
-            False,
-            f'Invalid payment status, received: {data.get("Status")}. Only "CONFIRMED" is status is processed.',
-        )
+    # logger.debug("Checking payment status...")
+    # if data.get("Status") != "CONFIRMED":
+    #     return (
+    #         False,
+    #         f'Invalid payment status, received: {data.get("Status")}. Only "CONFIRMED" is status is processed.',
+    #     )
+    #
+    # logger.debug("Checking terminal key...")
+    # if data.get("TerminalKey") != settings.TINKOFF_TERMINAL_KEY_TEST:
+    #     return False, "Invalid terminal key"
+    #
+    # logger.debug("Checking order ID...")
+    # if data.get("OrderId") != order.order_id:
+    #     return False, "Invalid order ID"
+    #
+    # logger.debug("Checking for Payment field status...")
+    # if data.get("Success", False) is False:
+    #     return False, "Payment failed"
+    #
+    # logger.debug("Checking if payment amount matches the expected value...")
+    # if data.get("Amount") != int(Decimal(order.amount) * 100):  # Convert rubles to kopecks
+    #     return False, "Amount mismatch"
 
-    logger.debug("Checking terminal key...")
-    if data.get("TerminalKey") != settings.TINKOFF_TERMINAL_KEY_TEST:
-        return False, "Invalid terminal key"
-
-    logger.debug("Checking order ID...")
-    if data.get("OrderId") != order.order_id:
-        return False, "Invalid order ID"
-
-    logger.debug("Checking for Payment field status...")
-    if data.get("Success", False) is False:
-        return False, "Payment failed"
-
-    logger.debug("Checking if payment amount matches the expected value...")
-    if data.get("Amount") != int(Decimal(order.amount) * 100):  # Convert rubles to kopecks
-        return False, "Amount mismatch"
-
-    token_generator = TinkoffTokenGenerator(terminal_password=settings.TINKOFF_TERMINAL_PASSWORD_TEST)
+    # token_generator = TinkoffTokenGenerator(terminal_password=settings.TINKOFF_TERMINAL_PASSWORD_TEST)
+    token_generator = TinkoffTokenGenerator(terminal_password=settings.TINKOFF_TERMINAL_PASSWORD)
     payment_token = token_generator.get_token(data)
     # https://docs.python.org/3/library/hmac.html#hmac.HMAC.digest
     logger.debug("Validating token...")

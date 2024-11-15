@@ -25,6 +25,12 @@ class PriceAdmin(admin.ModelAdmin):
         return obj.item.name
 
 
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ("tenant", "order_id", "amount", "status", "created_at")
+    search_fields = ("tenant", "order_id")
+    search_help_text = "Search by tenant or order ID"
+
+
 admin.site.register(PaymentPlan)
 admin.site.register(Payment)
-admin.site.register(Order)
