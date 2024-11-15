@@ -611,15 +611,13 @@ def billing_view(request):
     )
 
     # Determine if it's a real payment (PLAN 0) or a test payment
-    # is_real_payment = plan_name == "0"
-    is_real_payment = True
+    is_real_payment = plan_name == "0"
 
     context = {
         # "form": form,
         "plan": plan,
         "is_real_payment": is_real_payment,
-        # "terminal_key": settings.TINKOFF_TERMINAL_KEY_TEST,
-        "terminal_key": settings.TINKOFF_TERMINAL_KEY,
+        "terminal_key": settings.TINKOFF_TERMINAL_KEY_TEST,
         "order_id": order.order_id,
     }
 
