@@ -35,7 +35,6 @@
 {#                   value="{{ user.email }}">#}
 {#            <input class="payform-tbank-row" type="hidden" placeholder="Контактный телефон" name="phone">#}
 {##}
-{##}
 {#            <div class="d-flex justify-content-between mt-3">#}
 {#                <button type="submit" class="btn btn-success bg-gradient py-2 shadow flex-grow-1 me-2 pay-button"#}
 {#                        autofocus>#}
@@ -81,84 +80,80 @@
 {#</script>#}
 {#    {% endif %}#}
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 my-5 text-center pricing-card-container">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 my-5 text-center pricing-card-container">
 
         <!-- Free Plan -->
-        <div class="col px-1">
-            <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
+        <div class="col">
+            <div class="card h-100 rounded-3 shadow-sm fit-content price-card-height">
                 <div class="card-header py-3">
-                    <h3 class="h3 my-0 fw-bold text-body-secondary">БЕСПЛАТНЫЙ</h3>
+                    <h3 class="my-0 fw-bold text-body-secondary text-wrap fs-4">БЕСПЛАТНЫЙ</h3>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex flex-column justify-content-between h-100">
-                        <div>
-                            <h4 class="h2 card-title pricing-card-title mb-0">
-                                0<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
-                            </h4>
-                            <div class="text-body-secondary fw-light">/месяц</div>
-                            <ul class="list-unstyled mt-3 mb-4 ms-3 text-start ">
-                                <li>Количество товаров - 50</li>
-                                <li class="my-3">
+                <div class="card-body d-flex flex-column">
+                    <div class="flex-grow-1">
+                        <h4 class="h2 card-title pricing-card-title mb-0">
+                            0<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                        </h4>
+                        <div class="text-body-secondary fw-light">/месяц</div>
+                        <ul class="list-unstyled mt-3 mb-4 ms-3 text-start ">
+                            <li>Количество товаров - 50</li>
+                            <li class="my-3">
                             <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
                                   data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 5000
-                                </li>
-                                <li>&nbsp;<br>&nbsp;</li>
-                                <li class="text-success mt-3">&nbsp;</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <hr class="opacity-25 w-50 mx-auto">
-                            <!-- TODO: add functionality to change the plan  -->
-                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button"
-                                    hx-get="{% url 'billing' %}?plan=1"
-                                    hx-target="#payment-dialog"
-                                    hx-push-url="true"
-                                    hx-trigger="click"
-                                    hx-disabled-elt="this"
-                                    hx-swap="innerHTML">Сменить тариф
-                            </button>
-                        </div>
+                            </li>
+                            <li>&nbsp;<br>&nbsp;</li>
+                            <li class="text-success mt-3">&nbsp;</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <hr class="opacity-25 w-50 mx-auto">
+                        <!-- TODO: add functionality to change the plan  -->
+                        <button class="w-100 btn btn-lg btn-outline-secondary pay-button"
+                                hx-get="{% url 'billing' %}?plan=1"
+                                hx-target="#payment-dialog"
+                                hx-push-url="true"
+                                hx-trigger="click"
+                                hx-disabled-elt="this"
+                                hx-swap="innerHTML">Сменить тариф
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Business Plan (Current Plan) (BACKEND for border-primary - user's current plan) -->
-        <div class="col px-1">
-            <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height border-primary">
+        <div class="col">
+            <div class="card h-100 rounded-3 shadow-sm border-primary fit-content price-card-height">
                 <div class="card-header py-3 bg-light border-primary position-relative">
-                    <h3 class="h3 my-0 fw-bold">БИЗНЕС</h3>
+                    <h3 class="my-0 fw-bold text-wrap fs-4">БИЗНЕС</h3>
                     <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф (BACKEND)</span>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex flex-column justify-content-between h-100">
-                        <div>
-                            <h4 class="h2 card-title pricing-card-title mb-0">
-                                5 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
-                            </h4>
-                            <div class="text-body-secondary fw-light">/месяц</div>
-                            <ul class="list-unstyled mt-3 mb-4 ms-3 text-start ">
-                                <li>Количество товаров - 500</li>
-                                <li class="my-3">
+                <div class="card-body d-flex flex-column">
+                    <div class="flex-grow-1">
+                        <h4 class="h2 card-title pricing-card-title mb-0">
+                            5 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                        </h4>
+                        <div class="text-body-secondary fw-light">/месяц</div>
+                        <ul class="list-unstyled mt-3 mb-4 ms-3 text-start ">
+                            <li>Количество товаров - 500</li>
+                            <li class="my-3">
                             <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
                                   data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - 35 000
-                                </li>
-                                <li>Стоимость за проверку - 0.17 руб.</li>
-                                <li class="text-success mt-3 fw-semibold">&nbsp;</li>
-                            </ul>
-                        </div>
-                        <!-- TODO: Don't show / disable the button if this is the current plan -->
-                        <div>
-                            <hr class="opacity-25 w-50 mx-auto">
-                            <button class="w-100 btn btn-lg btn-primary pay-button"
-                                    hx-get="{% url 'billing' %}?plan=2"
-                                    hx-target="#payment-dialog"
-                                    hx-push-url="true"
-                                    hx-trigger="click"
-                                    hx-disabled-elt="this"
-                                    hx-swap="innerHTML">Сменить тариф
-                            </button>
-                        </div>
+                            </li>
+                            <li>Стоимость за проверку - 0.17 руб.</li>
+                            <li class="text-success mt-3 fw-semibold">&nbsp;</li>
+                        </ul>
+                    </div>
+                    <!-- TODO: Don't show / disable the button if this is the current plan -->
+                    <div>
+                        <hr class="opacity-25 w-50 mx-auto">
+                        <button class="w-100 btn btn-lg btn-primary pay-button"
+                                hx-get="{% url 'billing' %}?plan=2"
+                                hx-target="#payment-dialog"
+                                hx-push-url="true"
+                                hx-trigger="click"
+                                hx-disabled-elt="this"
+                                hx-swap="innerHTML">Сменить тариф
+                        </button>
                     </div>
                 </div>
             </div>
@@ -167,43 +162,41 @@
         <!-- Professional Plan
         TODO: use `fw-semibold text-success-emphasis` class only for plans that are more expensive
          than user's current plan and `text-body-secondary` for cheaper ones to encourage them to upgrade -->
-        <div class="col px-0">
-            <div class="card mb-4 rounded-3 shadow-sm border-primary fit-content price-card-height">
+        <div class="col ps-0">
+            <div class="card h-100 rounded-3 shadow-sm border-primary fit-content price-card-height">
                 <div class="card-header py-3 text-bg-primary border-primary position-relative">
-                    <h3 class="h3 my-0 fw-bold">ПРОФЕССИОНАЛ</h3>
+                    <h3 class="my-0 fw-bold text-wrap fs-4">ПРОФЕССИОНАЛ</h3>
                     <span class="badge bg-warning position-absolute top-0 translate-middle-y end-0 me-3">Выгодно</span>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex flex-column justify-content-between h-100">
-                        <div>
-                            <h4 class="h2 card-title pricing-card-title mb-0">
-                                11 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
-                            </h4>
-                            <div class="text-body-secondary fw-light">/месяц</div>
-                            <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
-                                <li>Количество товаров - <span class="fw-semibold text-success-emphasis">1000</span>
-                                </li>
-                                <li class="my-3">
+                <div class="card-body d-flex flex-column">
+                    <div class="flex-grow-1">
+                        <h4 class="h2 card-title pricing-card-title mb-0">
+                            11 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                        </h4>
+                        <div class="text-body-secondary fw-light">/месяц</div>
+                        <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
+                            <li>Количество товаров - <span class="fw-semibold text-success-emphasis">1000</span>
+                            </li>
+                            <li class="my-3">
         <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
               data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - <span
                                         class="fw-semibold text-success-emphasis">100 000</span>
-                                </li>
-                                <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
-                                <li>Стоимость за проверку - <span
+                            </li>
+                            <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
+                            <li>Стоимость за проверку - <span
                                         class="fw-semibold text-success-emphasis">0.12 руб.</span></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <hr class="opacity-25 w-50 mx-auto">
-                            <button class="w-100 btn btn-lg btn-primary pay-button"
-                                    hx-get="{% url 'billing' %}?plan=3"
-                                    hx-target="#payment-dialog"
-                                    hx-push-url="true"
-                                    hx-trigger="click"
-                                    hx-disabled-elt="this"
-                                    hx-swap="innerHTML">Сменить тариф
-                            </button>
-                        </div>
+                        </ul>
+                    </div>
+                    <div>
+                        <hr class="opacity-25 w-50 mx-auto">
+                        <button class="w-100 btn btn-lg btn-primary pay-button"
+                                hx-get="{% url 'billing' %}?plan=3"
+                                hx-target="#payment-dialog"
+                                hx-push-url="true"
+                                hx-trigger="click"
+                                hx-disabled-elt="this"
+                                hx-swap="innerHTML">Сменить тариф
+                        </button>
                     </div>
                 </div>
             </div>
@@ -211,41 +204,39 @@
 
         <!-- Corporate Plan -->
         <div class="col ps-1">
-            <div class="card mb-4 rounded-3 shadow-sm fit-content price-card-height">
+            <div class="card h-100 rounded-3 shadow-sm fit-content price-card-height">
                 <div class="card-header py-3">
-                    <h3 class="h3 my-0 fw-bold">КОРПОРАТИВНЫЙ</h3>
+                    <h3 class="my-0 fw-bold text-wrap fs-4">КОРПОРАТИВНЫЙ</h3>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex flex-column justify-content-between h-100">
-                        <div>
-                            <h4 class="h2 card-title pricing-card-title mb-0">
-                                35 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
-                            </h4>
-                            <div class="text-body-secondary fw-light">/месяц</div>
-                            <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
-                                <li>Количество товаров - <span class="fw-semibold text-success-emphasis">5000</span>
-                                </li>
-                                <li class="my-3">
+                <div class="card-body d-flex flex-column">
+                    <div class="flex-grow-1">
+                        <h4 class="h2 card-title pricing-card-title mb-0">
+                            35 990<span class="material-symbols-sharp fs-4 text-body-tertiary">currency_ruble</span>
+                        </h4>
+                        <div class="text-body-secondary fw-light">/месяц</div>
+                        <ul class="list-unstyled mt-3 mb-4 ms-3 text-start">
+                            <li>Количество товаров - <span class="fw-semibold text-success-emphasis">5000</span>
+                            </li>
+                            <li class="my-3">
                             <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
                                   data-bs-title="Однократная проверка одного товара">Единиц проверки</span> -
                                     <span class="fw-semibold text-success-emphasis">500 000</span>
-                                </li>
-                                <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
-                                <li>Стоимость за проверку -
+                            </li>
+                            <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
+                            <li>Стоимость за проверку -
                                     <span class="fw-semibold text-success-emphasis">0.07 руб.</span></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <hr class="opacity-25 w-50 mx-auto">
-                            <button class="w-100 btn btn-lg btn-outline-primary pay-button"
-                                    hx-get="{% url 'billing' %}?plan=4"
-                                    hx-target="#payment-dialog"
-                                    hx-push-url="true"
-                                    hx-trigger="click"
-                                    hx-disabled-elt="this"
-                                    hx-swap="innerHTML">Сменить тариф
-                            </button>
-                        </div>
+                        </ul>
+                    </div>
+                    <div>
+                        <hr class="opacity-25 w-50 mx-auto">
+                        <button class="w-100 btn btn-lg btn-outline-primary pay-button"
+                                hx-get="{% url 'billing' %}?plan=4"
+                                hx-target="#payment-dialog"
+                                hx-push-url="true"
+                                hx-trigger="click"
+                                hx-disabled-elt="this"
+                                hx-swap="innerHTML">Сменить тариф
+                        </button>
                     </div>
                 </div>
             </div>
