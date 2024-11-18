@@ -231,14 +231,16 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
 
     name = item.get("name")
     sku = item.get("id")
-    # price with only seller discount
+    # price with only seller discount, no longer used in WB API
     price_before_spp = extract_price_before_spp(item) or 0
-    # price_after_spp = item.get("salePriceU") / 100
-    # data.products[2].sizes[0].price.total
-    try:
+    logger.info("Checking if item is in stock")
+    is_in_stock = check_item_stock(item)
+    if is_in_stock:
+        logger.info("Item with SKU %s is in stock. Checking price...", sku)
         price_after_spp = item["sizes"][0]["price"]["total"] / 100
-    except KeyError:
-        price_after_spp = 0
+    else:
+        logger.info("Item is out of stock")
+        price_after_spp = None
     image = item.get("image")
     category = item.get("category")
     brand = item.get("brand")
@@ -249,9 +251,6 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     logger.info("seller_price: %s", price_before_spp)
     if price_before_spp is None:
         logger.error("Could not find seller's price for sku %s", sku)
-
-    logger.info("Checking if item is in stock")
-    is_in_stock = check_item_stock(item)
 
     price_before_any_discount = (
         item.get("priceU") / 100 if (item.get("priceU") and isinstance(item.get("priceU"), int)) else None
@@ -265,12 +264,13 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
 
     try:
         spp = round(((price_before_spp - price_after_spp) / price_before_spp) * 100)
-    except TypeError:
+    except TypeError as e:
         logger.error(
-            "Could not calculate SPP for sku %s using price_before_spp (%s) and price_after_spp (%s)",
+            "Could not calculate SPP for sku %s using price_before_spp (%s) and price_after_spp (%s). Error: %s",
             sku,
             price_before_spp,
             price_after_spp,
+            e,
         )
         spp = 0
     except ZeroDivisionError:
@@ -479,9 +479,6 @@ def calculate_percentage_change(prices: Page) -> None:
     """
     for i in range(len(prices)):
         try:
-            # if i == 0:
-            #     prices[i].percent_change = 0  # No previous price to compare to
-            # else:
             previous_price = prices[i + 1].value
             current_price = prices[i].value
             percent_change = ((current_price - previous_price) / previous_price) * 100
@@ -490,10 +487,10 @@ def calculate_percentage_change(prices: Page) -> None:
             prices[i].percent_change = 0
         except TypeError:
             logger.warning("Can't compare price to NoneType")
-            prices[i].percent_change = 100
+            prices[i].percent_change = 0
         except (decimal.DivisionByZero, decimal.InvalidOperation):
             logger.warning("Can't divide by zero")
-            prices[i].percent_change = 100
+            prices[i].percent_change = 0
 
 
 def add_table_class(prices: Page) -> None:

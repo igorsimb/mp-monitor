@@ -1,6 +1,7 @@
 <div x-show="billing_tab === 'billing_tab1'" class="p-4">
     <!-- Plan Name -->
-    <h2 class="display-6 mb-4">Мой тариф: <span class="fw-semibold">{{ plan.get_name_display|lower|capfirst }}</span></h2>
+    <h2 class="display-6 mb-4">Мой тариф: <span class="fw-semibold">{{ plan.get_name_display|lower|capfirst }}</span>
+    </h2>
 
     <!-- Current Balance -->
     <div class="mb-4">
@@ -8,7 +9,17 @@
         <div class="h3 mb-0">
             {{ user.tenant.balance|floatformat:2 }}
             <span class="material-symbols-sharp fs-3">currency_ruble</span>
+
+            <button class="btn btn-lg btn-outline-success pay-button" aria-label="Пополнить баланс"
+                    hx-get="{% url 'billing' %}"
+                    hx-target="#payment-dialog"
+                    hx-push-url="true"
+                    hx-trigger="click"
+                    hx-disabled-elt="this"
+                    hx-swap="innerHTML">Пополнить
+            </button>
         </div>
+
         <!-- if not free plan -->
         <small class="text-body-secondary">Следующая оплата: 15.09.2024 (BACKEND)</small>
     </div>
@@ -60,17 +71,18 @@
     <!-- Upgrade Suggestion -->
     <div class="mt-4 mb-4 text-center">
         <p class="text-muted">Нужно больше единиц проверки?
-{#            <a href="#" class="text-primary">Поменяйте ваш тариф</a>#}
+            {#            <a href="#" class="text-primary">Поменяйте ваш тариф</a>#}
             <a href="#" class="nav-link d-inline text-primary" :class="{ 'active': billing_tab === 'billing_tab3' }"
-                   @click.prevent="billing_tab = 'billing_tab3'">Сравните тарифы</a>
+               @click.prevent="billing_tab = 'billing_tab3'">Сравните тарифы</a>
         </p>
     </div>
 
     <!-- Support Contact -->
     <div class="text-center">
         <p class="text-muted">Нужно помощь?
-            <a href="mailto:support@mpmonitor.ru" class="text-primary text-decoration-none" target="_blank">Свяжитесь с нами
-            <span class="material-symbols-sharp">open_in_new</span>
+            <a href="mailto:support@mpmonitor.ru" class="text-primary text-decoration-none" target="_blank">Свяжитесь с
+                нами
+                <span class="material-symbols-sharp">open_in_new</span>
             </a>
         </p>
     </div>

@@ -91,30 +91,29 @@ class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
         fields = [
-            "order",
             "terminal_key",
             "amount",
+            "order",
             "client_name",
             "client_email",
             "client_phone",
-            # "success_url",
-            # "receipt_items",
-            # "signature",
-            # "testing",
         ]
         widgets = {
             "terminal_key": forms.HiddenInput(),
-            # "amount": forms.HiddenInput(),
-            # "order_id": forms.HiddenInput(),
-            # "description": forms.HiddenInput(),
-            # "client_name": forms.HiddenInput(),
-            # "client_email": forms.HiddenInput(),
-            # "client_phone": forms.HiddenInput(),
-            # "success_url": forms.HiddenInput(),
-            # "receipt_items": forms.HiddenInput(),
-            # "signature": forms.HiddenInput(),
-            # "testing": forms.HiddenInput(),
+            "amount": forms.TextInput(),
+            "order": forms.HiddenInput(),
+            "client_name": forms.HiddenInput(),
+            "client_email": forms.HiddenInput(),
+            "client_phone": forms.HiddenInput(),
         }
+
+    def clean_amount(self) -> float:
+        amount = self.cleaned_data["amount"]
+        # Ensure the amount is serialized correctly and is greater than zero
+        amount = float(amount)
+        if amount <= 0:
+            raise forms.ValidationError("Amount must be greater than zero")
+        return amount
 
 
 # TODO: add payment form to billing_tab_payment_plans
