@@ -156,10 +156,12 @@ class TinkoffTokenGenerator:
         """
         Generate a raw token by concatenating values sorted by key.
         """
+        # Create a copy of the data to avoid modifying the original, i.e. data["Password"] = self.password
+        data_copy = data.copy()
         logger.debug("Creating raw token from data...")
         logger.debug("Adding test password to data...")
-        data["Password"] = self.password
-        filtered_data = self.filter_data_by_ignored_types(data)
+        data_copy["Password"] = self.password
+        filtered_data = self.filter_data_by_ignored_types(data_copy)
 
         logger.debug("Sorting filtered data by key...")
         sorted_data = sorted(filtered_data.items(), key=lambda item: item[0])
@@ -213,4 +215,6 @@ class TinkoffTokenGenerator:
         Generate the final token after encoding the concatenated string.
         """
         raw_token = self.get_raw_token(data)
-        return self.encode_data(raw_token)
+        token = self.encode_data(raw_token)
+        logger.debug("Token successfully generated.")
+        return token

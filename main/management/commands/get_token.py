@@ -3,7 +3,6 @@ import hmac
 from django.core.management.base import BaseCommand
 
 from main.payment_utils import TinkoffTokenGenerator
-from mp_monitor import settings
 
 
 class Command(BaseCommand):
@@ -24,22 +23,29 @@ class Command(BaseCommand):
             "Token": "bb63941ff95ef9db76cb8702a5487d4ac3d253605580d8ee6065196f4f7e01d4",
         }
 
-        data2 = {  # noqa
-            "TerminalKey": "1728466408616DEMO",
-            "OrderId": "279498",
-            "Success": True,
-            "Status": "CONFIRMED",
-            "PaymentId": 5278152875,
-            "ErrorCode": "0",
-            "Amount": 599000,
-            "CardId": 493814601,
-            "Pan": "430000******0777",
-            "ExpDate": "1210",
-            "Token": "45fbf8a215f2c3d68bc09a3611e6c0c7a4db4622ae3c5351e74a40927c71cf0b",
+        # example from https://tokentcs.web.app/ with terminal_password="test_terminal_password"
+        data2 = {
+            "TerminalKey": "15180119216597",
+            "PaymentId": "5353155",
+            "Amount": "851500",
+            "Receipt": {
+                "Email": "ermilove78@mail.ru",
+                "Taxation": "osn",
+                "Items": [
+                    {
+                        "Name": "Футболка-поло с золотистым воротничком",
+                        "Price": "728000",
+                        "Quantity": "1",
+                        "Amount": "364000",
+                        "Tax": "vat18",
+                    }
+                ],
+            },
+            "Token": "44431aec17a9c4fd6bafcfff4580d0168d50ff815a9026c116f53d986cc002b5",
         }
 
-        data = data1
-        terminal_password = settings.TINKOFF_TERMINAL_PASSWORD_TEST
+        data = data2
+        terminal_password = "test_terminal_password"
         generator = TinkoffTokenGenerator(terminal_password)
         raw_token = generator.get_raw_token(data)
         encoded_token = generator.get_token(data)
@@ -47,6 +53,6 @@ class Command(BaseCommand):
         print(f"{encoded_token = }")
 
         if hmac.compare_digest(data.get("Token", ""), encoded_token):
-            self.stdout.write(self.style.SUCCESS("SUCCESS: Correct token generated"))
+            self.stdout.write(self.style.SUCCESS("SUCCESS: token generated correctly"))
         else:
             self.stdout.write(self.style.ERROR("ERROR: Incorrect token"))

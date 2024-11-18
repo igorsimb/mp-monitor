@@ -10,11 +10,12 @@ from .views import (
     scrape_items,
     update_items,
     oferta_view,
-    billing_view,
+    # billing_view,
     payment_callback_view,
     # create_payment,
     # payment_success,
     load_chart,
+    BillingView,
 )
 
 urlpatterns = [
@@ -31,7 +32,8 @@ urlpatterns = [
     path("scrape/<str:skus>/", scrape_items, name="scrape_item"),
     path("update_items/", update_items, name="update_items"),
     path("oferta/", oferta_view, name="oferta"),
-    path("billing/", billing_view, name="billing"),
+    # path("billing/", billing_view, name="billing"),
+    path("billing/", BillingView.as_view(), name="billing"),
     # path("billing/payment/", create_payment, name="payment"),
     # path("billing/payment-success/", payment_success, name="payment_success"),
     path("load-chart/<str:sku>/", load_chart, name="load_chart"),

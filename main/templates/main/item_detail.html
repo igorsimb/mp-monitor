@@ -49,6 +49,7 @@
         </div>
 
         <!-- PRICE CARDS -->
+        {% if item.price %}
         <div class="row justify-content-between mb-4 gx-4">
             <div class="col-md-3 mb-3">
                 <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
@@ -87,6 +88,7 @@
                 </div>
             </div>
         </div>
+    {% endif %}
 
 
         <div class="position-relative mb-4">

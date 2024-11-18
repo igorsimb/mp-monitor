@@ -3,10 +3,11 @@ import locale
 import logging
 from datetime import timedelta
 
+import requests
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import user_passes_test, login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
 from django.db import IntegrityError
@@ -14,6 +15,7 @@ from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView, DetailView
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
@@ -22,14 +24,12 @@ from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 import config
 import main.plotly_charts as plotly_charts
-from accounts.models import PaymentPlan
 from mp_monitor import settings
 from .exceptions import QuotaExceededException, PlanScheduleLimitationException
-from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm
+from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
 from .models import Item, Price, Order
-from .payment_utils import validate_callback_data, update_payment_records
+from .payment_utils import validate_callback_data, update_payment_records, TinkoffTokenGenerator
 from .utils import (
-    create_unique_order_id,
     uncheck_all_boxes,
     show_successful_scrape_message,
     is_at_least_one_item_selected,
@@ -48,6 +48,7 @@ from .utils import (
     update_user_quota_for_allowed_parse_units,
     # MerchantSignatureGenerator,
     check_plan_schedule_limitations,
+    create_unique_order_id,
 )
 
 user = get_user_model()
@@ -585,46 +586,197 @@ def superuser_or_test_modul(user) -> bool:
 #     return render(request, "main/billing.html", context)
 
 
-@login_required
-@user_passes_test(superuser_or_test_modul)
-def billing_view(request):
-    plan_name = request.GET.get(
-        "plan", str(request.user.tenant.payment_plan.name)
-    )  # Default is the user's current plan
-    plan = get_object_or_404(PaymentPlan, name=plan_name)
+# @login_required
+# @user_passes_test(superuser_or_test_modul)
+# def billing_view(request):
+#     plan_name = request.GET.get(
+#         "plan", str(request.user.tenant.payment_plan.name)
+#     )  # Default is the user's current plan
+#     plan = get_object_or_404(PaymentPlan, name=plan_name)
+#
+#     # TODO: https://github.com/igorsimb/mp-monitor/issues/191
+#     try:
+#         order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
+#     except ValueError as e:
+#         return HttpResponse(e, status=400)
+#
+#     order, _ = Order.objects.get_or_create(
+#         tenant=request.user.tenant,
+#         order_id=order_id,
+#         defaults={
+#             "amount": plan.price,
+#             "description": plan.name,
+#             "status": Order.OrderStatus.PENDING,
+#             "order_intent": Order.OrderIntent.SWITCH_PLAN,
+#         },
+#     )
+#
+#     # Determine if it's a real payment (PLAN 0) or a test payment
+#     is_real_payment = plan_name == "0"
+#
+#     context = {
+#         # "form": form,
+#         "plan": plan,
+#         "is_real_payment": is_real_payment,
+#         "terminal_key": settings.TINKOFF_TERMINAL_KEY_TEST,
+#         "order_id": order.order_id,
+#     }
+#
+#     # if request.headers.get('HX-Request'):
+#     if request.htmx:
+#         return render(request, "main/partials/payment_plan_modal.html", context)
+#     return render(request, "main/billing.html", context)
 
-    # TODO: https://github.com/igorsimb/mp-monitor/issues/191
-    try:
-        order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
-    except ValueError as e:
-        return HttpResponse(e, status=400)
 
-    order, _ = Order.objects.get_or_create(
-        tenant=request.user.tenant,
-        order_id=order_id,
-        defaults={
-            "amount": plan.price,
-            "description": plan.name,
-            "status": Order.OrderStatus.PENDING,
-            "order_intent": Order.OrderIntent.SWITCH_PLAN,
-        },
-    )
+class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixin when fully implemented
+    def test_func(self):
+        return superuser_or_test_modul(self.request.user)
 
-    # Determine if it's a real payment (PLAN 0) or a test payment
-    is_real_payment = plan_name == "0"
+    def get(self, request):
+        # plan_name = request.GET.get(
+        #     "plan", str(request.user.tenant.payment_plan.name)
+        # )  # Default is the user's current plan
+        # plan = get_object_or_404(PaymentPlan, name=plan_name)
+        # print(f"Plan GET: {plan}")
 
-    context = {
-        # "form": form,
-        "plan": plan,
-        "is_real_payment": is_real_payment,
-        "terminal_key": settings.TINKOFF_TERMINAL_KEY_TEST,
-        "order_id": order.order_id,
-    }
+        form = PaymentForm(
+            initial={
+                "terminal_key": "terminal_key",  # will be replaced with the actual value in POST
+                # "amount": plan.price,  # Ensure amount is a string
+                "client_email": request.user.tenant.name,
+                # Other initial values as needed
+            }
+        )
+        context = {"form": form}
+        # context = {"form": form, "plan": plan}
+        if request.htmx:
+            return render(request, "main/partials/payment_plan_modal.html", context)
+        return render(request, "main/billing.html", context)
 
-    # if request.headers.get('HX-Request'):
-    if request.htmx:
-        return render(request, "main/partials/payment_plan_modal.html", context)
-    return render(request, "main/billing.html", context)
+    def post(self, request):
+        # plan_name = request.POST.get(
+        #     "plan", str(request.user.tenant.payment_plan.name)
+        # )  # Default is the user's current plan
+        #
+        # # Fetch the PaymentPlan object
+        # plan = get_object_or_404(PaymentPlan, name=plan_name)
+        # print(f"Plan POST: {plan}")
+        form = PaymentForm(request.POST)
+        # form.fields['terminal_key'] = settings.TINKOFF_TERMINAL_KEY_TEST
+
+        if form.is_valid():
+            amount = form.cleaned_data["amount"]
+            try:
+                order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
+            except ValueError as e:
+                return HttpResponse(e, status=400)
+
+            order, _ = Order.objects.get_or_create(
+                tenant=request.user.tenant,
+                order_id=order_id,
+                defaults={
+                    # "amount": float(plan.price),  # Convert to float for JSON serialization
+                    "amount": float(amount),  # Convert to float for JSON serialization
+                    # TODO: should be Order.OrderIntent.ADD_TO_BALANCE, and SWITCH_PLAN should be a separate view
+                    # "order_intent": Order.OrderIntent.SWITCH_PLAN,
+                    "order_intent": Order.OrderIntent.ADD_TO_BALANCE,
+                },
+            )
+
+            # Prepare the receipt data
+            receipt_data = {
+                "EmailCompany": "info@mpmonitor.ru",
+                "Taxation": "usn_income",
+                "FfdVersion": "1.2",
+                "Items": [
+                    {
+                        # "Name": f'Тариф "{plan.get_name_display()}"',
+                        "Name": "Пополнение баланса",
+                        # "Price": int(float(plan.price) * 100),  # Convert to integer (cents)
+                        "Price": int(float(amount) * 100),
+                        "Quantity": 1.00,
+                        # "Amount": int(float(plan.price) * 100),  # Convert to integer (cents)
+                        "Amount": int(float(amount) * 100),
+                        "PaymentMethod": "full_payment",
+                        "PaymentObject": "service",
+                        "Tax": "none",  # none = без НДС
+                        "MeasurementUnit": "pc",
+                    }
+                ],
+                "Email": request.user.tenant.name,
+            }
+
+            # Construct the payload
+            payload = {
+                "TerminalKey": settings.TINKOFF_TERMINAL_KEY_TEST,  # Replace with your actual TerminalKey
+                # "Amount": int(float(plan.price) * 100),  # Amount in cents
+                "Amount": int(float(amount) * 100),
+                "OrderId": order_id,
+                "Email": request.user.tenant.name,
+                # "Description": f'Payment for plan "{plan.get_name_display()}"',
+                "Description": "Пополнение баланса",
+                "Receipt": receipt_data,
+                # Include other required fields as per Tinkoff's API documentation
+            }
+
+            logger.info("Generating token...")
+            terminal_password = settings.TINKOFF_TERMINAL_PASSWORD_TEST
+            generator = TinkoffTokenGenerator(terminal_password)
+            token = generator.get_token(payload)
+            logger.info("Adding token to payload...")
+            payload["Token"] = token
+
+            logger.info("Payload sent to Tinkoff.")
+            headers = {"Content-Type": "application/json; charset=utf-8"}
+
+            try:
+                # Serialize payload with ensure_ascii=False to handle Cyrillic
+                json_payload = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+                response = requests.post("https://securepay.tinkoff.ru/v2/Init", data=json_payload, headers=headers)
+                response.raise_for_status()  # Raise HTTPError for bad responses (4xx, 5xx)
+
+                # Decode JSON response
+                tinkoff_response = response.json()
+
+                # Log the response with proper Cyrillic characters
+                # logger.info("Tinkoff response: %s", json.dumps(tinkoff_response, ensure_ascii=False, indent=4))
+                logger.info("Tinkoff responded successfully.")
+
+            except requests.exceptions.RequestException as e:
+                # Log the exception
+                logger.exception("Error communicating with Tinkoff API: %s", e)
+                return JsonResponse({"error": "Payment request failed"}, status=500)
+            except json.JSONDecodeError as e:
+                # Log decoding issues
+                logger.exception("Error decoding Tinkoff API response %s", e)
+                return JsonResponse({"error": "Failed to decode Tinkoff response"}, status=500)
+
+            # Handle Tinkoff response
+            if tinkoff_response.get("Success"):
+                payment_url = tinkoff_response.get("PaymentURL")
+                if payment_url and payment_url.startswith("https://securepayments.tinkoff.ru/"):
+                    logger.info("Redirecting user to PaymentURL: %s", payment_url)
+                    return redirect(payment_url)
+                else:
+                    logger.error("Invalid PaymentURL received: %s", payment_url)
+                    return JsonResponse({"error": "Invalid payment URL"}, status=500)
+            else:
+                # Log the error details from Tinkoff
+                logger.error(
+                    "Payment initialization failed: %s", json.dumps(tinkoff_response, ensure_ascii=False, indent=4)
+                )
+                return JsonResponse(
+                    {"error": "Payment initialization failed", "details": tinkoff_response},
+                    json_dumps_params={"ensure_ascii": False},
+                    status=400,
+                )
+
+        print(f"ERROR: Invalid payment form: {form.errors}")
+        # context = {"form": form, "plan": plan}
+        context = {"form": form}
+        if request.htmx:
+            return render(request, "main/partials/payment_plan_modal.html", context)
+        return render(request, "main/billing.html", context)
 
 
 @csrf_exempt
@@ -686,8 +838,8 @@ def payment_callback_view(request):
         except Order.DoesNotExist:
             return JsonResponse({"status": "invalid", "error": "Order not found"}, status=404)
 
-        is_valid, error_message = validate_callback_data(callback_data, order)
-        if is_valid:
+        data_is_valid, error_message = validate_callback_data(callback_data, order)
+        if data_is_valid:
             logger.info("Payment callback data validation successful. Updating payment records...")
             update_payment_records(data=callback_data, order=order)
             logger.info("Payment records updated successfully.")

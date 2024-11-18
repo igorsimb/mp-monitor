@@ -13,7 +13,6 @@ from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import assign_perm, get_perms
 
 from accounts.models import Tenant
-from mp_monitor import settings
 
 # from notifier.signals import price_updated
 
@@ -90,7 +89,13 @@ class Item(models.Model):
     @property
     def avg_price(self) -> int:
         # In detail template  {{ item.avg_price }}
-        return int(Price.objects.filter(item=self).aggregate(avg_price=Avg("value"))["avg_price"])
+        try:
+            avg_price = int(Price.objects.filter(item=self).aggregate(avg_price=Avg("value"))["avg_price"])
+        except TypeError:
+            logger.warning("Could not calculate average price for item %s", self.sku)
+            return 0
+
+        return avg_price
 
     @property
     def min_price_date(self) -> datetime:
@@ -283,10 +288,10 @@ class Payment(models.Model):
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
-    merchant = models.CharField(max_length=255, default=settings.TINKOFF_MERCHANT_ID)
-    terminal_key = models.CharField(max_length=255, default=settings.TINKOFF_TERMINAL_KEY_TEST)
+    merchant = models.CharField(max_length=255)
+    terminal_key = models.CharField(max_length=255)
     payment_id = models.CharField(max_length=255, unique=True, blank=True)  # Tinkoff's unique identifier
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Сумма оплаты")
     # In the form: <input class="payform-tbank-row" type="text" placeholder="ФИО плательщика" name="name">
     client_name = models.CharField(max_length=255, null=True, blank=True, help_text="ФИО плательщика")
     client_email = models.CharField(max_length=255)

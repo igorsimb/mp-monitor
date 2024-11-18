@@ -42,6 +42,9 @@ def check_price_change(sender, instance, **kwargs):
                 "Division by zero occurred while calculating percent change. Skipping price change notification. %s", e
             )
             return
+        except TypeError as e:
+            logger.error("Could not calculate percent change. %s", e)
+            return
         print(f"Previous price: {previous_price}, current price: {current_price}, percent change: {percent_change}")
 
         threshold = instance.tenant.price_change_threshold or 0.00
