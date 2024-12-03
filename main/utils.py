@@ -238,6 +238,7 @@ def scrape_item(sku: str, use_selenium: bool = False) -> dict:
     try:
         price_after_spp = item["sizes"][0]["price"]["total"] / 100
     except KeyError:
+        logger.warning("Could not find price after SPP for sku %s", sku)
         price_after_spp = 0
     image = item.get("image")
     category = item.get("category")
