@@ -100,19 +100,31 @@ class PaymentForm(forms.ModelForm):
         ]
         widgets = {
             "terminal_key": forms.HiddenInput(),
-            "amount": forms.TextInput(),
+            "amount": forms.NumberInput(
+                attrs={
+                    "autocomplete": "off",
+                    "class": "form-control",
+                    "min": "100",
+                    "step": "100",
+                    "value": "1000",
+                    "required": True,
+                }
+            ),
             "order": forms.HiddenInput(),
             "client_name": forms.HiddenInput(),
             "client_email": forms.HiddenInput(),
             "client_phone": forms.HiddenInput(),
         }
+        labels = {"amount": "Сумма пополнения"}
+        help_texts = {"amount": "Минимальная сумма пополнения: 100 ₽"}
 
     def clean_amount(self) -> float:
         amount = self.cleaned_data["amount"]
-        # Ensure the amount is serialized correctly and is greater than zero
         amount = float(amount)
+        if amount < 100:
+            raise forms.ValidationError("Минимальная сумма пополнения: 100 ₽")
         if amount <= 0:
-            raise forms.ValidationError("Amount must be greater than zero")
+            raise forms.ValidationError("Сумма не может быть отрицательной")
         return amount
 
 

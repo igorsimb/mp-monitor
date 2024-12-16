@@ -493,141 +493,6 @@ def superuser_or_test_modul(user) -> bool:
     return user.is_superuser or user.email == "test_modul@test.com"
 
 
-# @login_required
-# @user_passes_test(superuser_or_test_modul)
-# def billing_view(request):
-#     plan_name = request.GET.get(
-#         "plan", str(request.user.tenant.payment_plan.name)
-#     )  # Default is the user's current plan
-#     plan = get_object_or_404(PaymentPlan, name=plan_name)
-#     # unix_timestamp = int(timezone.now().timestamp())
-#
-#     # TODO: https://github.com/igorsimb/mp-monitor/issues/191
-#     try:
-#         order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
-#     except ValueError as e:
-#         return HttpResponse(e, status=400)
-#
-#     # Determine if it's a real payment (PLAN 0) or a test payment
-#     is_real_payment = plan_name == "0"
-#
-#     # receipt_items = json.dumps(
-#     #     [
-#     #         {
-#     #             "name": plan.get_name_display(),
-#     #             "payment_method": "full_prepayment",
-#     #             "payment_object": "service",
-#     #             "price": str(plan.price),
-#     #             "quantity": "1",
-#     #             "sno": "osn",
-#     #             "vat": "none",
-#     #         }
-#     #     ]
-#     # )
-#
-#     if request.method == "POST":
-#         form = PaymentForm(request.POST)
-#         if form.is_valid():
-#             payment = form.save(commit=False)
-#             payment.tenant = request.user.tenant
-#             payment.order_id = order_id
-#             payment.amount = plan.price
-#
-#             # Collect the form data to generate the signature
-#             # params = {
-#             #     "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
-#             #     "unix_timestamp": payment.unix_timestamp,
-#             #     "amount": str(payment.amount),
-#             #     "testing": "0" if is_real_payment else "1",
-#             #     "description": payment.description,
-#             #     "order_id": order_id,
-#             #     "client_email": payment.client_email,
-#             #     "success_url": payment.success_url,
-#             #     "receipt_items": receipt_items,
-#             # }
-#
-#             # Use the appropriate secret key based on whether it's a real or test payment
-#             # secret_key = settings.PAYMENT_SECRET_KEY if is_real_payment else settings.PAYMENT_TEST_SECRET_KEY
-#             # generator = MerchantSignatureGenerator(secret_key)
-#             # payment.signature = generator.get_signature(params)
-#             # params["signature"] = payment.signature
-#
-#             # Send POST request to Modulbank
-#             # response = requests.post("https://pay.modulbank.ru/pay", data=params)
-#
-#             # if response.status_code == 200:
-#             #     payment.save()
-#             #     return HttpResponse(response.text)
-#             # else:
-#             #     # TODO: improve handling when not 200 response (message, logging)
-#             #     return HttpResponse(response.text)
-#     else:
-#         form = PaymentForm(
-#             initial={
-#                 "terminal_key": "1728466408616DEMO",
-#                 "amount": plan.price,
-#                 "order_id": order_id,
-#                 "description": f"Абонентская оплата. Тариф: {plan.get_name_display()}",
-#                 # "unix_timestamp": unix_timestamp,
-#                 "client_email": request.user.tenant,
-#                 # "receipt_items": receipt_items,
-#             }
-#         )
-#
-#     context = {
-#         "form": form,
-#         "plan": plan,
-#         "is_real_payment": is_real_payment,
-#     }
-#
-#     # if request.headers.get('HX-Request'):
-#     if request.htmx:
-#         return render(request, "main/partials/payment_plan_modal.html", context)
-#     return render(request, "main/billing.html", context)
-
-
-# @login_required
-# @user_passes_test(superuser_or_test_modul)
-# def billing_view(request):
-#     plan_name = request.GET.get(
-#         "plan", str(request.user.tenant.payment_plan.name)
-#     )  # Default is the user's current plan
-#     plan = get_object_or_404(PaymentPlan, name=plan_name)
-#
-#     # TODO: https://github.com/igorsimb/mp-monitor/issues/191
-#     try:
-#         order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
-#     except ValueError as e:
-#         return HttpResponse(e, status=400)
-#
-#     order, _ = Order.objects.get_or_create(
-#         tenant=request.user.tenant,
-#         order_id=order_id,
-#         defaults={
-#             "amount": plan.price,
-#             "description": plan.name,
-#             "status": Order.OrderStatus.PENDING,
-#             "order_intent": Order.OrderIntent.SWITCH_PLAN,
-#         },
-#     )
-#
-#     # Determine if it's a real payment (PLAN 0) or a test payment
-#     is_real_payment = plan_name == "0"
-#
-#     context = {
-#         # "form": form,
-#         "plan": plan,
-#         "is_real_payment": is_real_payment,
-#         "terminal_key": settings.TINKOFF_TERMINAL_KEY_TEST,
-#         "order_id": order.order_id,
-#     }
-#
-#     # if request.headers.get('HX-Request'):
-#     if request.htmx:
-#         return render(request, "main/partials/payment_plan_modal.html", context)
-#     return render(request, "main/billing.html", context)
-
-
 class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixin when fully implemented
     def test_func(self):
         return superuser_or_test_modul(self.request.user)
@@ -743,11 +608,10 @@ class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixi
                 logger.info("Tinkoff responded successfully.")
 
             except requests.exceptions.RequestException as e:
-                # Log the exception
                 logger.exception("Error communicating with Tinkoff API: %s", e)
                 return JsonResponse({"error": "Payment request failed"}, status=500)
+
             except json.JSONDecodeError as e:
-                # Log decoding issues
                 logger.exception("Error decoding Tinkoff API response %s", e)
                 return JsonResponse({"error": "Failed to decode Tinkoff response"}, status=500)
 
@@ -824,7 +688,7 @@ def payment_callback(request):  # TODO: remove this, if payment_callback_view wo
 
 
 @csrf_exempt
-def payment_callback_view(request):
+def payment_callback_view(request: WSGIRequest) -> JsonResponse:
     if request.method == "POST":
         try:
             callback_data = json.loads(request.body)
@@ -847,93 +711,3 @@ def payment_callback_view(request):
         else:
             logger.error("Payment callback data validation failed: %s", error_message)
             return JsonResponse({"status": "invalid"}, status=400)
-
-
-# TODO:
-#   - billing page: display current balance (if user paid 5k, it should display 5k)
-#   - add balance field to Tenant model
-
-# @user_passes_test(superuser_or_test_modul)
-# @login_required
-# def create_payment(request: WSGIRequest) -> HttpResponse:
-#     unix_timestamp = int(timezone.now().timestamp())
-#     plan_name = request.GET.get("plan")
-#     plan = get_object_or_404(PaymentPlan, name=plan_name)
-#     plan_name_readable = plan.get_name_display()
-#     try:
-#         order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
-#     except ValueError as e:
-#         return HttpResponse(e, status=400)
-#
-#     # Determine if it's a real payment (PLAN 0) or a test payment
-#     is_real_payment = plan_name == "0"
-#
-#     receipt_items = json.dumps(
-#         [
-#             {
-#                 "name": plan_name_readable,
-#                 "payment_method": "full_prepayment",
-#                 "payment_object": "service",
-#                 "price": str(plan.price),
-#                 "quantity": "1",
-#                 "sno": "osn",
-#                 "vat": "none",
-#             }
-#         ]
-#     )
-#
-#     if request.method == "POST":
-#         form = PaymentForm(request.POST)
-#         if form.is_valid():
-#             payment = form.save(commit=False)
-#             payment.tenant = request.user.tenant
-#             payment.order_id = order_id
-#             payment.amount = plan.price
-#
-#             # Collect the form data to generate the signature
-#             params = {
-#                 "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
-#                 "unix_timestamp": payment.unix_timestamp,
-#                 "amount": str(payment.amount),
-#                 "testing": "0" if is_real_payment else "1",
-#                 "description": payment.description,
-#                 "order_id": order_id,
-#                 "client_email": payment.client_email,
-#                 "success_url": payment.success_url,
-#                 "receipt_items": receipt_items,
-#             }
-#
-#             # Use the appropriate secret key based on whether it's a real or test payment
-#             # Bug: using env var for PAYMENT_SECRET_KEY sometimes doesn't work when calculating the signature for real payment
-#             secret_key = settings.PAYMENT_SECRET_KEY if is_real_payment else settings.PAYMENT_TEST_SECRET_KEY
-#             generator = MerchantSignatureGenerator(secret_key)
-#             payment.signature = generator.get_signature(params)
-#             params["signature"] = payment.signature
-#
-#             # Send POST request to Modulbank
-#             response = requests.post("https://pay.modulbank.ru/pay", data=params)
-#
-#             if response.status_code == 200:
-#                 payment.save()
-#                 return HttpResponse(response.text)
-#             else:
-#                 return HttpResponse(response.text)
-#     else:
-#         form = PaymentForm(
-#             initial={
-#                 "amount": plan.price,
-#                 "description": f"Абонентская оплата. Тариф: {plan_name_readable}",
-#                 "unix_timestamp": unix_timestamp,
-#                 "client_email": request.user.tenant,
-#                 "receipt_items": receipt_items,
-#                 # Add other initial values as needed
-#             }
-#         )
-#         pprint("Form not valid")
-#
-#     context = {
-#         "form": form,
-#         "plan": plan,
-#         "is_real_payment": is_real_payment,
-#     }
-#     return render(request, "main/payment.html", context)
