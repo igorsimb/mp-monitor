@@ -103,10 +103,10 @@ class PaymentForm(forms.ModelForm):
             "amount": forms.NumberInput(
                 attrs={
                     "autocomplete": "off",
+                    "autofocus": True,
                     "class": "form-control",
                     "min": "100",
                     "step": "100",
-                    "value": "1000",
                     "required": True,
                 }
             ),
