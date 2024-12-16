@@ -104,7 +104,8 @@ class PaymentForm(forms.ModelForm):
                 attrs={
                     "autocomplete": "off",
                     "autofocus": True,
-                    "class": "form-control",
+                    "class": "form-control focus-ring focus-ring-success border",
+                    "style": "--bs-focus-ring-width: 2px",
                     "min": "100",
                     "step": "100",
                     "required": True,
