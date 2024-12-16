@@ -711,3 +711,16 @@ def payment_callback_view(request: WSGIRequest) -> JsonResponse:
         else:
             logger.error("Payment callback data validation failed: %s", error_message)
             return JsonResponse({"status": "invalid"}, status=400)
+
+
+def switch_plan(request: WSGIRequest) -> HttpResponse:
+    # check user's current plan
+    # check that the new plan is different from the old plan
+    # check if user has enough balance for at least a day(?) of payment
+    # make sure new quotas are applied when switching plan (should already be done in Tenant's switch_plan method)
+    # Determine what happens to excess resources if downgrading (i.e. if new plan doesn't allow so many parses, tell it to user and don't allow switch)
+    # create appropriate OrderIntent (i.e. SWITCH_PLAN)
+    # UX:
+    # contents of modal windos (see "Create "Change plan" view" ticket in AFFiNe)
+    # create notification that plan was successfully switched.
+    pass
