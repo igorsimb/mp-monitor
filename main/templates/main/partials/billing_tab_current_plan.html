@@ -25,6 +25,10 @@
         </div>
     </div>
 
+    <dialog id="payment-dialog" class="pt-0 px-0 rounded-3 border-1">
+        <!-- Dialog content will be replaced by HTMX -->
+    </dialog>
+
     <!-- Quotas and Usage -->
     <div class="mb-4 pt-3">
         <h5 class="text-muted mb-3">Квоты и использование</h5>
@@ -80,7 +84,7 @@
 
     <!-- Support Contact -->
     <div class="text-center">
-        <p class="text-muted">Нужно помощь?
+        <p class="text-muted">Нужна помощь?
             <a href="mailto:support@mpmonitor.ru" class="text-primary text-decoration-none" target="_blank">Свяжитесь с
                 нами
                 <span class="material-symbols-sharp">open_in_new</span>
@@ -88,3 +92,22 @@
         </p>
     </div>
 </div>
+
+
+<script>
+    // Show the dialog when HTMX loads the content
+    document.body.addEventListener('htmx:afterSwap', (event) => {
+        if (event.detail.target.id === 'payment-dialog') {
+            document.querySelector("#payment-dialog").showModal();
+        }
+    });
+
+    // Close dialog functionality
+    document.addEventListener("click", function (event) {
+        if (event.target.id === "close-button") {
+            document.querySelector("#payment-dialog").close();
+            // remove the hx-push-url value from the url
+            window.history.pushState("", document.title, window.location.pathname);
+        }
+    });
+</script>

@@ -4,81 +4,81 @@
 
     {# Real payment for MODULBANK #}
     {#    {% if user.is_superuser %}#}
-{#        <div>#}
-{#            <button class="btn btn-outline-primary pay-button"#}
-{#                    hx-get="{% url 'billing' %}?plan=0"#}
-{#                    hx-target="#payment-dialog"#}
-{#                    hx-push-url="true"#}
-{#                    hx-trigger="click"#}
-{#                    hx-disabled-elt="this"#}
-{#                    hx-swap="innerHTML">Тестовый тариф за реальные деньги (1 руб.)#}
-{#            </button>#}
-{#        </div>#}
-{#    {% endif %}#}
+    {#        <div>#}
+    {#            <button class="btn btn-outline-primary pay-button"#}
+    {#                    hx-get="{% url 'billing' %}?plan=0"#}
+    {#                    hx-target="#switch-plan-dialog"#}
+    {#                    hx-push-url="true"#}
+    {#                    hx-trigger="click"#}
+    {#                    hx-disabled-elt="this"#}
+    {#                    hx-swap="innerHTML">Тестовый тариф за реальные деньги (1 руб.)#}
+    {#            </button>#}
+    {#        </div>#}
+    {#    {% endif %}#}
 
     {# Real payment for TINKOFF #}
-{#    {% if user.is_superuser %}#}
-{#        <script src="https://securepay.tinkoff.ru/html/payForm/js/tinkoff_v2.js"></script>#}
-{#       <form class="" name="payform-tbank" id="payform-tbank">#}
-{#            <input class="payform-tbank-row" type="hidden" name="terminalkey" value="{{ terminal_key }}">#}
-{#            <input class="payform-tbank-row" type="hidden" name="frame" value="false">#}
-{#            <input class="payform-tbank-row" type="hidden" name="language" value="ru">#}
-{#            <input class="payform-tbank-row" type="hidden" name="receipt" value="">#}
-{#            <input class="payform-tbank-row" type="text" placeholder="Сумма заказа" name="amount"#}
-{#                   value="{{ plan.price|floatformat:0 }}" required>#}
-{#            <input class="payform-tbank-row" type="hidden" placeholder="Номер заказа" name="order"#}
-{#                   value="{{ order_id }}">#}
-{#            <input class="payform-tbank-row" type="hidden" placeholder="Описание заказа" name="description"#}
-{#                   value='Тариф "{{ plan.get_name_display }}"'>#}
-{#            <input class="payform-tbank-row" type="hidden" placeholder="ФИО плательщика" name="name">#}
-{#            <input class="payform-tbank-row" type="hidden" placeholder="E-mail" name="email"#}
-{#                   value="{{ user.email }}">#}
-{#            <input class="payform-tbank-row" type="hidden" placeholder="Контактный телефон" name="phone">#}
-{##}
-{#            <div class="d-flex justify-content-between mt-3">#}
-{#                <button type="submit" class="btn btn-success bg-gradient py-2 shadow flex-grow-1 me-2 pay-button"#}
-{#                        autofocus>#}
-{#                    {% if is_real_payment %}#}
-{#                        Перейти к оплате (Реальный платеж)#}
-{#                    {% else %}#}
-{#                        Перейти к оплате (Тестовый платеж)#}
-{#                    {% endif %}#}
-{#                </button>#}
-{#            </div>#}
-{##}
-{#        </form>#}
-{#        <script type="text/javascript">#}
-{#    const TPF = document.getElementById("payform-tbank");#}
-{##}
-{#    TPF.addEventListener("submit", function (e) {#}
-{#        e.preventDefault();#}
-{#        const {description, amount, email, phone, receipt} = TPF;#}
-{##}
-{#        if (receipt) {#}
-{#            if (!email.value && !phone.value)#}
-{#                return alert("Поле E-mail или Phone не должно быть пустым");#}
-{#            TPF.receipt.value = JSON.stringify({#}
-{#                "EmailCompany": "info@mpmonitor.ru",#}
-{#                "Taxation": "usn_income",#}
-{#                "FfdVersion": "1.2",#}
-{#                "Items": [#}
-{#                    {#}
-{#                        "Name": 'Тариф "{{ plan.get_name_display }}"' || "Оплата",#}
-{#                        "Price": amount.value + '00',#}
-{#                        "Quantity": 1.00,#}
-{#                        "Amount": amount.value + '00',#}
-{#                        "PaymentMethod": "full_payment",#}
-{#                        "PaymentObject": "service",#}
-{#                        "Tax": "none",#}
-{#                        "MeasurementUnit": "pc"#}
-{#                    }#}
-{#                ]#}
-{#            });#}
-{#        }#}
-{#        pay(TPF);#}
-{#    })#}
-{#</script>#}
-{#    {% endif %}#}
+    {#    {% if user.is_superuser %}#}
+    {#        <script src="https://securepay.tinkoff.ru/html/payForm/js/tinkoff_v2.js"></script>#}
+    {#       <form class="" name="payform-tbank" id="payform-tbank">#}
+    {#            <input class="payform-tbank-row" type="hidden" name="terminalkey" value="{{ terminal_key }}">#}
+    {#            <input class="payform-tbank-row" type="hidden" name="frame" value="false">#}
+    {#            <input class="payform-tbank-row" type="hidden" name="language" value="ru">#}
+    {#            <input class="payform-tbank-row" type="hidden" name="receipt" value="">#}
+    {#            <input class="payform-tbank-row" type="text" placeholder="Сумма заказа" name="amount"#}
+    {#                   value="{{ plan.price|floatformat:0 }}" required>#}
+    {#            <input class="payform-tbank-row" type="hidden" placeholder="Номер заказа" name="order"#}
+    {#                   value="{{ order_id }}">#}
+    {#            <input class="payform-tbank-row" type="hidden" placeholder="Описание заказа" name="description"#}
+    {#                   value='Тариф "{{ plan.get_name_display }}"'>#}
+    {#            <input class="payform-tbank-row" type="hidden" placeholder="ФИО плательщика" name="name">#}
+    {#            <input class="payform-tbank-row" type="hidden" placeholder="E-mail" name="email"#}
+    {#                   value="{{ user.email }}">#}
+    {#            <input class="payform-tbank-row" type="hidden" placeholder="Контактный телефон" name="phone">#}
+    {##}
+    {#            <div class="d-flex justify-content-between mt-3">#}
+    {#                <button type="submit" class="btn btn-success bg-gradient py-2 shadow flex-grow-1 me-2 pay-button"#}
+    {#                        autofocus>#}
+    {#                    {% if is_real_payment %}#}
+    {#                        Перейти к оплате (Реальный платеж)#}
+    {#                    {% else %}#}
+    {#                        Перейти к оплате (Тестовый платеж)#}
+    {#                    {% endif %}#}
+    {#                </button>#}
+    {#            </div>#}
+    {##}
+    {#        </form>#}
+    {#        <script type="text/javascript">#}
+    {#    const TPF = document.getElementById("payform-tbank");#}
+    {##}
+    {#    TPF.addEventListener("submit", function (e) {#}
+    {#        e.preventDefault();#}
+    {#        const {description, amount, email, phone, receipt} = TPF;#}
+    {##}
+    {#        if (receipt) {#}
+    {#            if (!email.value && !phone.value)#}
+    {#                return alert("Поле E-mail или Phone не должно быть пустым");#}
+    {#            TPF.receipt.value = JSON.stringify({#}
+    {#                "EmailCompany": "info@mpmonitor.ru",#}
+    {#                "Taxation": "usn_income",#}
+    {#                "FfdVersion": "1.2",#}
+    {#                "Items": [#}
+    {#                    {#}
+    {#                        "Name": 'Тариф "{{ plan.get_name_display }}"' || "Оплата",#}
+    {#                        "Price": amount.value + '00',#}
+    {#                        "Quantity": 1.00,#}
+    {#                        "Amount": amount.value + '00',#}
+    {#                        "PaymentMethod": "full_payment",#}
+    {#                        "PaymentObject": "service",#}
+    {#                        "Tax": "none",#}
+    {#                        "MeasurementUnit": "pc"#}
+    {#                    }#}
+    {#                ]#}
+    {#            });#}
+    {#        }#}
+    {#        pay(TPF);#}
+    {#    })#}
+    {#</script>#}
+    {#    {% endif %}#}
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 my-5 text-center pricing-card-container">
 
@@ -87,6 +87,9 @@
             <div class="card h-100 rounded-3 shadow-sm fit-content price-card-height">
                 <div class="card-header py-3">
                     <h3 class="my-0 fw-bold text-body-secondary text-wrap fs-4">БЕСПЛАТНЫЙ</h3>
+                    {% if request.user.tenant.payment_plan.name == plan.PlanName.FREE %}
+                    <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
+                    {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
                     <div class="flex-grow-1">
@@ -107,14 +110,19 @@
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
                         <!-- TODO: add functionality to change the plan  -->
-                        <button class="w-100 btn btn-lg btn-outline-secondary pay-button"
-                                hx-get="{% url 'billing' %}?plan=1"
-                                hx-target="#payment-dialog"
-                                hx-push-url="true"
-                                hx-trigger="click"
-                                hx-disabled-elt="this"
-                                hx-swap="innerHTML">Сменить тариф
-                        </button>
+{#                        <button class="w-100 btn btn-lg btn-outline-secondary pay-button"#}
+{#                                hx-get="{% url 'billing' %}?plan=1"#}
+{#                                hx-target="#switch-plan-dialog"#}
+{#                                hx-push-url="true"#}
+{#                                hx-trigger="click"#}
+{#                                hx-disabled-elt="this"#}
+{#                                hx-swap="innerHTML">Сменить тариф#}
+{#                        </button>#}
+                        <form method="post" action="{% url 'switch_plan' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="plan" value="1">
+                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить тариф</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -125,7 +133,9 @@
             <div class="card h-100 rounded-3 shadow-sm border-primary fit-content price-card-height">
                 <div class="card-header py-3 bg-light border-primary position-relative">
                     <h3 class="my-0 fw-bold text-wrap fs-4">БИЗНЕС</h3>
-                    <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф (BACKEND)</span>
+                    {% if request.user.tenant.payment_plan.name == plan.PlanName.BUSINESS %}
+                    <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
+                    {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
                     <div class="flex-grow-1">
@@ -146,14 +156,21 @@
                     <!-- TODO: Don't show / disable the button if this is the current plan -->
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
-                        <button class="w-100 btn btn-lg btn-primary pay-button"
-                                hx-get="{% url 'billing' %}?plan=2"
-                                hx-target="#payment-dialog"
-                                hx-push-url="true"
-                                hx-trigger="click"
-                                hx-disabled-elt="this"
-                                hx-swap="innerHTML">Сменить тариф
-                        </button>
+                        {#                        <button class="w-100 btn btn-lg btn-primary pay-button"#}
+                        {#                                hx-get="{% url 'billing' %}?plan=2"#}
+                        {#                                hx-target="#switch-plan-dialog"#}
+                        {#                                hx-push-url="true"#}
+                        {#                                hx-trigger="click"#}
+                        {#                                hx-disabled-elt="this"#}
+                        {#                                hx-swap="innerHTML">Сменить тариф#}
+                        {#                        </button>#}
+                        <form method="post" action="{% url 'switch_plan' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="plan" value="2">
+                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить
+                                тариф
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -166,7 +183,11 @@
             <div class="card h-100 rounded-3 shadow-sm border-primary fit-content price-card-height">
                 <div class="card-header py-3 text-bg-primary border-primary position-relative">
                     <h3 class="my-0 fw-bold text-wrap fs-4">ПРОФЕССИОНАЛ</h3>
-                    <span class="badge bg-warning position-absolute top-0 translate-middle-y end-0 me-3">Выгодно</span>
+                    {% if request.user.tenant.payment_plan.name == plan.PlanName.PRO %}
+                    <span class="badge bg-primary border border-warning border-2 position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
+                    {% else %}
+                        <span class="badge bg-warning position-absolute top-0 translate-middle-y end-0 me-3">Выгодно</span>
+                    {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
                     <div class="flex-grow-1">
@@ -180,23 +201,30 @@
                             <li class="my-3">
         <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
               data-bs-title="Однократная проверка одного товара">Единиц проверки</span> - <span
-                                        class="fw-semibold text-success-emphasis">100 000</span>
+                                    class="fw-semibold text-success-emphasis">100 000</span>
                             </li>
                             <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
                             <li>Стоимость за проверку - <span
-                                        class="fw-semibold text-success-emphasis">0.12 руб.</span></li>
+                                    class="fw-semibold text-success-emphasis">0.12 руб.</span></li>
                         </ul>
                     </div>
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
-                        <button class="w-100 btn btn-lg btn-primary pay-button"
-                                hx-get="{% url 'billing' %}?plan=3"
-                                hx-target="#payment-dialog"
-                                hx-push-url="true"
-                                hx-trigger="click"
-                                hx-disabled-elt="this"
-                                hx-swap="innerHTML">Сменить тариф
-                        </button>
+                        {#                        <button class="w-100 btn btn-lg btn-primary pay-button"#}
+                        {#                                hx-get="{% url 'billing' %}?plan=3"#}
+                        {#                                hx-target="#switch-plan-dialog"#}
+                        {#                                hx-push-url="true"#}
+                        {#                                hx-trigger="click"#}
+                        {#                                hx-disabled-elt="this"#}
+                        {#                                hx-swap="innerHTML">Сменить тариф#}
+                        {#                        </button>#}
+                        <form method="post" action="{% url 'switch_plan' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="plan" value="3">
+                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить
+                                тариф
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -207,6 +235,9 @@
             <div class="card h-100 rounded-3 shadow-sm fit-content price-card-height">
                 <div class="card-header py-3">
                     <h3 class="my-0 fw-bold text-wrap fs-4">КОРПОРАТИВНЫЙ</h3>
+                    {% if request.user.tenant.payment_plan.name == plan.PlanName.CORPORATE %}
+                    <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
+                    {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
                     <div class="flex-grow-1">
@@ -220,23 +251,29 @@
                             <li class="my-3">
                             <span class="tooltip-needed" data-bs-toggle="tooltip" data-bs-placement="top"
                                   data-bs-title="Однократная проверка одного товара">Единиц проверки</span> -
-                                    <span class="fw-semibold text-success-emphasis">500 000</span>
+                                <span class="fw-semibold text-success-emphasis">500 000</span>
                             </li>
                             <li class="text-success mb-3 fw-semibold">Приоритетная поддержка</li>
                             <li>Стоимость за проверку -
-                                    <span class="fw-semibold text-success-emphasis">0.07 руб.</span></li>
+                                <span class="fw-semibold text-success-emphasis">0.07 руб.</span></li>
                         </ul>
                     </div>
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
-                        <button class="w-100 btn btn-lg btn-outline-primary pay-button"
-                                hx-get="{% url 'billing' %}?plan=4"
-                                hx-target="#payment-dialog"
-                                hx-push-url="true"
+                        <button class="w-100 btn btn-lg btn-danger pay-button"
+                                hx-get="{% url 'switch_plan' %}?plan=4"
+                                hx-target="#switch-plan-dialog"
+{#                                hx-push-url="true"#}
                                 hx-trigger="click"
                                 hx-disabled-elt="this"
                                 hx-swap="innerHTML">Сменить тариф
                         </button>
+{#                        <form method="post" action="{% url 'switch_plan' %}">#}
+{#                            {% csrf_token %}#}
+{#                            <input type="hidden" name="plan" value="4">#}
+{#                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить тариф</button>#}
+{#                        </form>#}
+
                     </div>
                 </div>
             </div>
@@ -244,23 +281,23 @@
     </div>
 </section>
 
-<!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog -->
-<dialog id="payment-dialog" class="pt-0 px-0 rounded-3 border-1">
+
+<dialog id="switch-plan-dialog" class="pt-0 px-0 rounded-3 border-1 switch-plan-dialog">
     <!-- Dialog content will be replaced by HTMX -->
 </dialog>
 
 <script>
     // Show the dialog when HTMX loads the content
     document.body.addEventListener('htmx:afterSwap', (event) => {
-        if (event.detail.target.id === 'payment-dialog') {
-            document.querySelector("#payment-dialog").showModal();
+        if (event.detail.target.id === 'switch-plan-dialog') {
+            document.querySelector("#switch-plan-dialog").showModal();
         }
     });
 
     // Close dialog functionality
     document.addEventListener("click", function (event) {
         if (event.target.id === "close-button") {
-            document.querySelector("#payment-dialog").close();
+            document.querySelector("#switch-plan-dialog").close();
             // remove the hx-push-url value from the url
             window.history.pushState("", document.title, window.location.pathname);
         }

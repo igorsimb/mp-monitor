@@ -16,6 +16,7 @@ from .views import (
     # payment_success,
     load_chart,
     BillingView,
+    switch_plan_view,
 )
 
 urlpatterns = [
@@ -39,4 +40,5 @@ urlpatterns = [
     path("load-chart/<str:sku>/", load_chart, name="load_chart"),
     # payment callback (to be created)
     path("payment/callback/", payment_callback_view, name="payment_callback"),
+    path("billing/switch-plan/", switch_plan_view, name="switch_plan"),
 ]

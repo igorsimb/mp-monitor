@@ -507,3 +507,30 @@ because the nesting selector cannot represent pseudo-elements. */
     background-color: #FAB619;
     border: 1px solid #FAB619;
 }
+
+
+.add-balance-input {
+    --bs-focus-ring-width: 0px!important;
+    transition: all 0.2s ease-in-out;
+}
+
+.add-balance-input:user-invalid {
+    border: 1px solid var(--bs-danger)!important;
+}
+
+.add-balance-input:user-valid {
+    border: 1px solid var(--bs-success)!important;
+}
+
+/* Dialog responsive width */
+.switch-plan-dialog {
+    width: 90%;
+    max-width: 800px;
+}
+
+@media (max-width: 576px) {
+    .switch-plan-dialog {
+        width: 95%;
+        margin: 16px auto;
+    }
+}

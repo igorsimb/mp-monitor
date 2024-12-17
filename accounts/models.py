@@ -156,6 +156,7 @@ class Tenant(models.Model):
     def switch_plan(self, new_plan: str) -> None:
         """
         Switches the tenant's payment plan to the specified plan.
+        For plan names see class PlanName.
 
         Args:
             new_plan (str): The name of the new plan to switch to.
@@ -173,6 +174,10 @@ class Tenant(models.Model):
         except PaymentPlan.DoesNotExist:
             logger.error("Attempted to switch to non-existent plan: %s", new_plan)
             raise ValueError(f"Invalid plan: {new_plan}") from None
+
+        if self.payment_plan == new_plan:
+            logger.info("Plan is already set to %s", new_plan.get_name_display())
+            return
 
         old_plan_name = self.payment_plan.get_name_display()
         logger.info("Switching plan from '%s' to '%s'", old_plan_name, new_plan.get_name_display())
