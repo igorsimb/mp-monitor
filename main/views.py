@@ -24,6 +24,7 @@ from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 import config
 import main.plotly_charts as plotly_charts
+from accounts.models import PaymentPlan
 from mp_monitor import settings
 from .exceptions import QuotaExceededException, PlanScheduleLimitationException
 from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
@@ -498,11 +499,10 @@ class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixi
         return superuser_or_test_modul(self.request.user)
 
     def get(self, request):
-        # plan_name = request.GET.get(
-        #     "plan", str(request.user.tenant.payment_plan.name)
-        # )  # Default is the user's current plan
-        # plan = get_object_or_404(PaymentPlan, name=plan_name)
-        # print(f"Plan GET: {plan}")
+        plan_name = request.GET.get(
+            "plan", str(request.user.tenant.payment_plan.name)
+        )  # Default is the user's current plan
+        plan = get_object_or_404(PaymentPlan, name=plan_name)
 
         form = PaymentForm(
             initial={
@@ -512,7 +512,7 @@ class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixi
                 # Other initial values as needed
             }
         )
-        context = {"form": form}
+        context = {"form": form, "plan": plan}
         # context = {"form": form, "plan": plan}
         if request.htmx:
             return render(request, "main/partials/payment_plan_modal.html", context)
@@ -713,14 +713,18 @@ def payment_callback_view(request: WSGIRequest) -> JsonResponse:
             return JsonResponse({"status": "invalid"}, status=400)
 
 
-def switch_plan(request: WSGIRequest) -> HttpResponse:
-    # check user's current plan
-    # check that the new plan is different from the old plan
+def switch_plan_view(request: WSGIRequest) -> HttpResponse:
+    current_plan = request.user.tenant.payment_plan.get_name_display()
+    new_plan_code = request.GET.get("plan")
+    new_plan_name = get_object_or_404(PaymentPlan, name=new_plan_code).get_name_display()
+
+    context = {"current_plan": current_plan, "new_plan": new_plan_name}
+    return render(request, "main/partials/switch_plan_modal.html", context)
+
     # check if user has enough balance for at least a day(?) of payment
-    # make sure new quotas are applied when switching plan (should already be done in Tenant's switch_plan method)
     # Determine what happens to excess resources if downgrading (i.e. if new plan doesn't allow so many parses, tell it to user and don't allow switch)
     # create appropriate OrderIntent (i.e. SWITCH_PLAN)
     # UX:
-    # contents of modal windos (see "Create "Change plan" view" ticket in AFFiNe)
+    # contents of modal windows (see "Create "Change plan" view" ticket in AFFiNe)
     # create notification that plan was successfully switched.
-    pass
+    # pass
