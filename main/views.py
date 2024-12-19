@@ -6,7 +6,7 @@ from datetime import timedelta
 import requests
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
@@ -713,6 +713,7 @@ def payment_callback_view(request: WSGIRequest) -> JsonResponse:
             return JsonResponse({"status": "invalid"}, status=400)
 
 
+@login_required
 def switch_plan_view(request: WSGIRequest) -> HttpResponse:
     current_plan = request.user.tenant.payment_plan.get_name_display()
     new_plan_code = request.GET.get("plan")

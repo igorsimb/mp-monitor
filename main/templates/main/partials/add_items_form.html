@@ -2,13 +2,15 @@
 
 
 <div x-data="{ expanded: false }">
-    <a id="addItemsToggleLink" class="toggle" title="Добавить новые товары для парсинга" @click="expanded = ! expanded">
-        <input type="checkbox">
-        <span class="button" id="addItemsToggle"></span>
-        <span class="material-symbols-sharp label text-primary">add</span>
+    <a id="addItemsToggleLink"
+       class="btn btn-success bg-gradient rounded-pill mb-2 shadow-sm"
+       role="button" data-bs-toggle="button"
+       title="Открыть/Закрыть форму добавления товаров для парсинга"
+       @click="expanded = ! expanded">
+        <span class="material-symbols-sharp" x-text="expanded ? 'expand_circle_up' : 'expand_circle_down'"></span>
+        <span>Добавить товары для парсинга</span>
     </a>
 
-    {#<div class="collapse" id="addItems" x-show="expanded" x-collapse>#}
     <div x-show="expanded" x-collapse>
         <div class="row">
             <div class="col-md-12">
@@ -30,7 +32,7 @@
                                 чтобы снять это ограничение.
                             </div>
                         {% else %}
-                            <button id="addItemsButton" type="submit" class="btn btn-primary rounded-pill my-3"
+                            <button id="addItemsButton" type="submit" class="btn btn-success rounded-pill my-3"
                                     @click="loadingIndicator = true" x-show="!loadingIndicator">
                                 <span id="spinner" x-show="loadingIndicator"
                                       class="htmx-loading-indicator spinner-border spinner-border-sm"
@@ -38,7 +40,7 @@
                                 Добавить
                             </button>
                             <button x-show="loadingIndicator"
-                                    class="btn btn-primary rounded-pill my-3" disabled>
+                                    class="btn btn-success rounded-pill my-3" disabled>
                                 <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
                                 <span role="status" x-text="loadingIndicatorMessage"></span>
                             </button>
@@ -51,8 +53,8 @@
 </div>
 
 <script>
-// if "skus" field is empty or contains only whitespace disable submit button
-document.addEventListener('DOMContentLoaded', function() {
-    validateSkusInput('addItemsForm', 'skus', 'addItemsButton');
-});
+    // if "skus" field is empty or contains only whitespace disable submit button
+    document.addEventListener('DOMContentLoaded', function () {
+        validateSkusInput('addItemsForm', 'skus', 'addItemsButton');
+    });
 </script>
