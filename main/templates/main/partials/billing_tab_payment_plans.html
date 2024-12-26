@@ -1,85 +1,6 @@
 <section x-show="billing_tab === 'billing_tab3'" class="mt-5">
     <h2 class="h2 text-center display-6 fw-bold text-body-emphasis my-4">Тарифы и цены!</h2>
 
-
-    {# Real payment for MODULBANK #}
-    {#    {% if user.is_superuser %}#}
-    {#        <div>#}
-    {#            <button class="btn btn-outline-primary pay-button"#}
-    {#                    hx-get="{% url 'billing' %}?plan=0"#}
-    {#                    hx-target="#switch-plan-dialog"#}
-    {#                    hx-push-url="true"#}
-    {#                    hx-trigger="click"#}
-    {#                    hx-disabled-elt="this"#}
-    {#                    hx-swap="innerHTML">Тестовый тариф за реальные деньги (1 руб.)#}
-    {#            </button>#}
-    {#        </div>#}
-    {#    {% endif %}#}
-
-    {# Real payment for TINKOFF #}
-    {#    {% if user.is_superuser %}#}
-    {#        <script src="https://securepay.tinkoff.ru/html/payForm/js/tinkoff_v2.js"></script>#}
-    {#       <form class="" name="payform-tbank" id="payform-tbank">#}
-    {#            <input class="payform-tbank-row" type="hidden" name="terminalkey" value="{{ terminal_key }}">#}
-    {#            <input class="payform-tbank-row" type="hidden" name="frame" value="false">#}
-    {#            <input class="payform-tbank-row" type="hidden" name="language" value="ru">#}
-    {#            <input class="payform-tbank-row" type="hidden" name="receipt" value="">#}
-    {#            <input class="payform-tbank-row" type="text" placeholder="Сумма заказа" name="amount"#}
-    {#                   value="{{ plan.price|floatformat:0 }}" required>#}
-    {#            <input class="payform-tbank-row" type="hidden" placeholder="Номер заказа" name="order"#}
-    {#                   value="{{ order_id }}">#}
-    {#            <input class="payform-tbank-row" type="hidden" placeholder="Описание заказа" name="description"#}
-    {#                   value='Тариф "{{ plan.get_name_display }}"'>#}
-    {#            <input class="payform-tbank-row" type="hidden" placeholder="ФИО плательщика" name="name">#}
-    {#            <input class="payform-tbank-row" type="hidden" placeholder="E-mail" name="email"#}
-    {#                   value="{{ user.email }}">#}
-    {#            <input class="payform-tbank-row" type="hidden" placeholder="Контактный телефон" name="phone">#}
-    {##}
-    {#            <div class="d-flex justify-content-between mt-3">#}
-    {#                <button type="submit" class="btn btn-success bg-gradient py-2 shadow flex-grow-1 me-2 pay-button"#}
-    {#                        autofocus>#}
-    {#                    {% if is_real_payment %}#}
-    {#                        Перейти к оплате (Реальный платеж)#}
-    {#                    {% else %}#}
-    {#                        Перейти к оплате (Тестовый платеж)#}
-    {#                    {% endif %}#}
-    {#                </button>#}
-    {#            </div>#}
-    {##}
-    {#        </form>#}
-    {#        <script type="text/javascript">#}
-    {#    const TPF = document.getElementById("payform-tbank");#}
-    {##}
-    {#    TPF.addEventListener("submit", function (e) {#}
-    {#        e.preventDefault();#}
-    {#        const {description, amount, email, phone, receipt} = TPF;#}
-    {##}
-    {#        if (receipt) {#}
-    {#            if (!email.value && !phone.value)#}
-    {#                return alert("Поле E-mail или Phone не должно быть пустым");#}
-    {#            TPF.receipt.value = JSON.stringify({#}
-    {#                "EmailCompany": "info@mpmonitor.ru",#}
-    {#                "Taxation": "usn_income",#}
-    {#                "FfdVersion": "1.2",#}
-    {#                "Items": [#}
-    {#                    {#}
-    {#                        "Name": 'Тариф "{{ plan.get_name_display }}"' || "Оплата",#}
-    {#                        "Price": amount.value + '00',#}
-    {#                        "Quantity": 1.00,#}
-    {#                        "Amount": amount.value + '00',#}
-    {#                        "PaymentMethod": "full_payment",#}
-    {#                        "PaymentObject": "service",#}
-    {#                        "Tax": "none",#}
-    {#                        "MeasurementUnit": "pc"#}
-    {#                    }#}
-    {#                ]#}
-    {#            });#}
-    {#        }#}
-    {#        pay(TPF);#}
-    {#    })#}
-    {#</script>#}
-    {#    {% endif %}#}
-
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 my-5 text-center pricing-card-container">
 
         <!-- Free Plan -->
@@ -88,7 +9,7 @@
                 <div class="card-header py-3">
                     <h3 class="my-0 fw-bold text-body-secondary text-wrap fs-4">БЕСПЛАТНЫЙ</h3>
                     {% if request.user.tenant.payment_plan.name == plan.PlanName.FREE %}
-                    <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
+                        <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
                     {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
@@ -109,20 +30,15 @@
                     </div>
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
-                        <!-- TODO: add functionality to change the plan  -->
-{#                        <button class="w-100 btn btn-lg btn-outline-secondary pay-button"#}
-{#                                hx-get="{% url 'billing' %}?plan=1"#}
-{#                                hx-target="#switch-plan-dialog"#}
-{#                                hx-push-url="true"#}
-{#                                hx-trigger="click"#}
-{#                                hx-disabled-elt="this"#}
-{#                                hx-swap="innerHTML">Сменить тариф#}
-{#                        </button>#}
-                        <form method="post" action="{% url 'switch_plan_modal' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="plan" value="1">
-                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить тариф</button>
-                        </form>
+
+                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button"
+                                    hx-get="{% url 'switch_plan_modal' %}?plan=1"
+                                    hx-target="#switch-plan-dialog"
+                                    hx-trigger="click"
+                                    hx-disabled-elt="this"
+                                    hx-swap="innerHTML">Сменить тариф
+                            </button>
+
                     </div>
                 </div>
             </div>
@@ -134,7 +50,7 @@
                 <div class="card-header py-3 bg-light border-primary position-relative">
                     <h3 class="my-0 fw-bold text-wrap fs-4">БИЗНЕС</h3>
                     {% if request.user.tenant.payment_plan.name == plan.PlanName.BUSINESS %}
-                    <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
+                        <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
                     {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
@@ -156,21 +72,13 @@
                     <!-- TODO: Don't show / disable the button if this is the current plan -->
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
-                        {#                        <button class="w-100 btn btn-lg btn-primary pay-button"#}
-                        {#                                hx-get="{% url 'billing' %}?plan=2"#}
-                        {#                                hx-target="#switch-plan-dialog"#}
-                        {#                                hx-push-url="true"#}
-                        {#                                hx-trigger="click"#}
-                        {#                                hx-disabled-elt="this"#}
-                        {#                                hx-swap="innerHTML">Сменить тариф#}
-                        {#                        </button>#}
-                        <form method="post" action="{% url 'switch_plan_modal' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="plan" value="2">
-                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить
-                                тариф
+                            <button class="w-100 btn btn-lg btn-primary pay-button"
+                                    hx-get="{% url 'switch_plan_modal' %}?plan=2"
+                                    hx-target="#switch-plan-dialog"
+                                    hx-trigger="click"
+                                    hx-disabled-elt="this"
+                                    hx-swap="innerHTML">Сменить тариф
                             </button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -184,7 +92,7 @@
                 <div class="card-header py-3 text-bg-primary border-primary position-relative">
                     <h3 class="my-0 fw-bold text-wrap fs-4">ПРОФЕССИОНАЛ</h3>
                     {% if request.user.tenant.payment_plan.name == plan.PlanName.PRO %}
-                    <span class="badge bg-primary border border-warning border-2 position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
+                        <span class="badge bg-primary border border-warning border-2 position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
                     {% else %}
                         <span class="badge bg-warning position-absolute top-0 translate-middle-y end-0 me-3">Выгодно</span>
                     {% endif %}
@@ -210,21 +118,13 @@
                     </div>
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
-                        {#                        <button class="w-100 btn btn-lg btn-primary pay-button"#}
-                        {#                                hx-get="{% url 'billing' %}?plan=3"#}
-                        {#                                hx-target="#switch-plan-dialog"#}
-                        {#                                hx-push-url="true"#}
-                        {#                                hx-trigger="click"#}
-                        {#                                hx-disabled-elt="this"#}
-                        {#                                hx-swap="innerHTML">Сменить тариф#}
-                        {#                        </button>#}
-                        <form method="post" action="{% url 'switch_plan_modal' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="plan" value="3">
-                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить
-                                тариф
+                            <button class="w-100 btn btn-lg btn-primary pay-button"
+                                    hx-get="{% url 'switch_plan_modal' %}?plan=3"
+                                    hx-target="#switch-plan-dialog"
+                                    hx-trigger="click"
+                                    hx-disabled-elt="this"
+                                    hx-swap="innerHTML">Сменить тариф
                             </button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -236,7 +136,7 @@
                 <div class="card-header py-3">
                     <h3 class="my-0 fw-bold text-wrap fs-4">КОРПОРАТИВНЫЙ</h3>
                     {% if request.user.tenant.payment_plan.name == plan.PlanName.CORPORATE %}
-                    <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
+                        <span class="badge bg-primary position-absolute top-0 translate-middle-y end-0 me-3">Мой тариф</span>
                     {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
@@ -260,19 +160,13 @@
                     </div>
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
-                        <button class="w-100 btn btn-lg btn-danger pay-button"
+                        <button class="w-100 btn btn-lg btn-primary pay-button"
                                 hx-get="{% url 'switch_plan_modal' %}?plan=4"
                                 hx-target="#switch-plan-dialog"
-{#                                hx-push-url="true"#}
                                 hx-trigger="click"
                                 hx-disabled-elt="this"
                                 hx-swap="innerHTML">Сменить тариф
                         </button>
-{#                        <form method="post" action="{% url 'switch_plan' %}">#}
-{#                            {% csrf_token %}#}
-{#                            <input type="hidden" name="plan" value="4">#}
-{#                            <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить тариф</button>#}
-{#                        </form>#}
 
                     </div>
                 </div>

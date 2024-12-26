@@ -768,17 +768,6 @@ def switch_plan(request: WSGIRequest) -> HttpResponse:
     else:
         return redirect("billing")
 
-    # tenant = request.user.tenant
-    # current_plan = tenant.payment_plan
-    # if request.method == "POST":
-    #     new_plan = request.POST.get("plan")
-    #     tenant.switch_plan(new_plan)
-    #     messages.success(request, f"Тариф успешно переключен на {new_plan.get_name_display()}")
-    #     return redirect("billing")
-    # else:
-    #     context = {"current_plan": current_plan.get_name_display()}
-    #     return render(request, "main/partials/switch_plan.html", context)
-
     # check if user has enough balance for at least 3 days (?) of payment
     # Determine what happens to excess resources if downgrading (i.e. if new plan doesn't allow so many parses, tell it to user and don't allow switch)
     # create appropriate OrderIntent (i.e. SWITCH_PLAN)
