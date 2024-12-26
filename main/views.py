@@ -759,10 +759,10 @@ def switch_plan(request: WSGIRequest) -> HttpResponse:
         form = SwitchPlanForm(request.POST)
         if form.is_valid():
             new_plan = form.cleaned_data["plan"]
-            if new_plan == tenant.payment_plan.name:
+            if new_plan.name == tenant.payment_plan.name:
                 messages.error(request, "Такой тариф уже выбран.")
                 return redirect("billing")
-            tenant.switch_plan(new_plan)
+            tenant.switch_plan(new_plan.name)
             messages.success(request, f"Тариф успешно переключен на {new_plan.get_name_display()}")
             return redirect("billing")
     else:
