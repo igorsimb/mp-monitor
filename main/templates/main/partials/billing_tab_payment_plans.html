@@ -118,7 +118,7 @@
 {#                                hx-disabled-elt="this"#}
 {#                                hx-swap="innerHTML">Сменить тариф#}
 {#                        </button>#}
-                        <form method="post" action="{% url 'switch_plan' %}">
+                        <form method="post" action="{% url 'switch_plan_modal' %}">
                             {% csrf_token %}
                             <input type="hidden" name="plan" value="1">
                             <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить тариф</button>
@@ -164,7 +164,7 @@
                         {#                                hx-disabled-elt="this"#}
                         {#                                hx-swap="innerHTML">Сменить тариф#}
                         {#                        </button>#}
-                        <form method="post" action="{% url 'switch_plan' %}">
+                        <form method="post" action="{% url 'switch_plan_modal' %}">
                             {% csrf_token %}
                             <input type="hidden" name="plan" value="2">
                             <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить
@@ -218,7 +218,7 @@
                         {#                                hx-disabled-elt="this"#}
                         {#                                hx-swap="innerHTML">Сменить тариф#}
                         {#                        </button>#}
-                        <form method="post" action="{% url 'switch_plan' %}">
+                        <form method="post" action="{% url 'switch_plan_modal' %}">
                             {% csrf_token %}
                             <input type="hidden" name="plan" value="3">
                             <button class="w-100 btn btn-lg btn-outline-secondary pay-button" type="submit">Сменить
@@ -261,7 +261,7 @@
                     <div>
                         <hr class="opacity-25 w-50 mx-auto">
                         <button class="w-100 btn btn-lg btn-danger pay-button"
-                                hx-get="{% url 'switch_plan' %}?plan=4"
+                                hx-get="{% url 'switch_plan_modal' %}?plan=4"
                                 hx-target="#switch-plan-dialog"
 {#                                hx-push-url="true"#}
                                 hx-trigger="click"
