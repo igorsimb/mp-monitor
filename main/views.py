@@ -732,6 +732,8 @@ def switch_plan_modal(request):
     new_quotas = config.DEFAULT_QUOTAS[new_plan.name]
     price_per_parse = get_price_per_parse(current_plan.price, current_quotas["parse_units_limit"])
 
+    new_plan_text_color = "text-success" if int(current_plan.name) < int(new_plan.name) else "text-danger"
+
     context = {
         "current_plan": {
             "name": current_plan.get_name_display(),
@@ -748,6 +750,7 @@ def switch_plan_modal(request):
             "price_per_parse": get_price_per_parse(new_plan.price, new_quotas["parse_units_limit"]),
         },
         "plan_id": new_plan.name,
+        "new_plan_text_color": new_plan_text_color,
     }
 
     return render(request, "main/partials/switch_plan_modal.html", context)
