@@ -24,12 +24,18 @@ from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 import config
 import main.plotly_charts as plotly_charts
+from accounts.forms import SwitchPlanForm
 from accounts.models import PaymentPlan
 from mp_monitor import settings
 from .exceptions import QuotaExceededException, PlanScheduleLimitationException
 from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
 from .models import Item, Price, Order
-from .payment_utils import validate_callback_data, update_payment_records, TinkoffTokenGenerator
+from .payment_utils import (
+    validate_callback_data,
+    update_payment_records,
+    TinkoffTokenGenerator,
+    get_price_per_parse,
+)
 from .utils import (
     uncheck_all_boxes,
     show_successful_scrape_message,
@@ -714,15 +720,66 @@ def payment_callback_view(request: WSGIRequest) -> JsonResponse:
 
 
 @login_required
-def switch_plan_view(request: WSGIRequest) -> HttpResponse:
-    current_plan = request.user.tenant.payment_plan.get_name_display()
-    new_plan_code = request.GET.get("plan")
-    new_plan_name = get_object_or_404(PaymentPlan, name=new_plan_code).get_name_display()
+def switch_plan_modal(request):
+    """
+    Modal window for switching to a new payment plan.
+    """
+    new_plan = get_object_or_404(PaymentPlan, name=request.GET.get("plan"))
+    current_plan = request.user.tenant.payment_plan
 
-    context = {"current_plan": current_plan, "new_plan": new_plan_name}
+    # Get quotas from DEFAULT_QUOTAS
+    current_quotas = config.DEFAULT_QUOTAS[current_plan.name]
+    new_quotas = config.DEFAULT_QUOTAS[new_plan.name]
+    price_per_parse = get_price_per_parse(current_plan.price, current_quotas["parse_units_limit"])
+
+    context = {
+        "current_plan": {
+            "name": current_plan.get_name_display(),
+            "price": current_plan.price,
+            "skus_limit": current_quotas["skus_limit"],
+            "parse_units_limit": current_quotas["parse_units_limit"],
+            "price_per_parse": price_per_parse,
+        },
+        "new_plan": {
+            "name": new_plan.get_name_display(),
+            "price": new_plan.price,
+            "skus_limit": new_quotas["skus_limit"],
+            "parse_units_limit": new_quotas["parse_units_limit"],
+            "price_per_parse": get_price_per_parse(new_plan.price, new_quotas["parse_units_limit"]),
+        },
+        "plan_id": new_plan.name,
+    }
+
     return render(request, "main/partials/switch_plan_modal.html", context)
 
-    # check if user has enough balance for at least a day(?) of payment
+
+def switch_plan(request: WSGIRequest) -> HttpResponse:
+    tenant = request.user.tenant
+    if request.method == "POST":
+        form = SwitchPlanForm(request.POST)
+        if form.is_valid():
+            new_plan = form.cleaned_data["plan"]
+            if new_plan == tenant.payment_plan.name:
+                messages.error(request, "Такой тариф уже выбран.")
+                return redirect("billing")
+            tenant.switch_plan(new_plan)
+            messages.success(request, f"Тариф успешно переключен на {new_plan.get_name_display()}")
+            return redirect("billing")
+    else:
+        return redirect("billing")
+
+    # tenant = request.user.tenant
+    # current_plan = tenant.payment_plan
+    # if request.method == "POST":
+    #     new_plan = request.POST.get("plan")
+    #     tenant.switch_plan(new_plan)
+    #     messages.success(request, f"Тариф успешно переключен на {new_plan.get_name_display()}")
+    #     return redirect("billing")
+    # else:
+    #     context = {"current_plan": current_plan.get_name_display()}
+    #     return render(request, "main/partials/switch_plan.html", context)
+
+    # check if user has enough balance for at least 3 days (?) of payment
     # Determine what happens to excess resources if downgrading (i.e. if new plan doesn't allow so many parses, tell it to user and don't allow switch)
     # create appropriate OrderIntent (i.e. SWITCH_PLAN)
     # UX:

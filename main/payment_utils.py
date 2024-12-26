@@ -218,3 +218,17 @@ class TinkoffTokenGenerator:
         token = self.encode_data(raw_token)
         logger.debug("Token successfully generated.")
         return token
+
+
+def get_price_per_parse(price: Decimal, parse_units: int) -> float:
+    """
+    Calculate the price per parse unit for a given price and parse units limit.
+
+    Args:
+        price (Decimal): The price of the plan in rubles.
+        parse_units (int): The number of parse units allowed for the plan.
+
+    Returns:
+        float: The price per parse unit.
+    """
+    return round(float(price) / parse_units, 2) if parse_units > 0 and price > 0 else 0.00
