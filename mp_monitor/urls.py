@@ -8,6 +8,7 @@ urlpatterns = [
     path("definitely-not-admin/", admin.site.urls),
     # User management
     path("accounts/logout/", logout_view, name="logout"),
+    path("profile/", include("accounts.urls")),
     path("demo/", demo_view, name="demo"),
     path("accounts/", include("allauth.urls")),
     # path("demo-expired/<int:pk>/", check_expired_demo, name="check_expired_demo"),
