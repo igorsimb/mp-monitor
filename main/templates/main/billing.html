@@ -9,7 +9,18 @@
 {% block content %}
     {#    {% include 'main/partials/billing_form.html' %}#}
 
-
+    <div class="container mx-auto">
+        {% if messages %}
+            {% for message in messages %}
+                <div {% if message.tags %}
+                    class="alert alert-{{ message.tags }} alert-dismissible fade show"{% endif %}
+                    role="alert">
+                    {{ message|safe }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
     <!-- using(sessionStorage) clears the tab data once the user closes the browser tab.
     No need to save which billing tab is open. Source: https://alpinejs.dev/plugins/persist#custom-storage -->

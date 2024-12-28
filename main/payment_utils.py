@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-
 import logging
 from decimal import Decimal
 from typing import Any
@@ -232,3 +231,24 @@ def get_price_per_parse(price: Decimal, parse_units: int) -> float:
         float: The price per parse unit.
     """
     return round(float(price) / parse_units, 2) if parse_units > 0 and price > 0 else 0.00
+
+
+def calculate_days_covered(current_balance: Decimal, cost_per_month: Decimal) -> int | float:
+    """
+    Calculate how many days a user can pay for given their current balance and monthly plan cost.
+
+    Args:
+        current_balance (Decimal): The user's current balance.
+        cost_per_month (Decimal): The monthly cost of the payment plan.
+
+    Returns:
+        int | float: The number of days the user can pay for.
+    """
+    days_in_month = 30
+
+    if cost_per_month == 0:
+        return float("inf")  # Free plan has infinite days
+
+    days_left = (current_balance / cost_per_month) * days_in_month
+    print(f"days_left: {int(days_left)}")
+    return int(days_left)

@@ -35,6 +35,7 @@ from .payment_utils import (
     update_payment_records,
     TinkoffTokenGenerator,
     get_price_per_parse,
+    calculate_days_covered,
 )
 from .utils import (
     uncheck_all_boxes,
@@ -758,6 +759,7 @@ def switch_plan_modal(request):
 
 def switch_plan(request: WSGIRequest) -> HttpResponse:
     tenant = request.user.tenant
+    minimum_days_covered = 3
     if request.method == "POST":
         form = SwitchPlanForm(request.POST)
         if form.is_valid():
@@ -765,13 +767,24 @@ def switch_plan(request: WSGIRequest) -> HttpResponse:
             if new_plan.name == tenant.payment_plan.name:
                 messages.error(request, "Такой тариф уже выбран.")
                 return redirect("billing")
+            elif (
+                calculate_days_covered(current_balance=tenant.balance, cost_per_month=new_plan.price)
+                < minimum_days_covered
+            ):
+                print(f"Not enough balance. Current balance: {tenant.balance}, new plan price: {new_plan.price}")
+                messages.error(
+                    request,
+                    f"Недостаточно средств для переключения тарифа. "
+                    f"Баланса должно хватать не менее чем на {minimum_days_covered} дн.",
+                )
+                return redirect("billing")
             tenant.switch_plan(new_plan.name)
             messages.success(request, f"Тариф успешно переключен на {new_plan.get_name_display()}")
             return redirect("billing")
     else:
         return redirect("billing")
 
-    # check if user has enough balance for at least 3 days (?) of payment
+    # DONE check if user has enough balance for at least 3 days (?) of payment
     # Determine what happens to excess resources if downgrading (i.e. if new plan doesn't allow so many parses, tell it to user and don't allow switch)
     # create appropriate OrderIntent (i.e. SWITCH_PLAN)
     # UX:
