@@ -251,7 +251,7 @@ def user_is_allowed_to_switch_plan(
         tuple[bool, str]: A tuple where the first value is a boolean indicating whether the user is allowed to switch
             to the new plan, and the second value is a string containing the error message if the user is not allowed.
     """
-    if is_new_plan_different_from_current_plan(tenant.payment_plan, new_plan):
+    if is_new_plan_same_as_current_plan(tenant.payment_plan, new_plan):
         return False, "Такой тариф уже выбран."
 
     days_covered = calculate_days_covered(current_balance=tenant.balance, cost_per_month=new_plan.price)
@@ -264,9 +264,9 @@ def user_is_allowed_to_switch_plan(
     return True, f"Тариф успешно переключен на {new_plan.get_name_display()}"
 
 
-def is_new_plan_different_from_current_plan(current_plan: PaymentPlan, new_plan: PaymentPlan) -> bool:
+def is_new_plan_same_as_current_plan(current_plan: PaymentPlan, new_plan: PaymentPlan) -> bool:
     """
-    Check if the new plan is different from the current plan.
+    Check if the new plan is the same as the current plan.
     """
     print(f"plan types: {type(current_plan)} {type(new_plan)}")
     return current_plan.name == new_plan.name
