@@ -7,7 +7,8 @@ from django.contrib.auth.models import Group
 from django.dispatch import Signal
 
 from accounts.models import Tenant
-from accounts.models import add_user_to_group, PaymentPlan
+from accounts.models import PaymentPlan
+from accounts.signals import add_user_to_group
 from config import DEFAULT_QUOTAS, PlanType
 from tests.factories import UserFactory, TenantQuotaFactory, TenantFactory
 

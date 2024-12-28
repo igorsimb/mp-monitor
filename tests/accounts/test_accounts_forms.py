@@ -1,14 +1,17 @@
+"""
 import logging
 
+import pytest
 from django.contrib.auth import get_user_model
 
-from accounts.forms import CustomUserCreationForm
+# from accounts.forms import CustomUserCreationForm
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
 
+@pytest.mark.skip(reason="Deprecated")
 class TestCustomUserCreationForm:
     def test_form_valid_with_correct_data(self):
         form_data = {
@@ -81,3 +84,5 @@ class TestCustomUserCreationForm:
         assert "password2" in form.errors
         error_messages = form.errors.get("password2", [])
         assert any("Введённый пароль слишком короткий" in error for error in error_messages), form.errors
+
+"""

@@ -1,8 +1,10 @@
 import logging
 
+from allauth.account.utils import send_email_confirmation
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, IntegrityError
 from django.http import HttpResponseRedirect, HttpResponse
@@ -12,6 +14,7 @@ from django_celery_beat.models import PeriodicTask
 from django_htmx.http import HttpResponseClientRedirect
 
 import config
+from accounts.forms import ProfileForm, EmailChangeForm
 from main.models import Item
 from main.utils import task_name, create_demo_user, create_demo_items, no_active_demo_user, set_tenant_quota
 
@@ -108,3 +111,87 @@ def check_expired_demo_users(request):
                 user.objects.bulk_update(users_to_update, ["is_demo_active", "is_active"])
         logger.info("Bulk update completed for expired demo users.")
     return redirect("index")
+
+
+@login_required
+def profile_view(request):
+    profile = request.user.profile
+    return render(request, "account/profile.html", {"profile": profile})
+
+
+@login_required
+def profile_edit_view(request):
+    form = ProfileForm(instance=request.user.profile)
+
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        if form.is_valid():
+            form.save()
+            return redirect("profile")
+
+    if request.path == reverse("profile_onboarding"):
+        onboarding = True
+    else:
+        onboarding = False
+
+    context = {"form": form, "onboarding": onboarding}
+    return render(request, "account/profile_edit.html", context)
+
+
+@login_required
+def profile_settings_view(request):
+    return render(request, "account/profile_settings.html")
+
+
+@login_required
+def email_change_view(request):
+    if request.htmx:
+        form = EmailChangeForm(instance=request.user)
+        return render(request, "account/partials/email_change_form.html", {"form": form})
+
+    if request.method == "POST":
+        form = EmailChangeForm(request.POST, instance=request.user)
+
+        if form.is_valid():
+            # Check if the email already exists
+            email = form.cleaned_data["email"]
+            if user.objects.filter(email=email).exclude(id=request.user.id).exists():
+                messages.warning(request, "Пользователь с таким email уже существует.")
+                return redirect("profile_settings")
+
+            form.save()
+
+            # Then Signal updates the email_address and sets "verified" to False
+
+            # Then send confirmation email
+            send_email_confirmation(request, request.user)
+
+            return redirect("profile_settings")
+        else:
+            messages.warning(
+                request, "Ошибка при обновлении email. Попробуйте еще раз или обратитесь к администратору."
+            )
+            return redirect("profile_settings")
+
+    return redirect("item_list")
+
+
+@login_required
+def email_verify(request):
+    """
+    Send confirmation email to the user
+    """
+    send_email_confirmation(request, request.user)
+    return redirect("profile_settings")
+
+
+@login_required
+def profile_delete_view(request):
+    user = request.user
+    if request.method == "POST":
+        logout(request)
+        user.delete()
+        messages.success(request, "Аккаунт удалён. Очень жаль!")
+        return redirect("index")
+
+    return render(request, "account/profile_delete.html")
