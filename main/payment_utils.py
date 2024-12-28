@@ -1,3 +1,4 @@
+import calendar
 import hashlib
 import hmac
 import logging
@@ -268,7 +269,6 @@ def is_new_plan_same_as_current_plan(current_plan: PaymentPlan, new_plan: Paymen
     """
     Check if the new plan is the same as the current plan.
     """
-    print(f"plan types: {type(current_plan)} {type(new_plan)}")
     return current_plan.name == new_plan.name
 
 
@@ -283,10 +283,11 @@ def calculate_days_covered(current_balance: Decimal, cost_per_month: Decimal) ->
     Returns:
         int | float: The number of days the user can pay for.
     """
-    days_in_month = 30
-
     if cost_per_month == 0:
         return float("inf")  # Free plan has infinite days
+
+    today = timezone.now()
+    _, days_in_month = calendar.monthrange(today.year, today.month)
 
     days_left = (current_balance / cost_per_month) * days_in_month
     print(f"days_left: {int(days_left)}")
