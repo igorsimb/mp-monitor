@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from simple_history.admin import SimpleHistoryAdmin
 
 # from accounts.forms import CustomUserCreationForm, CustomUserChangeForm
-from accounts.models import User, TenantQuota, Tenant
+from accounts.models import User, TenantQuota, Tenant, Profile
 
 
 @admin.register(User)
@@ -87,3 +87,4 @@ class TenantAdmin(SimpleHistoryAdmin):
 
 
 admin.site.unregister(EmailAddress)
+admin.site.register(Profile)
