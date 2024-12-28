@@ -770,15 +770,20 @@ def switch_plan(request: WSGIRequest) -> HttpResponse:
                 messages.error(request, message)
                 return redirect("billing")
 
+            logger.info("Creating order for switching plan...")
+            Order.objects.create(
+                tenant=tenant,
+                order_id=create_unique_order_id(tenant_id=tenant.id),
+                amount=0,
+                order_intent=Order.OrderIntent.SWITCH_PLAN,
+                status=Order.OrderStatus.COMPLETED,
+                description=f"Switch plan from {tenant.payment_plan.get_name_display()} to {new_plan.get_name_display()}",
+            )
+            logger.info("Order created successfully.")
+            logger.info("Switching plan...")
             tenant.switch_plan(new_plan.name)
+            logger.info("Plan switched successfully.")
             messages.success(request, message)
             return redirect("billing")
     else:
         return redirect("billing")
-
-    # DONE check if user has enough balance for at least 3 days (?) of payment
-    # Determine what happens to excess resources if downgrading (i.e. if new plan doesn't allow so many parses, tell it to user and don't allow switch)
-    # create appropriate OrderIntent (i.e. SWITCH_PLAN)
-    # UX:
-    # DONE contents of modal windows (see "Create "Change plan" view" ticket in AFFiNe)
-    # DONE create notification that plan was successfully switched.

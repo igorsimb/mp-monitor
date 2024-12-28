@@ -27,7 +27,7 @@ class PriceAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("tenant", "order_id", "amount", "status", "created_at")
+    list_display = ("tenant", "order_id", "amount", "status", "order_intent", "created_at")
     search_fields = ("tenant", "order_id")
     search_help_text = "Search by tenant or order ID"
 

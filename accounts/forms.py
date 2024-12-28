@@ -23,7 +23,7 @@ class SwitchPlanForm(forms.Form):
 
     plan = forms.CharField(widget=forms.HiddenInput())
 
-    def clean_plan(self):
+    def clean_plan(self) -> PaymentPlan:
         """
         Validates that plan ID exists in the database
         """
