@@ -7,6 +7,7 @@ from typing import Any
 from django.db import transaction
 from django.utils import timezone
 
+from accounts.models import PaymentPlan, Tenant
 from main.models import Order, Payment
 from mp_monitor import settings
 
@@ -231,6 +232,44 @@ def get_price_per_parse(price: Decimal, parse_units: int) -> float:
         float: The price per parse unit.
     """
     return round(float(price) / parse_units, 2) if parse_units > 0 and price > 0 else 0.00
+
+
+def user_is_allowed_to_switch_plan(
+    tenant: Tenant, new_plan: PaymentPlan, minimum_days_covered: int
+) -> tuple[bool, str]:
+    """
+    Check if the user is allowed to switch to a new plan:
+        - The new plan is different from the current plan.
+        - The user has enough balance for at least <minimum_days_covered> days of payment.
+
+    Args:
+        tenant (Tenant): The user's tenant object.
+        new_plan (PaymentPlan): The new payment plan object.
+        minimum_days_covered (int): The minimum number of days the user must have covered.
+
+    Returns:
+        tuple[bool, str]: A tuple where the first value is a boolean indicating whether the user is allowed to switch
+            to the new plan, and the second value is a string containing the error message if the user is not allowed.
+    """
+    if is_new_plan_different_from_current_plan(tenant.payment_plan, new_plan):
+        return False, "Такой тариф уже выбран."
+
+    days_covered = calculate_days_covered(current_balance=tenant.balance, cost_per_month=new_plan.price)
+    if days_covered < minimum_days_covered:
+        return False, (
+            f"Недостаточно средств для переключения тарифа. "
+            f"Баланса должно хватать не менее чем на {minimum_days_covered} дн."
+        )
+
+    return True, f"Тариф успешно переключен на {new_plan.get_name_display()}"
+
+
+def is_new_plan_different_from_current_plan(current_plan: PaymentPlan, new_plan: PaymentPlan) -> bool:
+    """
+    Check if the new plan is different from the current plan.
+    """
+    print(f"plan types: {type(current_plan)} {type(new_plan)}")
+    return current_plan.name == new_plan.name
 
 
 def calculate_days_covered(current_balance: Decimal, cost_per_month: Decimal) -> int | float:
