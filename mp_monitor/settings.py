@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "main.apps.MainConfig",
     "notifier.apps.NotifierConfig",
     "sentry",
+    "django_cleanup.apps.CleanupConfig",  # needs to be at the bottom, according to docs
 ]
 
 MIDDLEWARE = [
@@ -171,7 +172,6 @@ AUTH_USER_MODEL = "accounts.User"
 
 # Email
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = True
 EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
@@ -267,7 +267,7 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-# django-allauth
+# django-allauth config
 
 SITE_ID = 1
 LOGIN_REDIRECT_URL = "item_list"
@@ -280,8 +280,9 @@ AUTHENTICATION_BACKENDS = (
     "guardian.backends.ObjectPermissionBackend",
 )
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 ACCOUNT_SESSION_REMEMBER = True  # True/False/None; None = ask user
-ACCOUNT_USERNAME_REQUIRED = False
+# ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True

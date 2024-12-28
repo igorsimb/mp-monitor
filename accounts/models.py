@@ -2,10 +2,8 @@ import logging
 from decimal import Decimal
 
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import Group
 from django.db import models, transaction
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.templatetags.static import static
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
@@ -31,18 +29,6 @@ class TenantQuota(models.Model):
     class Meta:
         verbose_name = "Квота"
         verbose_name_plural = "Квоты"
-
-    # @classmethod
-    # def get_default_quota(cls) -> "TenantQuota":
-    #     quota, created = TenantQuota.objects.get_or_create(
-    #         name=PlanType.FREE.value,
-    #         defaults={
-    #             "total_hours_allowed": DEFAULT_QUOTAS[PlanType.FREE]["total_hours_allowed"],
-    #             "skus_limit": DEFAULT_QUOTAS[PlanType.FREE]["skus_limit"],
-    #             "parse_units_limit": DEFAULT_QUOTAS[PlanType.FREE]["parse_units_limit"],
-    #         },
-    #     )
-    #     return quota
 
     @classmethod
     def get_quota(cls, plan: str):
@@ -258,20 +244,25 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
 
-# Add user to the Tenant group upon creation
-@receiver(post_save, sender=User)
-def add_user_to_group(sender, instance, created, **kwargs):  # type: ignore  # pylint: disable=[unused-argument]
-    if instance.is_superuser:
-        return
-    if created:
-        try:
-            group, created = Group.objects.get_or_create(name=instance.tenant.name)
-            instance.groups.add(group)
-        except AttributeError as e:
-            print(f"An error occurred: {e}. Tenant does not exist.")
-    else:
-        old_groups = instance.groups.all()
-        new_group, created = Group.objects.get_or_create(name=instance.tenant.name)
-        if new_group not in old_groups:
-            instance.groups.clear()
-            instance.groups.add(new_group)
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="avatars/", null=True, blank=True)
+    display_name = models.CharField(max_length=40, null=True, blank=True)
+    info = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return str(self.user)
+
+    @property
+    def name(self):
+        if self.display_name:
+            name = self.display_name
+        else:
+            name = self.user.username
+        return name
+
+    @property
+    def avatar(self):
+        if self.image:
+            return self.image.url
+        return static("images/avatar.svg")
