@@ -4,14 +4,14 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 from simple_history.admin import SimpleHistoryAdmin
 
-from accounts.forms import CustomUserCreationForm, CustomUserChangeForm
+# from accounts.forms import CustomUserCreationForm, CustomUserChangeForm
 from accounts.models import User, TenantQuota, Tenant
 
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
+    # add_form = CustomUserCreationForm
+    # form = CustomUserChangeForm
     model = User
     date_hierarchy = "created_at"
     list_display = ["email", "username", "created_at", "get_item_count", "is_demo_user", "is_active"]

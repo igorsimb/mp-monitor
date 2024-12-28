@@ -55,7 +55,7 @@ def create_profile(sender, instance, created, **kwargs):  # type: ignore  # pyli
                 email_address.email = user.email
                 email_address.verified = False
                 email_address.save()
-        except EmailAddress.DoesNotExist:
+        except:  # noqa
             # if allauth email_address doesn't exist, create one
             EmailAddress.objects.create(user=user, email=user.email, primary=True, verified=False)
 
