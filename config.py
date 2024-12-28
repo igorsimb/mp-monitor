@@ -4,6 +4,7 @@ Stores constants and other settings that are used throughout the project.
 """
 
 from enum import Enum
+from decimal import Decimal
 
 DEMO_USER_HOURS_ALLOWED = 12
 DEMO_USER_MAX_ALLOWED_SKUS = 10
@@ -22,7 +23,20 @@ class PlanType(Enum):
     CORPORATE = "4"
 
 
+PLAN_PRICES = {
+    PlanType.TEST.value: Decimal("0.00"),
+    PlanType.FREE.value: Decimal("0.00"),
+    PlanType.BUSINESS.value: Decimal("5990.00"),
+    PlanType.PROFESSIONAL.value: Decimal("11990.00"),
+    PlanType.CORPORATE.value: Decimal("35990.00"),
+}
+
 DEFAULT_QUOTAS = {
+    PlanType.TEST.value: {
+        "total_hours_allowed": 24,  # 1 day
+        "skus_limit": 10,
+        "parse_units_limit": 1000,
+    },
     PlanType.FREE.value: {
         "total_hours_allowed": HOURS_ALLOWED,
         "skus_limit": 50,
