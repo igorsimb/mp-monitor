@@ -6,11 +6,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.dispatch import Signal
 
-from accounts.models import Tenant
+from accounts.models import Tenant, Profile
 from accounts.models import PaymentPlan
 from accounts.signals import add_user_to_group
 from config import DEFAULT_QUOTAS, PlanType
-from tests.factories import UserFactory, TenantQuotaFactory, TenantFactory
+from tests.factories import UserFactory, TenantQuotaFactory, TenantFactory, ProfileFactory
 
 logger = logging.getLogger(__name__)
 
@@ -195,3 +195,50 @@ class TestUserQuotaModel:
         new_limit = tenant.quota.parse_units_limit = 150
         assert tenant.quota.parse_units_limit == new_limit
         assert old_limit != new_limit
+
+
+class TestProfileModel:
+    @pytest.fixture
+    def profile(self):
+        """
+        Profile with the related user and blank fields otherwise
+        """
+        user = UserFactory()
+        profile = Profile.objects.get(user=user)
+        return profile
+
+    def test_profile_is_created(self, profile):
+        """
+        Check that profile is created when user is created
+        """
+        assert profile is not None
+
+    def test_profile_user(self):
+        user = UserFactory(email="test_email@test.com", username="test_username")
+        profile = Profile.objects.get(user=user)
+        assert profile.user.email == "test_email@test.com"
+        assert profile.user.username == "test_username"
+
+    def test_change_display_name(self, profile):
+        assert profile.display_name is None
+        profile.display_name = "new_name"
+        assert profile.display_name == 'new_name'
+
+    def test_change_info(self, profile):
+        assert profile.info is None
+        profile.info = "new info"
+        assert profile.info == 'new info'
+
+    def test_profile_default_name(self, profile):
+        """
+        Checks that `name` property defaults to user's username if no display_name is provided
+        """
+        assert profile.name == profile.user.username
+
+    def test_profile_name_filled(self, profile):
+        """
+        Checks that `name` property if display_name is provided
+        """
+        new_name = "new display name"
+        profile.display_name = new_name
+        assert profile.name == new_name
