@@ -4,7 +4,7 @@ from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 from config import DEFAULT_QUOTAS, PlanType
 from main.models import Item
-from accounts.models import Tenant, TenantQuota, PaymentPlan
+from accounts.models import Tenant, TenantQuota, PaymentPlan, Profile
 from mp_monitor import settings
 
 
@@ -25,6 +25,16 @@ class UserFactory(DjangoModelFactory):
     password = factory.PostGenerationMethodCall("set_password", "password")
     tenant = factory.RelatedFactory(TenantFactory)
 
+
+# currently not used since signal auto-creates profile when creating user
+# if you need to test profile creation separately, disable signals in the test
+class ProfileFactory(DjangoModelFactory):
+    class Meta:
+        model = Profile
+
+    user = factory.SubFactory(UserFactory)
+    display_name = factory.Faker('name')
+    info = factory.Faker('paragraph')
 
 class IntervalScheduleFactory(DjangoModelFactory):
     class Meta:

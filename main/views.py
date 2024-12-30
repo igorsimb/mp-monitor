@@ -61,7 +61,7 @@ from .utils import (
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
-locale.setlocale(locale.LC_TIME, "ru_RU.UTF-8")  # Set the locale to Russian
+# locale.setlocale(locale.LC_TIME, "ru_RU.UTF-8")  # Set the locale to Russian
 
 
 def index(request):
