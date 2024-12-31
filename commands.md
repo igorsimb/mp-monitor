@@ -24,3 +24,7 @@
 ### Run ruff format on everything
 
 `ruff format .`
+
+### Create profiles for existing users
+
+`python manage.py create_profiles`
