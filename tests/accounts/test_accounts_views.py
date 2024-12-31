@@ -1,6 +1,7 @@
 import logging
 
 import pytest
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
@@ -8,16 +9,21 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 
 import config
+from accounts.forms import EmailChangeForm
 from main.models import Item
 from tests.factories import UserFactory, PeriodicTaskFactory
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
-client = Client()
 
 
 class TestLogoutView:
+    @pytest.fixture(scope="class")
+    def client(self):
+        self.client = Client()
+        return self.client
+
     def test_redirect_to_main_page(self, client):
         user = UserFactory()
         client.login(username=user.username, password=user.password)
@@ -52,6 +58,11 @@ class TestLogoutView:
 
 @pytest.mark.demo_user
 class TestDemoView:
+    @pytest.fixture(scope="class")
+    def client(self):
+        self.client = Client()
+        return self.client
+
     def test_redirect_to_correct_template(self, client):
         template_name = "main/item_list.html"
         response = client.get(reverse("demo"), follow=True)
@@ -82,6 +93,11 @@ class TestDemoView:
 
 @pytest.mark.demo_user
 class TestCheckExpiredDemoUsers:
+    @pytest.fixture(scope="class")
+    def client(self):
+        self.client = Client()
+        return self.client
+
     @pytest.fixture
     def create_active_demo_user(self) -> User:
         demo_user = UserFactory(
@@ -173,3 +189,135 @@ class TestCheckExpiredDemoUsers:
         assert (
             PeriodicTask.objects.count() == 1
         ), f"Demo user should have 0 periodic tasks, but has {PeriodicTask.objects.count()}"
+
+
+class TestProfileViews:
+    @pytest.fixture
+    def client(self):
+        self.client = Client()
+        return self.client
+
+    @pytest.fixture
+    def logged_in_user(self, client):
+        user = UserFactory()
+        user.set_password("testpassword")
+        user.save()
+        client.login(username=user.username, password="testpassword")  # Use the correct password
+        return user
+
+    def test_profile_view(self, client, logged_in_user):
+        response = client.get(reverse("profile"), follow=True)
+        assert response.status_code == 200
+
+    def test_profile_edit_view(self, client, logged_in_user):
+        response = client.get(reverse("profile_edit"), follow=True)
+        assert response.context["onboarding"] is False
+        assert response.status_code == 200
+
+    def test_profile_edit_with_onboarding(self, client, logged_in_user):
+        response = client.get(reverse("profile_onboarding"), follow=True)
+        assert response.context["onboarding"] is True
+        assert response.status_code == 200
+
+    def test_profile_settings_view(self, client, logged_in_user):
+        response = client.get(reverse("profile_settings"), follow=True)
+        assert response.status_code == 200
+
+    def test_email_verify_redirect(self, client, logged_in_user):
+        response = client.get(reverse("email_verify"))
+        assert response.status_code == 302
+        assert response.url == reverse("profile_settings")
+
+    def test_profile_delete_view_get(self, client, logged_in_user):
+        response = client.get(reverse("profile_delete"))
+        assert response.status_code == 200
+        assert "account/profile_delete.html" in [t.name for t in response.templates]
+
+    def test_profile_delete_view_user_redirected(self, client, logged_in_user):
+        response = client.post(reverse("profile_delete"))
+        assert response.status_code == 302
+
+    def test_profile_delete_view_redirect_url(self, client, logged_in_user):
+        response = client.post(reverse("profile_delete"))
+        assert response.url == reverse("index")
+
+    def test_profile_delete_view_user_deleted(self, client, logged_in_user):
+        client.post(reverse("profile_delete"))
+        assert not User.objects.filter(id=logged_in_user.id).exists()
+
+    def test_profile_delete_view_message_called(self, client, logged_in_user):
+        response = client.post(reverse("profile_delete"))
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        assert len(messages_list) == 1
+
+    def test_profile_delete_view_unauthenticated_get(self, client):
+        response = client.get(reverse("profile_delete"))
+        assert response.status_code == 302
+        assert reverse("account_login") in response.url
+
+    def test_profile_delete_view_unauthenticated_post(self, client):
+        response = client.post(reverse("profile_delete"))
+        assert response.status_code == 302
+        assert reverse("account_login") in response.url
+
+
+class TestEmailChangeView:
+    @pytest.fixture(scope="class")
+    def client(self):
+        self.client = Client()
+        return self.client
+
+    @pytest.fixture
+    def logged_in_user(self, client):
+        user = UserFactory()
+        user.set_password("testpassword")
+        user.save()
+        client.login(username=user.username, password="testpassword")  # Use the correct password
+        return user
+
+    def test_form_is_instance_of_EmailChangeForm(self, client, logged_in_user):
+        response_htmx = client.get(reverse("email_change"), HTTP_HX_REQUEST="true", follow=True)
+        assert response_htmx.status_code == 200
+        assert isinstance(response_htmx.context["form"], EmailChangeForm)
+
+    def test_non_htmx_redirect(self, client, logged_in_user):
+        response = client.get(reverse("email_change"), follow=True)
+        current_url = response.request["PATH_INFO"]
+        print(f"Current URL: {current_url}")
+        assert current_url == reverse("item_list")
+
+    def test_post_with_valid_email(self, client, logged_in_user):
+        new_email = "new_email@example.com"
+        response = client.post(reverse("email_change"), data={"email": new_email})
+
+        logger.info("Checking if email was updated...")
+        logged_in_user.refresh_from_db()
+        assert logged_in_user.email == new_email
+
+        logger.info("Checking redirection...")
+        assert response.status_code == 302
+        assert response.url == reverse("profile_settings")
+
+    def test_post_with_existing_email(self, client, logged_in_user):
+        existing_user = UserFactory(email="existing_email@example.com")
+
+        response = client.post(reverse("email_change"), data={"email": existing_user.email})
+
+        logger.info("Checking if redirected to profile settings...")
+        assert response.status_code == 302
+        assert response.url == reverse("profile_settings")
+        msg = list(messages.get_messages(response.wsgi_request))
+        logger.info("Checking if messages have occurred: %s", msg)
+        # Check for warning message in session messages
+        assert list(messages.get_messages(response.wsgi_request))
+
+    def test_post_with_invalid_data(self, client, logged_in_user):
+        response = client.post(reverse("email_change"), data={"email": "invalid-email"})
+
+        logger.info("Checking if redirected to profile settings...")
+        assert response.status_code == 302
+        assert response.url == reverse("profile_settings")
+
+        msg = list(messages.get_messages(response.wsgi_request))
+        logger.info("Checking if messages have occurred: %s", msg)
+        assert list(messages.get_messages(response.wsgi_request))

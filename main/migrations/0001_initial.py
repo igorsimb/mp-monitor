@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -46,9 +45,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "cronjob_value",
-                    models.CharField(
-                        blank=True, max_length=100, null=True, verbose_name="CronJob"
-                    ),
+                    models.CharField(blank=True, max_length=100, null=True, verbose_name="CronJob"),
                 ),
                 (
                     "period",
@@ -206,9 +203,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "amount",
-                    models.DecimalField(
-                        decimal_places=2, max_digits=10, verbose_name="Сумма оплаты"
-                    ),
+                    models.DecimalField(decimal_places=2, max_digits=10, verbose_name="Сумма оплаты"),
                 ),
                 (
                     "client_name",
@@ -226,9 +221,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "testing",
-                    models.CharField(
-                        choices=[("1", "1"), ("0", "0")], default="0", max_length=1
-                    ),
+                    models.CharField(choices=[("1", "1"), ("0", "0")], default="0", max_length=1),
                 ),
                 ("is_successful", models.BooleanField(default=False)),
                 (
@@ -295,20 +288,14 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name="item",
-            constraint=models.UniqueConstraint(
-                fields=("tenant", "sku"), name="unique_tenant_sku"
-            ),
+            constraint=models.UniqueConstraint(fields=("tenant", "sku"), name="unique_tenant_sku"),
         ),
         migrations.AddConstraint(
             model_name="item",
-            constraint=models.CheckConstraint(
-                condition=models.Q(("price__gte", 0.0)), name="no_negative_price"
-            ),
+            constraint=models.CheckConstraint(condition=models.Q(("price__gte", 0.0)), name="no_negative_price"),
         ),
         migrations.AddConstraint(
             model_name="price",
-            constraint=models.CheckConstraint(
-                condition=models.Q(("value__gte", 0)), name="no_negative_price_value"
-            ),
+            constraint=models.CheckConstraint(condition=models.Q(("value__gte", 0)), name="no_negative_price_value"),
         ),
     ]

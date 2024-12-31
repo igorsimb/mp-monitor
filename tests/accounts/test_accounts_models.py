@@ -10,7 +10,7 @@ from accounts.models import Tenant, Profile
 from accounts.models import PaymentPlan
 from accounts.signals import add_user_to_group
 from config import DEFAULT_QUOTAS, PlanType
-from tests.factories import UserFactory, TenantQuotaFactory, TenantFactory, ProfileFactory
+from tests.factories import UserFactory, TenantQuotaFactory, TenantFactory
 
 logger = logging.getLogger(__name__)
 
@@ -222,12 +222,12 @@ class TestProfileModel:
     def test_change_display_name(self, profile):
         assert profile.display_name is None
         profile.display_name = "new_name"
-        assert profile.display_name == 'new_name'
+        assert profile.display_name == "new_name"
 
     def test_change_info(self, profile):
         assert profile.info is None
         profile.info = "new info"
-        assert profile.info == 'new info'
+        assert profile.info == "new info"
 
     def test_profile_default_name(self, profile):
         """
