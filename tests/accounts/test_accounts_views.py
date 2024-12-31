@@ -193,69 +193,69 @@ class TestCheckExpiredDemoUsers:
 
 class TestProfileViews:
     @pytest.fixture
-    def client(self):
+    def client(self) -> Client:
         self.client = Client()
         return self.client
 
     @pytest.fixture
-    def logged_in_user(self, client):
+    def logged_in_user(self, client: Client) -> User:
         user = UserFactory()
         user.set_password("testpassword")
         user.save()
         client.login(username=user.username, password="testpassword")  # Use the correct password
         return user
 
-    def test_profile_view(self, client, logged_in_user):
+    def test_profile_view(self, client: Client, logged_in_user: User) -> None:
         response = client.get(reverse("profile"), follow=True)
         assert response.status_code == 200
 
-    def test_profile_edit_view(self, client, logged_in_user):
+    def test_profile_edit_view(self, client: Client, logged_in_user: User) -> None:
         response = client.get(reverse("profile_edit"), follow=True)
         assert response.context["onboarding"] is False
         assert response.status_code == 200
 
-    def test_profile_edit_with_onboarding(self, client, logged_in_user):
+    def test_profile_edit_with_onboarding(self, client: Client, logged_in_user: User) -> None:
         response = client.get(reverse("profile_onboarding"), follow=True)
         assert response.context["onboarding"] is True
         assert response.status_code == 200
 
-    def test_profile_settings_view(self, client, logged_in_user):
+    def test_profile_settings_view(self, client: Client, logged_in_user: User) -> None:
         response = client.get(reverse("profile_settings"), follow=True)
         assert response.status_code == 200
 
-    def test_email_verify_redirect(self, client, logged_in_user):
+    def test_email_verify_redirect(self, client: Client, logged_in_user: User) -> None:
         response = client.get(reverse("email_verify"))
         assert response.status_code == 302
         assert response.url == reverse("profile_settings")
 
-    def test_profile_delete_view_get(self, client, logged_in_user):
+    def test_profile_delete_view_get(self, client: Client, logged_in_user: User) -> None:
         response = client.get(reverse("profile_delete"))
         assert response.status_code == 200
         assert "account/profile_delete.html" in [t.name for t in response.templates]
 
-    def test_profile_delete_view_user_redirected(self, client, logged_in_user):
+    def test_profile_delete_view_user_redirected(self, client: Client, logged_in_user: User) -> None:
         response = client.post(reverse("profile_delete"))
         assert response.status_code == 302
 
-    def test_profile_delete_view_redirect_url(self, client, logged_in_user):
+    def test_profile_delete_view_redirect_url(self, client: Client, logged_in_user: User) -> None:
         response = client.post(reverse("profile_delete"))
         assert response.url == reverse("index")
 
-    def test_profile_delete_view_user_deleted(self, client, logged_in_user):
+    def test_profile_delete_view_user_deleted(self, client: Client, logged_in_user: User) -> None:
         client.post(reverse("profile_delete"))
         assert not User.objects.filter(id=logged_in_user.id).exists()
 
-    def test_profile_delete_view_message_called(self, client, logged_in_user):
+    def test_profile_delete_view_message_called(self, client: Client, logged_in_user: User) -> None:
         response = client.post(reverse("profile_delete"))
         messages_list = list(messages.get_messages(response.wsgi_request))
         assert len(messages_list) == 1
 
-    def test_profile_delete_view_unauthenticated_get(self, client):
+    def test_profile_delete_view_unauthenticated_get(self, client: Client) -> None:
         response = client.get(reverse("profile_delete"))
         assert response.status_code == 302
         assert reverse("account_login") in response.url
 
-    def test_profile_delete_view_unauthenticated_post(self, client):
+    def test_profile_delete_view_unauthenticated_post(self, client: Client) -> None:
         response = client.post(reverse("profile_delete"))
         assert response.status_code == 302
         assert reverse("account_login") in response.url
@@ -263,30 +263,30 @@ class TestProfileViews:
 
 class TestEmailChangeView:
     @pytest.fixture(scope="class")
-    def client(self):
+    def client(self) -> Client:
         self.client = Client()
         return self.client
 
     @pytest.fixture
-    def logged_in_user(self, client):
+    def logged_in_user(self, client: Client) -> User:
         user = UserFactory()
         user.set_password("testpassword")
         user.save()
         client.login(username=user.username, password="testpassword")  # Use the correct password
         return user
 
-    def test_form_is_instance_of_EmailChangeForm(self, client, logged_in_user):
+    def test_form_is_instance_of_EmailChangeForm(self, client: Client, logged_in_user: User) -> None:
         response_htmx = client.get(reverse("email_change"), HTTP_HX_REQUEST="true", follow=True)
         assert response_htmx.status_code == 200
         assert isinstance(response_htmx.context["form"], EmailChangeForm)
 
-    def test_non_htmx_redirect(self, client, logged_in_user):
+    def test_non_htmx_redirect(self, client: Client, logged_in_user: User) -> None:
         response = client.get(reverse("email_change"), follow=True)
         current_url = response.request["PATH_INFO"]
         print(f"Current URL: {current_url}")
         assert current_url == reverse("item_list")
 
-    def test_post_with_valid_email(self, client, logged_in_user):
+    def test_post_with_valid_email(self, client: Client, logged_in_user: User) -> None:
         new_email = "new_email@example.com"
         response = client.post(reverse("email_change"), data={"email": new_email})
 
@@ -298,7 +298,7 @@ class TestEmailChangeView:
         assert response.status_code == 302
         assert response.url == reverse("profile_settings")
 
-    def test_post_with_existing_email(self, client, logged_in_user):
+    def test_post_with_existing_email(self, client: Client, logged_in_user: User) -> None:
         existing_user = UserFactory(email="existing_email@example.com")
 
         response = client.post(reverse("email_change"), data={"email": existing_user.email})
@@ -306,12 +306,14 @@ class TestEmailChangeView:
         logger.info("Checking if redirected to profile settings...")
         assert response.status_code == 302
         assert response.url == reverse("profile_settings")
+
         msg = list(messages.get_messages(response.wsgi_request))
         logger.info("Checking if messages have occurred: %s", msg)
+
         # Check for warning message in session messages
         assert list(messages.get_messages(response.wsgi_request))
 
-    def test_post_with_invalid_data(self, client, logged_in_user):
+    def test_post_with_invalid_data(self, client: Client, logged_in_user: User) -> None:
         response = client.post(reverse("email_change"), data={"email": "invalid-email"})
 
         logger.info("Checking if redirected to profile settings...")
@@ -320,4 +322,5 @@ class TestEmailChangeView:
 
         msg = list(messages.get_messages(response.wsgi_request))
         logger.info("Checking if messages have occurred: %s", msg)
+
         assert list(messages.get_messages(response.wsgi_request))
