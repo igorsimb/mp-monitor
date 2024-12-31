@@ -98,6 +98,21 @@
                 {% endif %}
 
                 <div class="col-12 form-floating">
+                    {% render_field form.username class="form-control border-secondary-subtle shadow shadow-sm" id="username" placeholder="Ваше имя" %}
+
+                    <label for="username" class="ms-2">
+                        <span class="material-symbols-sharp fs-5"></span> Имя
+                    </label>
+                </div>
+                {% if form.username.errors %}
+                    <ul class="ms-3">
+                        {% for error in form.username.errors %}
+                            <li><small class="text-danger">{{ error|escape }}</small></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <div class="col-12 form-floating">
                     {% render_field form.password1 class="form-control border-secondary-subtle shadow shadow-sm" id="password1" minlength="8" placeholder="Пароль" %}
                     <label for="password1" class="ms-2">
                         <span class="material-symbols-sharp fs-5">lock</span> Пароль
