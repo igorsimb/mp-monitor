@@ -33,8 +33,9 @@ class ProfileFactory(DjangoModelFactory):
         model = Profile
 
     user = factory.SubFactory(UserFactory)
-    display_name = factory.Faker('name')
-    info = factory.Faker('paragraph')
+    display_name = factory.Faker("name")
+    info = factory.Faker("paragraph")
+
 
 class IntervalScheduleFactory(DjangoModelFactory):
     class Meta:
