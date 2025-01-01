@@ -1,13 +1,22 @@
+{% load static %}
 {% load widget_tweaks %}
 
 
-<div x-data="{ expanded: false }">
+<span x-data="{ expanded: false }">
     <a id="addItemsToggleLink"
        class="btn btn-success bg-gradient rounded-pill mb-2 shadow-sm"
        role="button" data-bs-toggle="button"
        title="Открыть/Закрыть форму добавления товаров для парсинга"
        @click="expanded = ! expanded">
-        <span class="material-symbols-sharp" x-text="expanded ? 'expand_circle_up' : 'expand_circle_down'"></span>
+          <!-- Conditionally render the SVGs depending on expanded / non-expanded state-->
+            <img :src="expanded
+                ? '{% static "img/icons/expand_circle_up.svg" %}'
+                : '{% static "img/icons/expand_circle_down.svg" %}'"
+                alt="Arrow"
+                width="24" height="24" />
+
+
+
         <span>Добавить товары для парсинга</span>
     </a>
 
