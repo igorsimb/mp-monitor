@@ -265,4 +265,4 @@ class Profile(models.Model):
     def avatar(self):
         if self.image:
             return self.image.url
-        return static("images/avatar.svg")
+        return static("img/blank_avatar.svg")
