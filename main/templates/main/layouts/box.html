@@ -1,0 +1,18 @@
+{% extends "core/_base.html" %}
+{% block layout %}
+
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-12 col-xl-9 p-md-12">
+            <div class="bg-white rounded-3 shadow w-100 p-4">
+
+                {% block content %}
+                {% endblock content %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock layout %}
