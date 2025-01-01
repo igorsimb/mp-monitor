@@ -283,7 +283,11 @@ AUTHENTICATION_BACKENDS = (
     "guardian.backends.ObjectPermissionBackend",
 )
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+if LOCAL_DEVELOPMENT:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
 ACCOUNT_SESSION_REMEMBER = True  # True/False/None; None = ask user
 # ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
