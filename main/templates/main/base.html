@@ -87,6 +87,9 @@
     <title>{% block title %}{% endblock title %}</title>
 
 </head>
+<!-- block class is used in accounts/templates/allauth/layouts/base.html to wrap allauth specific
+elements and thus have access to them in CSS since we are not overriding most allauth templates, but still need
+to style them. See "allauth stuff" in custom.css for specific examples -->
 <body class="d-flex flex-column h-100 main-content {% block class %}{% endblock %}" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
       style="background-image: url({% static 'img/bg.png' %}); background-position: center; background-repeat: repeat;">
 
