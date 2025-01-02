@@ -5,26 +5,27 @@
 {% block content %}
 
 <div class="position-relative mb-4">
-{% if onboarding %}
+    {% if onboarding %}
     <h3 class="position-absolute top-0 start-0">Заполните свой профиль</h3>
-{% else %}
+    {% else %}
     <h3 class="position-absolute top-0 start-0">Редактировать профиль</h3>
-{% endif %}
+    {% endif %}
     <div class="position-absolute top-0 end-0">
 
-      {% if onboarding %}
-            <a href="{% url 'index' %}" title="Пропустить">
-        {% else %}
+        {% if onboarding %}
+        <a href="{% url 'index' %}" title="Пропустить">
+            {% else %}
             <a href="{{ request.META.HTTP_REFERER }}" title="Отмена">
-        {% endif %}
+                {% endif %}
 
-        <button type="button" class="btn-close" aria-label="Close"></button>
-      </a>
-  </div>
+                <button type="button" class="btn-close" aria-label="Close"></button>
+            </a>
+    </div>
 </div>
 
 <div class="text-center d-flex flex-column align-items-center">
-    <img id="avatar" class="rounded-circle my-4" style="width: 144px; height: 144px; object-fit: cover;" src="{{ user.profile.avatar }}" />
+    <img id="avatar" class="rounded-circle my-4" style="width: 144px; height: 144px; object-fit: cover;"
+         src="{{ user.profile.avatar }}"/>
     <div class="text-center mx-auto" style="max-width: 400px;">
         <h1 id="display_name">{{ user.profile.display_name|default:"" }}</h1>
         <div class="text-muted mb-2" style="margin-top: -1rem;">@{{ user.username }}</div>
@@ -36,6 +37,7 @@
 
     <div class="mb-3">
         {% render_field form.image id="avatar" %}
+        <div class="small text-muted mt-1">Не больше 3MB</div>
     </div>
 
     <div class="mb-3">
@@ -49,9 +51,9 @@
     <button type="submit" class="btn btn-primary">Сохранить</button>
 
     {% if onboarding %}
-        <a class="btn btn-outline-secondary ms-1" href="{% url 'index' %}">Пропустить</a>
+    <a class="btn btn-outline-secondary ms-1" href="{% url 'index' %}">Пропустить</a>
     {% else %}
-        <a class="btn btn-outline-secondary ms-1" href="{{ request.META.HTTP_REFERER }}">Отмена</a>
+    <a class="btn btn-outline-secondary ms-1" href="{{ request.META.HTTP_REFERER }}">Отмена</a>
     {% endif %}
 </form>
 
@@ -66,10 +68,21 @@
     const image = document.querySelector('#avatar');
 
     if (file && file.type.includes('image')) {
-        const url = URL.createObjectURL(file);
-        image.src = url;
-    }
-    });
+
+        if (file.size > 3 * 1024 * 1024) { // 3MB limit
+            alert('Размер файла слишком больльшой. Выберите изображение размером не больше 3MB.');
+            event.target.value = '';
+            return;
+        }
+         const url = URL.createObjectURL(file);
+         image.src = url;
+        // Clean up the object URL to prevent memory leaks (problem: prevents image preview from showing)
+        // URL.revokeObjectURL(image.src);
+    } else if (file) {
+        alert('Неверный формат. Выберите изображение.');
+        event.target.value = '';
+     }
+     });
 
     // This updates the name
     const display_nameInput = document.getElementById('id_display_name');
