@@ -27,7 +27,7 @@
     <img id="avatar" class="rounded-circle my-4" style="width: 144px; height: 144px; object-fit: cover;"
          src="{{ user.profile.avatar }}"/>
     <div class="text-center mx-auto" style="max-width: 400px;">
-        <h1 id="display_name">{{ user.profile.display_name|default:"" }}</h1>
+        <h1 id="display_name" class="pb-3">{{ user.profile.display_name|default:"" }}</h1>
         <div class="text-muted mb-2" style="margin-top: -1rem;">@{{ user.username }}</div>
     </div>
 </div>
