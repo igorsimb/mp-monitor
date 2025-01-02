@@ -8,7 +8,7 @@
     <form method="POST">
     {% csrf_token %}
     <button type="submit" class="btn btn-lg btn-danger mt-3 me-2">Да, я хочу удалить свой аккаунт</button>
-    <a class="btn btn-lg btn-outline-secondary mt-3" href="{{ request.META.HTTP_REFERER }}">Отмена</a>
+    <a class="btn btn-lg btn-outline-secondary mt-3" href="{% url 'profile_settings' %}">Отмена</a>
     </form>
 
 {% endblock content %}
