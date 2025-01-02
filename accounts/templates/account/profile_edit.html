@@ -1,4 +1,84 @@
 {% extends 'main/layouts/box.html' %}
+{% load widget_tweaks %}
+{% block title %}Редактировать профиль{% endblock %}
+
 {% block content %}
-    <h2>Profile Edit page</h2>
-{% endblock content %}
+
+<div class="position-relative mb-4">
+{% if onboarding %}
+    <h3 class="position-absolute top-0 start-0">Заполните свой профиль</h3>
+{% else %}
+    <h3 class="position-absolute top-0 start-0">Редактировать профиль</h3>
+{% endif %}
+    <div class="position-absolute top-0 end-0">
+
+      {% if onboarding %}
+            <a href="{% url 'index' %}" title="Пропустить">
+        {% else %}
+            <a href="{{ request.META.HTTP_REFERER }}" title="Отмена">
+        {% endif %}
+
+        <button type="button" class="btn-close" aria-label="Close"></button>
+      </a>
+  </div>
+</div>
+
+<div class="text-center d-flex flex-column align-items-center">
+    <img id="avatar" class="rounded-circle my-4" style="width: 144px; height: 144px; object-fit: cover;" src="{{ user.profile.avatar }}" />
+    <div class="text-center mx-auto" style="max-width: 400px;">
+        <h1 id="display_name">{{ user.profile.display_name|default:"" }}</h1>
+        <div class="text-muted mb-2" style="margin-top: -1rem;">@{{ user.username }}</div>
+    </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        {% render_field form.image id="avatar" %}
+    </div>
+
+    <div class="mb-3">
+        {% render_field form.display_name class="form-control border-secondary-subtle shadow shadow-sm" id="id_display_name" placeholder="Добавить отображаемое имя" %}
+    </div>
+
+    <div class="mb-3">
+        {% render_field form.info class="form-control border-secondary-subtle shadow shadow-sm" id="info" placeholder="Расскажите о себе" rows="6" %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+
+    {% if onboarding %}
+        <a class="btn btn-outline-secondary ms-1" href="{% url 'index' %}">Пропустить</a>
+    {% else %}
+        <a class="btn btn-outline-secondary ms-1" href="{{ request.META.HTTP_REFERER }}">Отмена</a>
+    {% endif %}
+</form>
+
+
+<script>
+
+    // This updates the avatar
+    const fileInput = document.querySelector('input[type="file"]');
+
+    fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    const image = document.querySelector('#avatar');
+
+    if (file && file.type.includes('image')) {
+        const url = URL.createObjectURL(file);
+        image.src = url;
+    }
+    });
+
+    // This updates the name
+    const display_nameInput = document.getElementById('id_display_name');
+    const display_nameOutput = document.getElementById('display_name');
+
+    display_nameInput.addEventListener('input', (event) => {
+        display_nameOutput.innerText = event.target.value;
+    });
+
+</script>
+
+{% endblock %}

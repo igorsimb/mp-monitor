@@ -1,6 +1,15 @@
 {% extends "main/layouts/box.html" %}
-{% block title %}Профиль{% endblock %}
+{% block title %}Мой профиль{% endblock %}
 {% block content %}
+
+<div class="position-relative">
+    <h3 class="position-absolute top-0 start-0">Мой профиль</h3>
+    <div class="position-absolute top-0 end-0">
+      <a href="{% url 'profile_edit' %}" title="Редактировать профиль">
+        <span class="material-symbols-sharp me-2 text-secondary fs-4">edit_square</span>
+      </a>
+  </div>
+</div>
 
 <div class="container text-center py-5 px-3">
     <img class="rounded-circle mb-4" style="width: 144px; height: 144px; object-fit: cover;" src="{{ profile.avatar }}"
