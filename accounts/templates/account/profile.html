@@ -1,4 +1,17 @@
-{% extends 'main/layouts/box.html' %}
+{% extends "main/layouts/box.html" %}
+{% block title %}Профиль{% endblock %}
 {% block content %}
-    <h2>Profile page</h2>
+
+<div class="container text-center py-5 px-3">
+    <img class="rounded-circle mb-4" style="width: 144px; height: 144px; object-fit: cover;" src="{{ profile.avatar }}"
+         alt="Avatar"/>
+    <div>
+        <h1>{{ profile.name }}</h1>
+        <div class="text-muted mb-2">@{{ profile.user.username }}</div>
+        {% if profile.info %}
+        <div class="mt-4">{{ profile.info|linebreaksbr }}</div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock content %}
