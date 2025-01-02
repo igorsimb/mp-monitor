@@ -25,6 +25,7 @@
                class="nav-link {% if request.path == billing_url %}nav-active{% endif %}"
                aria-current="page">Биллинг</a>
         </li>
+        {% endif %}
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown"
                aria-expanded="false">
@@ -40,7 +41,7 @@
                 </li>
                 <li>
                     <a class="dropdown-item d-flex align-items-center" href="{% url 'profile_edit' %}">
-                        <span class="material-symbols-sharp me-2">edit</span>
+                        <span class="material-symbols-sharp me-2">edit_square</span>
                         Редактировать профиль
                     </a>
                 </li>
@@ -62,7 +63,7 @@
 
             </ul>
         </li>
-        {% endif %}
+
 
         {% if user.is_demo_user %}
         <li class="nav-item">
@@ -88,7 +89,7 @@
             работает?</a></li>
         <li class="nav-item"><a href="{% url 'index' %}#faq" class="nav-link">FAQ</a></li>
         <li class="nav-item"><a href="{% url 'account_login' %}" class="nav-link">Войти</a></li>
-        <li class="nav-item"><a href="{% url 'account_signup' %}"
+        <li class="nav-item"><a href="{% url 'account_signup' %}?next={% url 'profile_onboarding' %}"
                                 class="nav-link link-primary fw-semibold">Регистрация</a></li>
     </ul>
     {% endif %}
