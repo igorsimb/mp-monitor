@@ -1,1 +1,15 @@
-<h2>Email change form</h2>
+<form action="{% url 'email_change' %}" method="POST" class="row g-2" autocomplete="off">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="col-auto">
+            {{ field }}
+        </div>
+    {% endfor %}
+    <div class="col-auto">
+    <button class="btn btn-sm btn-success" type="submit">Сохранить</button>
+    </div>
+</form>
+
+<a hx-swap-oob="true" id="email-edit" href="{% url 'profile_settings' %}" class="text-primary text-decoration-none">
+    Отмена
+</a>

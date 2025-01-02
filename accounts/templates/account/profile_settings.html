@@ -1,4 +1,57 @@
 {% extends 'main/layouts/box.html' %}
+{% block title %}Настройки аккаунта{% endblock %}
 {% block content %}
-    <h2>Profile Settings page</h2>
-{% endblock content %}
+
+<h1 class="mb-4">Настройки аккаунта</h1>
+
+<table class="table table-borderless text-start">
+    <tbody>
+    <tr>
+        <th scope="row" class="pt-3 pb-1 text-base fw-bold text-dark">
+            Email
+        </th>
+        <td id="email-address" class="pt-3 pb-1 px-4">
+            {% if user.email %}{{ user.email }}{% else %}Email отсутствует{% endif %}
+        </td>
+        <td class="pt-3 pb-1 px-4">
+            <a id="email-edit" class="link-primary text-decoration-none" style="cursor: pointer"
+               hx-get="{% url 'email_change' %}"
+               hx-target="#email-address"
+               hx-swap="innerHTML">
+                Изменить
+            </a>
+        </td>
+    </tr>
+    <tr class="border-bottom">
+        <th scope="row" class="pb-3 fw-medium text-dark">
+        </th>
+        <td class="px-4 pb-3">
+            {% if user.emailaddress_set.first.verified %}
+            <span class="text-success">Подтвержден</span>{% else %}
+            <span class="text-warning">Не подтвержден</span>
+            {% endif %}
+        </td>
+        <td class="px-4 pb-3">
+            <a href="{% url 'email_verify' %}" class="text-primary text-decoration-none">
+                {% if not user.emailaddress_set.first.verified %}Подтвердить{% endif %}
+            </a>
+        </td>
+    </tr>
+
+    <tr class="border-bottom">
+        <th scope="row" class="py-3 text-base fw-bold text-dark">
+            Удалить аккаунт
+        </th>
+        <td class="px-4 py-3">
+            Аккаунт будет удален навсегда.
+        </td>
+        <td class="px-4 py-3">
+            <a href="{% url 'profile_delete' %}" class="text-danger text-decoration-none">
+                Удалить
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+{% endblock %}

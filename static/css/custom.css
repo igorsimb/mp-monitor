@@ -534,3 +534,29 @@ because the nesting selector cannot represent pseudo-elements. */
         margin: 16px auto;
     }
 }
+
+
+/* allauth stuff */
+
+.allauth h1 {
+    font-size: 2rem;
+    text-weight: bold;
+    margin-bottom: 2rem;
+}
+
+.allauth button[type="submit"] {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #198754;
+    border: none;
+    border-radius: 0.25rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.allauth button[type="submit"]:hover {
+    background-color: #157347;
+}
