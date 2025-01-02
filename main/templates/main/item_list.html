@@ -53,18 +53,6 @@
         {% include "main/partials/demo_user_quota.html" %}
 
     {% endif %}
-    <div>
-        {% if messages %}
-            {% for message in messages %}
-                <div {% if message.tags %}
-                    class="alert alert-{{ message.tags }} alert-dismissible fade show"{% endif %}
-                    role="alert">
-                    {{ message|safe }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
 
     <!--Add items form -->
     {% include "main/partials/add_items_form.html" %}

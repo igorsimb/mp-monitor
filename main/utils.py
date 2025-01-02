@@ -778,11 +778,7 @@ def update_tenant_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> 
         user_quota.save()
     else:
         raise QuotaExceededException(
-            message=(
-                "Превышен лимит количества товаров для данного тарифа. %s / %s",
-                skus_count,
-                user_quota.skus_limit,
-            ),
+            message="Превышен лимит количества товаров для данного тарифа.",
             quota_type="max_allowed_skus",
         )
 
