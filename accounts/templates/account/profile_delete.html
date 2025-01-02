@@ -1,4 +1,14 @@
-{% extends 'main/layouts/box.html' %}
+{% extends "main/layouts/box.html" %}
+{% block title %}Удалить аккаунт{% endblock %}
 {% block content %}
-    <h2>Profile Delete page</h2>
+
+    <h1>Удаление аккаунта</h1>
+    <p>Вы уверены, что хотите удалить аккаунт?</p>
+
+    <form method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-lg btn-danger mt-3 me-2">Да, я хочу удалить свой аккаунт</button>
+    <a class="btn btn-lg btn-outline-secondary mt-3" href="{{ request.META.HTTP_REFERER }}">Отмена</a>
+    </form>
+
 {% endblock content %}
