@@ -1,0 +1,118 @@
+/* allauth related styling
+HOW TO USE:
+use .allauth class and any other selectors to style the allauth-specific elements
+*/
+
+.allauth h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+}
+
+.allauth button[type="submit"] {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #198754;
+    border: none;
+    border-radius: 0.25rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.allauth button[type="submit"]:hover {
+    background-color: #157347;
+}
+
+.allauth .helptext {
+    display: block;
+    /*mt-4*/
+}
+
+/* errorlist START */
+.allauth form ul.errorlist {
+  margin: 0 0 1rem 0;
+  padding: 0.75rem 1rem;
+  list-style: none;
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 0.375rem;
+  color: #842029;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.allauth form ul.errorlist li {
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.allauth form ul.errorlist li::before {
+  content: "⚠️";
+  position: absolute;
+  left: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: #842029;
+}
+/* errorlist END */
+
+
+/* password tips list START */
+.allauth form ul:not(.errorlist) {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 0.375rem;
+  list-style: none;
+  font-size: 0.875rem;
+  color: #495057;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.allauth form ul:not(.errorlist) li {
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.allauth form ul:not(.errorlist) li::before {
+  content: "💡";
+  position: absolute;
+  left: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: #0d6efd;
+}
+/* password tips list END */
+
+.allauth label {
+    display: none;
+}
+
+
+.allauth input {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #d6d8db;
+    border-radius: 0.375rem;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.075);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+allauth input:focus {
+    border-color: #adb5bd;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(173, 181, 189, 0.25);
+}

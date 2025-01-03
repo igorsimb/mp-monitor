@@ -1,7 +1,7 @@
 *.pyc
 .idea
 .git
-/media/
+/media/*
 
 ### Python template
 # Byte-compiled / optimized / DLL files
