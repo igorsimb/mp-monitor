@@ -510,16 +510,16 @@ because the nesting selector cannot represent pseudo-elements. */
 
 
 .add-balance-input {
-    --bs-focus-ring-width: 0px!important;
+    --bs-focus-ring-width: 0px !important;
     transition: all 0.2s ease-in-out;
 }
 
 .add-balance-input:user-invalid {
-    border: 1px solid var(--bs-danger)!important;
+    border: 1px solid var(--bs-danger) !important;
 }
 
 .add-balance-input:user-valid {
-    border: 1px solid var(--bs-success)!important;
+    border: 1px solid var(--bs-success) !important;
 }
 
 /* Dialog responsive width */
@@ -547,6 +547,7 @@ because the nesting selector cannot represent pseudo-elements. */
 .allauth button[type="submit"] {
     display: inline-block;
     padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
     font-size: 1rem;
     color: #fff;
     background-color: #198754;
@@ -559,4 +560,94 @@ because the nesting selector cannot represent pseudo-elements. */
 
 .allauth button[type="submit"]:hover {
     background-color: #157347;
+}
+
+.allauth .helptext {
+    display: block;
+    /*mt-4*/
+}
+
+/* errorlist START */
+.allauth form ul.errorlist {
+  margin: 0 0 1rem 0;
+  padding: 0.75rem 1rem;
+  list-style: none;
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 0.375rem;
+  color: #842029;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.allauth form ul.errorlist li {
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.allauth form ul.errorlist li::before {
+  content: "⚠️";
+  position: absolute;
+  left: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: #842029;
+}
+/* errorlist END */
+
+
+/* password tips list START */
+.allauth form ul:not(.errorlist) {
+  margin: 1rem 0; /* Space around the tips list */
+  padding: 1rem; /* Internal padding */
+  background-color: #f8f9fa; /* Light gray background */
+  border: 1px solid #e9ecef; /* Subtle border */
+  border-radius: 0.375rem; /* Rounded corners */
+  list-style: none; /* Remove bullets */
+  font-size: 0.875rem; /* Slightly smaller text */
+  color: #495057; /* Neutral text color */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+}
+
+.allauth form ul:not(.errorlist) li {
+  margin-bottom: 0.5rem; /* Space between tips */
+  padding-left: 1.5rem; /* Indent for text */
+  position: relative; /* Needed for the icon */
+}
+
+.allauth form ul:not(.errorlist) li::before {
+  content: "💡"; /* Lightbulb icon for tips */
+  position: absolute; /* Position the icon */
+  left: 0; /* Align icon to the left */
+  font-size: 1rem; /* Icon size */
+  line-height: 1; /* Align icon with text */
+  color: #0d6efd; /* Bootstrap primary blue for the icon */
+}
+/* password tips list END */
+
+.allauth label {
+    display: none;
+}
+
+
+.allauth input {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #d6d8db;
+    border-radius: 0.375rem;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.075);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+allauth input:focus {
+    border-color: #adb5bd;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(173, 181, 189, 0.25);
 }
