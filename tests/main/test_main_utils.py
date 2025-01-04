@@ -31,7 +31,7 @@ from utils.notifications import (
     show_successful_scrape_message,
     show_invalid_skus_message,
 )
-from utils.scheduling import get_interval_russian_translation
+from utils.task_utils import get_interval_russian_translation
 
 logger = logging.getLogger(__name__)
 User = get_user_model()

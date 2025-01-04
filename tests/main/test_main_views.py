@@ -18,7 +18,7 @@ from config import DEFAULT_QUOTAS, PlanType
 from factories import IntervalScheduleFactory, PeriodicTaskFactory, UserFactory
 from main.forms import ScrapeForm, ScrapeIntervalForm
 from main.models import Item
-from utils.scheduling import task_name
+from utils.task_utils import task_name
 from main.views import (
     ItemListView,
     ItemDetailView,
