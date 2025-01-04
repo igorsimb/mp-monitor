@@ -16,7 +16,7 @@ from django_htmx.http import HttpResponseClientRedirect
 import config
 from accounts.forms import ProfileForm, EmailChangeForm
 from main.models import Item
-from main.utils import create_demo_user, create_demo_items, no_active_demo_user
+from utils import demo
 from utils.billing import set_tenant_quota
 from utils.task_utils import task_name
 
@@ -32,7 +32,7 @@ def logout_view(request):
     return redirect("index")
 
 
-@user_passes_test(no_active_demo_user, redirect_field_name="item_list")
+@user_passes_test(demo.no_active_demo_user, redirect_field_name="item_list")
 @transaction.atomic
 def demo_view(request) -> HttpResponse | HttpResponseRedirect:
     """
@@ -40,9 +40,9 @@ def demo_view(request) -> HttpResponse | HttpResponseRedirect:
     Demo is expired after DEMO_USER_HOURS_ALLOWED hours (see accounts/models.py).
     """
     try:
-        demo_user, password_uuid = create_demo_user()
+        demo_user, password_uuid = demo.create_demo_user()
         set_tenant_quota(tenant=demo_user.tenant)
-        demo_items = create_demo_items(demo_user)
+        demo_items = demo.create_demo_items(demo_user)
         demo_user.tenant.quota.skus_limit = config.DEMO_USER_MAX_ALLOWED_SKUS - len(demo_items)
         demo_user.tenant.quota.save()
     except (IntegrityError, ValidationError):
