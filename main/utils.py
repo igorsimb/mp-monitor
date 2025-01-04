@@ -5,13 +5,11 @@ import re
 import uuid
 from uuid import uuid4
 
-from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import IntegrityError
 from django.http import HttpRequest
-from django.utils.safestring import mark_safe
 
 # import this here if you encounter the following error:
 # django.core.exceptions.ImproperlyConfigured: Requested setting USE_DEPRECATED_PYTZ, but settings are not configured.
@@ -389,58 +387,46 @@ User = get_user_model()
 #     Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list)).update(is_parser_active=True)
 
 
-def show_successful_scrape_message(
-    request: HttpRequest,
-    items_data: list[dict],
-    max_items_on_screen: int = config.MAX_ITEMS_ON_SCREEN,
-) -> None:
-    """Displays a success message to the user indicating that the scrape was successful.
-    Message depends on the number of items scraped to avoid screen clutter.
-
-    Args:
-        request: The HttpRequest object.
-        items_data: A list of dictionaries containing the data for the scraped items.
-        max_items_on_screen: The maximum number of items to display on the screen before it starts showing only
-            the number of items.
-
-    Returns:
-        None
-    """
-    if not items_data:
-        messages.error(request, "Добавьте хотя бы 1 товар с корректным артикулом")
-        return
-    if len(items_data) == 1:
-        # pylint: disable=inconsistent-quotes
-        # debug, info, success, warning, error
-        messages.success(
-            request,
-            f'Обновлена информация по товару: "{items_data[0]["name"]} ({items_data[0]["sku"]})"',
-        )
-    elif 1 < len(items_data) <= max_items_on_screen:
-        formatted_items = [f"<li>{item['sku']}: {item['name']}</li>" for item in items_data]
-        messages.success(
-            request,
-            mark_safe(f'Обновлена информация по товарам: <ul>{"".join(formatted_items)}</ul>'),
-        )
-    elif len(items_data) > max_items_on_screen:
-        messages.success(request, f"Обновлена информация по {len(items_data)} товарам")
+# def show_successful_scrape_message(request: HttpRequest, items_data: List[Dict[str, Any]], max_items_on_screen: int) -> None:
+#     """Show success message after scraping items."""
+#     if len(items_data) == 1:
+#         messages.success(
+#             request,
+#             mark_safe(
+#                 f"Товар <b>{items_data[0]['name']}</b> успешно добавлен.<br>"
+#                 f"Артикул: {items_data[0]['sku']}"
+#             ),
+#         )
+#     else:
+#         items_to_show = items_data[:max_items_on_screen]
+#         remaining_items = len(items_data) - max_items_on_screen
+#
+#         message = "Следующие товары успешно добавлены:<br>"
+#         for item in items_to_show:
+#             message += f"• {item['name']} (арт. {item['sku']})<br>"
+#
+#         if remaining_items > 0:
+#             message += f"... и еще {remaining_items} товаров"
+#
+#         messages.success(request, mark_safe(message))
 
 
-def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
-    if len(invalid_skus) == 1:
-        messages.warning(
-            request,
-            f"Не удалось добавить следующий артикул: {', '.join(invalid_skus)}<br>"
-            "Возможен неверный формат артикула, или товара с таким артикулом не существует. "
-            "Пожалуйста, проверьте его корректность и при возникновении вопросов обратитесь в службу поддержки.",
-        )
-    else:
-        messages.warning(
-            request,
-            f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>"
-            "Возможен неверный формат артикулов, или товаров с такими артикулами не существует. "
-            "Пожалуйста, проверьте их корректность и при возникновении вопросов обратитесь в службу поддержки.",
-        )
+# def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
+#     """Show warning message for invalid SKUs."""
+#     if len(invalid_skus) == 1:
+#         messages.warning(
+#             request,
+#             f"Не удалось добавить следующий артикул: {', '.join(invalid_skus)}<br>"
+#             "Возможен неверный формат артикула, или товара с таким артикулом не существует. "
+#             "Пожалуйста, проверьте его корректность и при возникновении вопросов обратитесь в службу поддержки.",
+#         )
+#     else:
+#         messages.warning(
+#             request,
+#             f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>"
+#             "Возможен неверный формат артикулов, или товаров с такими артикулами не существует. "
+#             "Пожалуйста, проверьте их корректность и при возникновении вопросов обратитесь в службу поддержки.",
+#         )
 
 
 # def calculate_percentage_change(prices: Page) -> None:
