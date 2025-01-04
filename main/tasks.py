@@ -6,14 +6,10 @@ from django.contrib.auth import get_user_model
 from django_celery_beat.models import PeriodicTask
 
 from accounts.models import Tenant
-from .exceptions import QuotaExceededException
-from .models import Item
-from .utils import (
-    scrape_item,
-    scrape_items_from_skus,
-    update_or_create_items_interval,
-    update_user_quota_for_allowed_parse_units,
-)
+from main.exceptions import QuotaExceededException
+from main.models import Item
+from main.utils import update_user_quota_for_allowed_parse_units
+from utils import marketplace, items
 
 logger = logging.getLogger(__name__)
 user = get_user_model()
@@ -22,17 +18,17 @@ user = get_user_model()
 # Currently not used in code, see: https://github.com/igorsimb/mp-monitor/issues/114
 @shared_task(bind=True)
 def scrape_interval_task(self, tenant_id: int, selected_item_ids: list[int]) -> None:  # pylint: disable=[unused-argument]
-    items = Item.objects.filter(id__in=selected_item_ids)
-    logger.info("Found items: %s. Selected Item ids: %s", items, selected_item_ids)
+    items_list = Item.objects.filter(id__in=selected_item_ids)
+    logger.info("Found items: %s. Selected Item ids: %s", items_list, selected_item_ids)
     tenant = Tenant.objects.get(id=tenant_id)
     logger.info("Tenant found: %s", tenant)
-    items_skus = [item.sku for item in items]
+    items_skus = [item.sku for item in items_list]
     logger.info("Items SKUs found: %s", items_skus)
 
     items_data = []
 
     for sku in items_skus:
-        item_data = scrape_item(sku)
+        item_data = marketplace.scrape_item(sku)
         items_data.append(item_data)
 
     logger.info("Items data: %s", items_data)
@@ -74,8 +70,8 @@ def update_or_create_items_task(self, tenant_id, skus_list):
 
     skus = convert_list_to_string(skus_list)
     # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items_interval
-    items_data, _ = scrape_items_from_skus(skus, is_parser_active=True)
-    update_or_create_items_interval(tenant_id, items_data)
+    items_data, _ = marketplace.scrape_items_from_skus(skus, is_parser_active=True)
+    items.update_or_create_items_interval(tenant_id, items_data)
 
     task_name = self.request.properties["periodic_task_name"]
     task_obj = PeriodicTask.objects.get(name=task_name)
