@@ -1,5 +1,4 @@
 import base64
-import decimal
 import hashlib
 import logging
 import re
@@ -10,7 +9,6 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
-from django.core.paginator import Page
 from django.db import IntegrityError
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
@@ -445,111 +443,48 @@ def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
         )
 
 
-def calculate_percentage_change(prices: Page) -> None:
-    """Calculate the percentage change for a list of prices.
-
-    This function computes the percentage change of prices and attaches
-    the calculated values to the 'percent_change' attribute of each Price object
-    in the 'prices' list.
-
-    Args:
-        prices (list): A list of Price objects to calculate the percentage change for.
-
-    Returns:
-        None: The function modifies the 'percent_change' attribute of each Price object in place.
-
-    Notes:
-        - If there are no previous prices to compare, 'percent_change' is set to 0.
-        - If a TypeError occurs while comparing prices, a warning message is logged.
-
-    Example of use in item_detail.html template:
-        {% for price in prices %}
-            {{ price.percent_change|floatformat}}%
-        {% endfor %}
-    """
-    for i in range(len(prices)):
-        try:
-            previous_price = prices[i + 1].value
-            current_price = prices[i].value
-            percent_change = ((current_price - previous_price) / previous_price) * 100
-            prices[i].percent_change = round(percent_change, 2)
-        except IndexError:
-            prices[i].percent_change = 0
-        except TypeError:
-            logger.warning("Can't compare price to NoneType")
-            prices[i].percent_change = 0
-        except (decimal.DivisionByZero, decimal.InvalidOperation):
-            logger.warning("Can't divide by zero")
-            prices[i].percent_change = 0
+# def calculate_percentage_change(prices: Page) -> None:
+#     """Calculate percentage change between consecutive prices."""
+#     for i in range(len(prices)):
+#         try:
+#             previous_price = prices[i + 1].value
+#             current_price = prices[i].value
+#             percent_change = ((current_price - previous_price) / previous_price) * 100
+#             prices[i].percent_change = round(percent_change, 2)
+#         except (IndexError, InvalidOperation, DivisionByZero):
+#             prices[i].percent_change = 0
+#         except TypeError:
+#             logger.warning("Can't compare price to NoneType")
 
 
-def add_table_class(prices: Page) -> None:
-    """Add Bootstrap table classes based on price comparison.
-
-    Iterates through a list of Price objects and assigns the appropriate
-    Bootstrap table classes('table_class' attribute) based on price comparisons.
-
-    Args:
-        prices (list): A list of Price objects to assign table classes to.
-
-    Returns:
-        None: The function modifies the 'table_class' attribute of each Price object in place.
-
-    Example of use in a template:
-         {% for price in prices %}
-             <tr class="{{ price.table_class }}">
-                 <td>...</td>
-             </tr>
-         {% endfor %}
-
-    See Also:
-        - https://getbootstrap.com/docs/5.3/content/tables/#variants
-
-    """
-    for i in range(len(prices)):
-        try:
-            if prices[i].value < prices[i + 1].value:
-                prices[i].table_class = "table-danger"
-            elif prices[i].value > prices[i + 1].value:
-                prices[i].table_class = "table-success"
-            else:
-                prices[i].table_class = ""
-
-        # the original price is the last price in the list, so no comparison is possible
-        except IndexError:
-            prices[i].table_class = ""
-        except TypeError:
-            logger.warning("Can't compare price to NoneType")
+# def add_table_class(prices: Page) -> None:
+#     """Add Bootstrap table classes based on price changes."""
+#     for i in range(len(prices)):
+#         try:
+#             if prices[i].percent_change > 0:
+#                 prices[i].table_class = "table-danger"
+#             elif prices[i].percent_change < 0:
+#                 prices[i].table_class = "table-success"
+#             else:
+#                 prices[i].table_class = ""
+#         except (AttributeError, TypeError):
+#             prices[i].table_class = ""
 
 
-def add_price_trend_indicator(prices: Page) -> None:
-    """Add trend indicators to a list of Price objects based on price comparison.
-
-    Iterates through a list of Price objects and assigns trend indicators
-    ('trend' attribute) based on price comparisons.
-
-    Example of use in a template:
-        {% for price in prices %}
-            <tr>
-                <td>{{ price.trend }}</td>
-                ...
-            </tr>
-        {% endfor %}
-    """
-    for i in range(len(prices)):
-        try:
-            if prices[i].value < prices[i + 1].value:
-                prices[i].trend = "↓"
-            elif prices[i].value > prices[i + 1].value:
-                prices[i].trend = "↑"
-            else:
-                prices[i].trend = ""
-
-        # the original price is the last price in the list, so no comparison is possible
-        except IndexError:
-            prices[i].table_class = ""
-        except TypeError:
-            logger.warning("Can't compare price to NoneType")
+# def add_price_trend_indicator(prices: Page) -> None:
+#     """Add trend indicators to a list of Price objects based on price comparison."""
+#     for i in range(len(prices)):
+#         try:
+#             if prices[i].value < prices[i + 1].value:
+#                 prices[i].trend = "↓"
+#             elif prices[i].value > prices[i + 1].value:
+#                 prices[i].trend = "↑"
+#             else:
+#                 prices[i].trend = ""
+#         except IndexError:
+#             prices[i].table_class = ""
+#         except TypeError:
+#             logger.warning("Can't compare price to NoneType")
 
 
 def task_name(user: User) -> str:
