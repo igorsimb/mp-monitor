@@ -26,6 +26,7 @@ import main.plotly_charts as plotly_charts
 from accounts.forms import SwitchPlanForm
 from accounts.models import PaymentPlan
 from mp_monitor import settings
+from utils import marketplace
 from .exceptions import QuotaExceededException, PlanScheduleLimitationException
 from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
 from .models import Item, Price, Order
@@ -40,7 +41,6 @@ from .utils import (
     uncheck_all_boxes,
     show_successful_scrape_message,
     is_at_least_one_item_selected,
-    scrape_items_from_skus,
     update_or_create_items,
     calculate_percentage_change,
     add_table_class,
@@ -243,7 +243,7 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
                     return redirect("item_list")
 
             logger.info("Scraping items with SKUs: %s", skus)
-            items_data, invalid_skus = scrape_items_from_skus(skus)
+            items_data, invalid_skus = marketplace.scrape_items_from_skus(skus)
             update_or_create_items(request, items_data)
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
@@ -286,7 +286,7 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
                     return redirect("item_list")
 
             # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items
-            items_data, _ = scrape_items_from_skus(skus)
+            items_data, _ = marketplace.scrape_items_from_skus(skus)
             update_or_create_items(request, items_data)
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
