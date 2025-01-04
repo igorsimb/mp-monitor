@@ -4,7 +4,6 @@ import hashlib
 import logging
 import re
 import uuid
-from typing import Any, List, Dict
 from uuid import uuid4
 
 from django.contrib import messages
@@ -13,7 +12,6 @@ from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Page
 from django.db import IntegrityError
-from django.db.models import Q
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
 
@@ -325,73 +323,72 @@ User = get_user_model()
 #     return items_data, invalid_skus
 
 
-def update_or_create_items(request: HttpRequest, items_data: List[Dict[str, Any]]) -> None:
-    """
-    Update existing items or create new ones for the user's tenant.
-
-    Args:
-        request (HttpRequest): The HTTP request object with user information.
-        items_data (List[Dict[str, Any]]): List of item data dictionaries.
-
-    Returns:
-        None
-    """
-    logger.info("Update request=%s", request)
-    for item_data in items_data:
-        item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
-            tenant=request.user.tenant,
-            sku=item_data["sku"],
-            defaults=item_data,
-        )
-
-
-# TODO: this should be just update, not update_or_create
-def update_or_create_items_interval(tenant_id, items_data):
-    logger.info("Update tenant_id=%s", tenant_id)
-    tenant = Tenant.objects.get(id=tenant_id)
-    logger.info("Update tenant=%s", tenant)
-    for item_data in items_data:
-        item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
-            tenant=tenant,
-            sku=item_data["sku"],
-            defaults=item_data,
-        )
+# def update_or_create_items(request: HttpRequest, items_data: List[Dict[str, Any]]) -> None:
+#     """
+#     Update existing items or create new ones for the user's tenant.
+#
+#     Args:
+#         request (HttpRequest): The HTTP request object with user information.
+#         items_data (List[Dict[str, Any]]): List of item data dictionaries.
+#
+#     Returns:
+#         None
+#     """
+#     logger.info("Update request=%s", request)
+#     for item_data in items_data:
+#         item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
+#             tenant=request.user.tenant,
+#             sku=item_data["sku"],
+#             defaults=item_data,
+#         )
 
 
-def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[str] | str) -> bool:
-    """Checks if at least one item is selected.
-
-    If not, displays an error message and redirects to the item list page.
-    Args:
-        request: The HttpRequest object.
-        selected_item_ids: A list of stringified integers representing the IDs of the selected items.
-    """
-    if not selected_item_ids:
-        messages.error(request, "Выберите хотя бы 1 товар")
-        logger.warning("No items were selected. Task not created.")
-        return False
-
-    logger.info("Items with these ids where selected: %s", selected_item_ids)
-    return True
+# def update_or_create_items_interval(tenant_id, items_data):
+#     logger.info("Update tenant_id=%s", tenant_id)
+#     tenant = Tenant.objects.get(id=tenant_id)
+#     logger.info("Update tenant=%s", tenant)
+#     for item_data in items_data:
+#         item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
+#             tenant=tenant,
+#             sku=item_data["sku"],
+#             defaults=item_data,
+#         )
 
 
-def uncheck_all_boxes(request: HttpRequest) -> None:
-    """Unchecks all boxes in the item list page.
+# def is_at_least_one_item_selected(request: HttpRequest, selected_item_ids: list[str] | str) -> bool:
+#     """Checks if at least one item is selected.
+#
+#     If not, displays an error message and redirects to the item list page.
+#     Args:
+#         request: The HttpRequest object.
+#         selected_item_ids: A list of stringified integers representing the IDs of the selected items.
+#     """
+#     if not selected_item_ids:
+#         messages.error(request, "Выберите хотя бы 1 товар")
+#         logger.warning("No items were selected. Task not created.")
+#         return False
+#
+#     logger.info("Items with these ids where selected: %s", selected_item_ids)
+#     return True
 
-    Since HTML checkboxes don't inherently signal when unchecked,
-     we uncheck everything so that later on an **updated** items list can be checked
-    """
-    logger.info("Unchecking all boxes in the item list page.")
-    Item.objects.filter(tenant=request.user.tenant.id).update(is_parser_active=False)  # type: ignore
-    logger.info("All boxes unchecked.")
+
+# def uncheck_all_boxes(request: HttpRequest) -> None:
+#     """Unchecks all boxes in the item list page.
+#
+#     Since HTML checkboxes don't inherently signal when unchecked,
+#      we uncheck everything so that later on an **updated** items list can be checked
+#     """
+#     logger.info("Unchecking all boxes in the item list page.")
+#     Item.objects.filter(tenant=request.user.tenant.id).update(is_parser_active=False)  # type: ignore
+#     logger.info("All boxes unchecked.")
 
 
-def activate_parsing_for_selected_items(request: WSGIRequest, skus_list: list[int]) -> None:
-    """Activates parsing for the specified items by setting their `is_parser_active` field to True.
-    Performs a single update operation to the database while making sure this operation is atomic and
-    no other operations run while this is in progress.
-    """
-    Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list)).update(is_parser_active=True)
+# def activate_parsing_for_selected_items(request: WSGIRequest, skus_list: list[int]) -> None:
+#     """Activates parsing for the specified items by setting their `is_parser_active` field to True.
+#     Performs a single update operation to the database while making sure this operation is atomic and
+#     no other operations run while this is in progress.
+#     """
+#     Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list)).update(is_parser_active=True)
 
 
 def show_successful_scrape_message(
