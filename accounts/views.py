@@ -16,7 +16,8 @@ from django_htmx.http import HttpResponseClientRedirect
 import config
 from accounts.forms import ProfileForm, EmailChangeForm
 from main.models import Item
-from main.utils import task_name, create_demo_user, create_demo_items, no_active_demo_user, set_tenant_quota
+from main.utils import create_demo_user, create_demo_items, no_active_demo_user, set_tenant_quota
+from utils.scheduling import task_name
 
 logger = logging.getLogger(__name__)
 user = get_user_model()
