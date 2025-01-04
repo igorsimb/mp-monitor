@@ -35,20 +35,8 @@ from main.payment_utils import (
     get_price_per_parse,
     user_is_allowed_to_switch_plan,
 )
-from main.utils import (
-    get_user_quota,
-    update_tenant_quota_for_max_allowed_sku,
-    update_user_quota_for_allowed_parse_units,
-    create_unique_order_id,
-)
 from mp_monitor import settings
-from utils import marketplace, items, price_display, notifications
-from utils.task_utils import (
-    task_name,
-    periodic_task_exists,
-    get_interval_russian_translation,
-    check_plan_schedule_limitations,
-)
+from utils import billing, marketplace, items, price_display, notifications, task_utils
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -83,17 +71,17 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         active_demo_users = user.objects.filter(is_demo_user=True, is_active=True)
         expired_active_demo_users = [user for user in active_demo_users if user.is_demo_expired]
         non_expired_active_demo_users = [user for user in active_demo_users if not user.is_demo_expired]
-        tenant_quota = get_user_quota(self.request.user)
+        tenant_quota = billing.get_user_quota(self.request.user)
 
         time_since_user_created = timezone.now() - self.request.user.created_at
-        if get_user_quota(self.request.user) is not None:
+        if billing.get_user_quota(self.request.user) is not None:
             remaining_time = timedelta(hours=tenant_quota.total_hours_allowed) - time_since_user_created
             remaining_hours = remaining_time.seconds // 3600
             remaining_minutes = (remaining_time.seconds % 3600) // 60
             context["demo_remaining_time"] = f"{remaining_hours} ч. {remaining_minutes} мин."
 
         try:
-            periodic_task = PeriodicTask.objects.get(name=task_name(self.request.user))
+            periodic_task = PeriodicTask.objects.get(name=task_utils.task_name(self.request.user))
         except PeriodicTask.DoesNotExist:
             periodic_task = None
 
@@ -112,7 +100,7 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         if periodic_task:
             schedule_interval = periodic_task.schedule.run_every
-            context["scrape_interval_task"] = get_interval_russian_translation(periodic_task)
+            context["scrape_interval_task"] = task_utils.get_interval_russian_translation(periodic_task)
             context["next_interval_run_at"] = periodic_task.last_run_at + schedule_interval
         return context
 
@@ -151,9 +139,9 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         item_updated_at = self.object.updated_at
         price_created_at = self.object.prices.latest("created_at")
 
-        tenant_quota = get_user_quota(self.request.user)
+        tenant_quota = billing.get_user_quota(self.request.user)
         time_since_user_created = timezone.now() - self.request.user.created_at
-        if get_user_quota(self.request.user) is not None:
+        if billing.get_user_quota(self.request.user) is not None:
             remaining_time = timedelta(hours=tenant_quota.total_hours_allowed) - time_since_user_created
             remaining_hours = remaining_time.seconds // 3600
             remaining_minutes = (remaining_time.seconds % 3600) // 60
@@ -224,11 +212,11 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
         if form.is_valid():
             skus = form.cleaned_data["skus"]
 
-            if get_user_quota(request.user) is not None:
+            if billing.get_user_quota(request.user) is not None:
                 try:
                     logger.info("Trying to update demo user quota for max allowed skus...")
-                    update_tenant_quota_for_max_allowed_sku(request, skus)
-                    update_user_quota_for_allowed_parse_units(request.user, skus)
+                    billing.update_tenant_quota_for_max_allowed_sku(request, skus)
+                    billing.update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     logger.warning(e.message)
                     messages.error(request, e.message)
@@ -270,9 +258,9 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
                 return redirect("item_list")
 
             #  needs to be placed after is_at_least_one_item_selected check to avoid updating quota despite the error
-            if get_user_quota(request.user) is not None:
+            if billing.get_user_quota(request.user) is not None:
                 try:
-                    update_user_quota_for_allowed_parse_units(request.user, skus)
+                    billing.update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     messages.error(request, e.message)
                     return redirect("item_list")
@@ -335,7 +323,7 @@ def create_scrape_interval_task(
             #         return redirect("item_list")
 
             try:
-                check_plan_schedule_limitations(request.user.tenant, period, interval)
+                task_utils.check_plan_schedule_limitations(request.user.tenant, period, interval)
                 schedule, created = IntervalSchedule.objects.get_or_create(
                     every=interval,
                     period=getattr(IntervalSchedule, period.upper()),  # IntervalSchedule.SECONDS, MINUTES, HOURS, etc
@@ -374,15 +362,15 @@ def create_scrape_interval_task(
                 )
 
             #  needs to be placed after all form checks to avoid updating quota despite the error
-            if get_user_quota(request.user) is not None:
+            if billing.get_user_quota(request.user) is not None:
                 try:
-                    update_user_quota_for_allowed_parse_units(request.user, skus)
+                    billing.update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     messages.error(request, e.message)
                     return redirect("item_list")
 
             scrape_interval_task, created = PeriodicTask.objects.update_or_create(
-                name=task_name(request.user),
+                name=task_utils.task_name(request.user),
                 defaults={
                     "interval": schedule,
                     "task": "main.tasks.update_or_create_items_task",
@@ -434,7 +422,7 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
         - Redirects to item list on success.
         - Shows error message and re-renders form on failure.
     """
-    existing_task = get_object_or_404(PeriodicTask, name=task_name(request.user))
+    existing_task = get_object_or_404(PeriodicTask, name=task_utils.task_name(request.user))
     if request.method == "POST":
         form = ScrapeIntervalForm(request.POST or None, instance=existing_task, user=request.user)
 
@@ -471,12 +459,12 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
     return render(request, "main/item_list.html", context)
 
 
-@user_passes_test(periodic_task_exists, redirect_field_name=None)
+@user_passes_test(task_utils.periodic_task_exists, redirect_field_name=None)
 def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     items.uncheck_all_boxes(request)
 
     periodic_task = PeriodicTask.objects.get(
-        name=task_name(request.user),
+        name=task_utils.task_name(request.user),
     )
     periodic_task.delete()
     print(f"{periodic_task} has been deleted!")
@@ -530,7 +518,7 @@ class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixi
         if form.is_valid():
             amount = form.cleaned_data["amount"]
             try:
-                order_id = create_unique_order_id(tenant_id=request.user.tenant.id)
+                order_id = billing.create_unique_order_id(tenant_id=request.user.tenant.id)
             except ValueError as e:
                 return HttpResponse(e, status=400)
 
@@ -764,7 +752,7 @@ def switch_plan(request: WSGIRequest) -> HttpResponse:
             logger.info("Creating order for switching plan...")
             Order.objects.create(
                 tenant=tenant,
-                order_id=create_unique_order_id(tenant_id=tenant.id),
+                order_id=billing.create_unique_order_id(tenant_id=tenant.id),
                 amount=0,
                 order_intent=Order.OrderIntent.SWITCH_PLAN,
                 status=Order.OrderStatus.COMPLETED,
