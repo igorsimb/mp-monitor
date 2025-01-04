@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from factories import TenantFactory, PaymentPlanFactory
 from main.models import Order
-from main.payment_utils import update_payment_records
+from utils.payment import update_payment_records
 
 
 class TestUpdatePaymentRecords:

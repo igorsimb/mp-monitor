@@ -1,21 +1,9 @@
-import logging
-
-from django.contrib.auth import get_user_model
-
-from accounts.models import TenantQuota, Tenant, PaymentPlan  # noqa
-from main.exceptions import InvalidSKUException, QuotaExceededException, PlanScheduleLimitationException  # noqa
-from main.models import Item, Payment, Order  # noqa
-
 # import this here if you encounter the following error:
 # django.core.exceptions.ImproperlyConfigured: Requested setting USE_DEPRECATED_PYTZ, but settings are not configured.
 # You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing
 # settings.
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mp_monitor.settings")
 # django.setup()
-
-logger = logging.getLogger(__name__)
-
-User = get_user_model()
 
 
 # def scrape_live_price(sku):

@@ -2,16 +2,13 @@
 
 import logging
 import re
-from uuid import uuid4
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.http import HttpRequest
 
 import config
 from accounts.models import TenantQuota, Tenant
 from main.exceptions import QuotaExceededException
-from main.models import Order
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -92,24 +89,3 @@ def update_user_quota_for_allowed_parse_units(user: User, skus: str) -> None:
             message="Превышен лимит единиц проверки для данного тарифа.",
             quota_type="allowed_parse_units",
         )
-
-
-def create_unique_order_id() -> str:
-    """Create a unique order ID.
-
-    Returns:
-        str: A unique order ID.
-
-    Raises:
-        ValidationError: If unable to generate a unique ID after multiple attempts.
-    """
-    max_attempts = 10
-    attempt = 0
-
-    while attempt < max_attempts:
-        order_id = str(uuid4())
-        if not Order.objects.filter(order_id=order_id).exists():
-            return order_id
-        attempt += 1
-
-    raise ValidationError("Unable to generate a unique order ID")

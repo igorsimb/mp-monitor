@@ -28,15 +28,8 @@ from main import plotly_charts
 from main.exceptions import QuotaExceededException, PlanScheduleLimitationException
 from main.forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
 from main.models import Item, Price, Order
-from main.payment_utils import (
-    validate_callback_data,
-    update_payment_records,
-    TinkoffTokenGenerator,
-    get_price_per_parse,
-    user_is_allowed_to_switch_plan,
-)
 from mp_monitor import settings
-from utils import billing, marketplace, items, price_display, notifications, task_utils
+from utils import billing, items, marketplace, notifications, payment, price_display, task_utils
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -518,7 +511,7 @@ class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixi
         if form.is_valid():
             amount = form.cleaned_data["amount"]
             try:
-                order_id = billing.create_unique_order_id(tenant_id=request.user.tenant.id)
+                order_id = payment.create_unique_order_id(tenant_id=request.user.tenant.id)
             except ValueError as e:
                 return HttpResponse(e, status=400)
 
@@ -572,7 +565,7 @@ class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixi
 
             logger.info("Generating token...")
             terminal_password = settings.TINKOFF_TERMINAL_PASSWORD_TEST
-            generator = TinkoffTokenGenerator(terminal_password)
+            generator = payment.TinkoffTokenGenerator(terminal_password)
             token = generator.get_token(payload)
             logger.info("Adding token to payload...")
             payload["Token"] = token
@@ -688,10 +681,10 @@ def payment_callback_view(request: WSGIRequest) -> JsonResponse:
         except Order.DoesNotExist:
             return JsonResponse({"status": "invalid", "error": "Order not found"}, status=404)
 
-        data_is_valid, error_message = validate_callback_data(callback_data, order)
+        data_is_valid, error_message = payment.validate_callback_data(callback_data, order)
         if data_is_valid:
             logger.info("Payment callback data validation successful. Updating payment records...")
-            update_payment_records(data=callback_data, order=order)
+            payment.update_payment_records(data=callback_data, order=order)
             logger.info("Payment records updated successfully.")
             return JsonResponse({"status": "success"})
         else:
@@ -710,7 +703,7 @@ def switch_plan_modal(request):
     # Get quotas from DEFAULT_QUOTAS
     current_quotas = config.DEFAULT_QUOTAS[current_plan.name]
     new_quotas = config.DEFAULT_QUOTAS[new_plan.name]
-    price_per_parse = get_price_per_parse(current_plan.price, current_quotas["parse_units_limit"])
+    price_per_parse = payment.get_price_per_parse(current_plan.price, current_quotas["parse_units_limit"])
 
     new_plan_text_color = "text-success" if int(current_plan.name) < int(new_plan.name) else "text-danger"
 
@@ -727,7 +720,7 @@ def switch_plan_modal(request):
             "price": new_plan.price,
             "skus_limit": new_quotas["skus_limit"],
             "parse_units_limit": new_quotas["parse_units_limit"],
-            "price_per_parse": get_price_per_parse(new_plan.price, new_quotas["parse_units_limit"]),
+            "price_per_parse": payment.get_price_per_parse(new_plan.price, new_quotas["parse_units_limit"]),
         },
         "plan_id": new_plan.name,
         "new_plan_text_color": new_plan_text_color,
@@ -744,7 +737,7 @@ def switch_plan(request: WSGIRequest) -> HttpResponse:
         form = SwitchPlanForm(request.POST)
         if form.is_valid():
             new_plan = form.cleaned_data["plan"]
-            can_switch, message = user_is_allowed_to_switch_plan(tenant, new_plan, minimum_days_covered)
+            can_switch, message = payment.user_is_allowed_to_switch_plan(tenant, new_plan, minimum_days_covered)
             if not can_switch:
                 messages.error(request, message)
                 return redirect("billing")
@@ -752,7 +745,7 @@ def switch_plan(request: WSGIRequest) -> HttpResponse:
             logger.info("Creating order for switching plan...")
             Order.objects.create(
                 tenant=tenant,
-                order_id=billing.create_unique_order_id(tenant_id=tenant.id),
+                order_id=payment.create_unique_order_id(tenant_id=tenant.id),
                 amount=0,
                 order_intent=Order.OrderIntent.SWITCH_PLAN,
                 status=Order.OrderStatus.COMPLETED,
