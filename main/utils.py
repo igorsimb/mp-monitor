@@ -1,16 +1,10 @@
-import base64
-import hashlib
 import logging
-import re
-import uuid
 from uuid import uuid4
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.http import HttpRequest
 
-import config
 from accounts.models import TenantQuota, Tenant, PaymentPlan  # noqa
 from main.exceptions import InvalidSKUException, QuotaExceededException, PlanScheduleLimitationException  # noqa
 from main.models import Item, Payment, Order  # noqa
@@ -471,72 +465,141 @@ User = get_user_model()
 #             logger.warning("Can't compare price to NoneType")
 
 
-def check_plan_schedule_limitations(tenant: Tenant, period: str, interval: int) -> None:
-    """
-    Checks if the user has violated the plan limitations.
-
-    Args:
-        tenant (Tenant): The tenant object.
-        period (str): The time unit (e.g., "hours", "days")
-        interval (int): The interval value (e.g., 7, 24, 48)
-
-    Raises:
-        PlanScheduleLimitationException: If the user has violated the plan limitations.
-    """
-    # Currently, we only have schedule limitations for the FREE plan
-    if tenant.payment_plan.name == PaymentPlan.PlanName.FREE.value:
-        if period == "hours" and interval < 24:
-            raise PlanScheduleLimitationException(
-                tenant,
-                plan=tenant.payment_plan.name,
-                period=period,
-                interval=interval,
-                message="Ограничения бесплатного тарифа. Установите интервал не менее 24 часов",
-            )
-
-
-def get_user_quota(user: User) -> TenantQuota | None:
-    """Get the user quota for a given user.
-
-    Args:
-        user (User): The user for which to get the quota.
-
-    Returns:
-        TenantQuota: The user quota for the given user.
-
-    You can access the user quota fields like this:
-        user_quota.user_lifetime_hours
-
-        user_quota.max_allowed_skus
-
-        user_quota.manual_updates
-
-        user_quota.scheduled_updates
-    """
-    try:
-        user_quota = user.tenant.quota
-    except TenantQuota.DoesNotExist:
-        user_quota = None
-
-    return user_quota
+# def check_plan_schedule_limitations(tenant: Tenant, period: str, interval: int) -> None:
+#     """
+#     Checks if the user has violated the plan limitations.
+#
+#     Args:
+#         tenant (Tenant): The tenant object.
+#         period (str): The time unit (e.g., "hours", "days")
+#         interval (int): The interval value (e.g., 7, 24, 48)
+#
+#     Raises:
+#         PlanScheduleLimitationException: If the user has violated the plan limitations.
+#     """
+#     # Currently, we only have schedule limitations for the FREE plan
+#     if tenant.payment_plan.name == PaymentPlan.PlanName.FREE.value:
+#         if period == "hours" and interval < 24:
+#             raise PlanScheduleLimitationException(
+#                 tenant,
+#                 plan=tenant.payment_plan.name,
+#                 period=period,
+#                 interval=interval,
+#                 message="Ограничения бесплатного тарифа. Установите интервал не менее 24 часов",
+#             )
 
 
-def set_tenant_quota(
-    tenant: Tenant,
-    name: str = "DEMO_QUOTA",
-    total_hours_allowed: int = config.DEMO_USER_HOURS_ALLOWED,
-    skus_limit: int = config.DEMO_USER_MAX_ALLOWED_SKUS,
-    parse_units_limit: int = config.DEMO_USER_ALLOWED_PARSE_UNITS,
-) -> None:
-    """Set the user quota for a given user."""
-    tenant.quota, _ = TenantQuota.objects.get_or_create(
-        name=name,
-        total_hours_allowed=total_hours_allowed,
-        skus_limit=skus_limit,
-        parse_units_limit=parse_units_limit,
-    )
-    # assign the quota to the tenant
-    tenant.save(update_fields=["quota"])
+# def get_user_quota(user: User) -> TenantQuota | None:
+#     """Get the user quota for a given user.
+#
+#     Args:
+#         user (User): The user for which to get the quota.
+#
+#     Returns:
+#         TenantQuota: The user quota for the given user.
+#
+#     You can access the user quota fields like this:
+#         user_quota.user_lifetime_hours
+#
+#         user_quota.max_allowed_skus
+#
+#         user_quota.manual_updates
+#
+#         user_quota.scheduled_updates
+#     """
+#     try:
+#         user_quota = user.tenant.quota
+#     except TenantQuota.DoesNotExist:
+#         user_quota = None
+#
+#     return user_quota
+
+
+# def set_tenant_quota(
+#     tenant: Tenant,
+#     name: str = "DEMO_QUOTA",
+#     total_hours_allowed: int = config.DEMO_USER_HOURS_ALLOWED,
+#     skus_limit: int = config.DEMO_USER_MAX_ALLOWED_SKUS,
+#     parse_units_limit: int = config.DEMO_USER_ALLOWED_PARSE_UNITS,
+# ) -> None:
+#     """Set the user quota for a given user."""
+#     tenant.quota, _ = TenantQuota.objects.get_or_create(
+#         name=name,
+#         total_hours_allowed=total_hours_allowed,
+#         skus_limit=skus_limit,
+#         parse_units_limit=parse_units_limit,
+#     )
+#     # assign the quota to the tenant
+#     tenant.save(update_fields=["quota"])
+
+
+# def update_tenant_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> None:
+#     """Update tenant quota for maximum allowed SKUs.
+#
+#     Args:
+#         request: The HTTP request object.
+#         skus: Space-separated string of SKUs.
+#
+#     Raises:
+#         QuotaExceededException: If the tenant has exceeded their SKU quota.
+#     """
+#     tenant_quota = request.user.tenant.quota
+#     if tenant_quota is None:
+#         return
+#
+#     skus_list = skus.split()
+#     current_items_count = request.user.tenant.items.count()
+#     new_items_count = len(skus_list)
+#
+#     if current_items_count + new_items_count > tenant_quota.skus_limit:
+#         raise QuotaExceededException(
+#             f"Превышен лимит в {tenant_quota.skus_limit} товаров для демо-аккаунта. "
+#             f"Текущее количество товаров: {current_items_count}. "
+#             f"Попытка добавить еще {new_items_count} товаров."
+#         )
+
+
+# def update_user_quota_for_allowed_parse_units(user: User, skus: str) -> None:
+#     """Update user quota for allowed parse units.
+#
+#     Args:
+#         user: The user object.
+#         skus: Space-separated string of SKUs.
+#
+#     Raises:
+#         QuotaExceededException: If the user has exceeded their parse units quota.
+#     """
+#     tenant_quota = user.tenant.quota
+#     if tenant_quota is None:
+#         return
+#
+#     skus_list = skus.split()
+#     if len(skus_list) > tenant_quota.parse_units_limit:
+#         raise QuotaExceededException(
+#             f"Превышен лимит в {tenant_quota.parse_units_limit} товаров за один запрос для демо-аккаунта. "
+#             f"Попытка спарсить {len(skus_list)} товаров."
+#         )
+
+
+# def create_unique_order_id() -> str:
+#     """Create a unique order ID.
+#
+#     Returns:
+#         str: A unique order ID.
+#
+#     Raises:
+#         ValidationError: If unable to generate a unique ID after multiple attempts.
+#     """
+#     max_attempts = 10
+#     attempt = 0
+#
+#     while attempt < max_attempts:
+#         order_id = str(uuid4())
+#         if not Order.objects.filter(order_id=order_id).exists():
+#             return order_id
+#         attempt += 1
+#
+#     raise ValidationError("Unable to generate a unique order ID")
 
 
 def create_demo_user() -> tuple[User, str]:
@@ -610,117 +673,3 @@ def no_active_demo_user(user: User) -> bool:
     while the first one is still active.
     """
     return not (user.is_authenticated and hasattr(user, "is_demo_user") and user.is_demo_user)
-
-
-def update_tenant_quota_for_max_allowed_sku(request: HttpRequest, skus: str) -> None:
-    """
-    Checks if the user has enough quota to scrape items and then updates the remaining user quota.
-
-    Args:
-        request: The HttpRequest object containing user and form data.
-        skus (str): The string of SKUs to check.
-    """
-    user_quota = get_user_quota(request.user)
-    skus_count = len(re.split(r"\s+|\n|,(?:\s*)", skus))  # count number of skus
-    if skus_count <= user_quota.skus_limit:
-        user_quota.skus_limit -= skus_count
-        user_quota.save()
-    else:
-        raise QuotaExceededException(
-            message="Превышен лимит количества товаров для данного тарифа.",
-            quota_type="max_allowed_skus",
-        )
-
-
-def update_user_quota_for_allowed_parse_units(user: User, skus: str) -> None:
-    user_quota = get_user_quota(user)
-    skus_count = len(re.split(r"\s+|\n|,(?:\s*)", skus))
-    if user_quota.parse_units_limit >= skus_count:
-        user_quota.parse_units_limit -= skus_count
-        user_quota.save()
-    else:
-        raise QuotaExceededException(
-            message="Превышен лимит единиц проверки для данного тарифа.",
-            quota_type="allowed_parse_units",
-        )
-
-
-class MerchantSignatureGenerator:
-    """
-    API reference: https://modulbank.ru/support/formation_payment_request
-
-    Generate a signature for merchant payments based on the secret key.
-    "merchant" is the merchant ID (get it from the merchant dashboard; not a required field).
-    "salt" is a random string that is used to prevent replay attacks (not a required field).
-    secret_key = settings.PAYMENT_TEST_SECRET_KEY
-
-    Example of use:
-    secret_key = settings.PAYMENT_TEST_SECRET_KEY
-
-    items = {
-        "testing": "1",
-        "salt": "xafAFruTVrpwHKjvZoHvSVkUeMqZoefp",
-        "order_id": "43683694",
-        "amount": "555",
-        "merchant": "f29e4787-0c3b-4630-9340-5dcfcdc9f85d",
-        "description": "Заказ №43683693",
-        "client_phone": "+7 (700) 675-87-89",
-        "client_email": "test@test.ru",
-        "client_name": "Тестов Тест Тестович",
-        "success_url": "https://pay.modulbank.ru/success",
-        "unix_timestamp": "1723447580",
-    }
-
-    generator = MerchantSignatureGenerator(secret_key)
-    print(generator.get_signature(items))
-
-    """
-
-    def __init__(self, secret_key: str):
-        self.secret_key = secret_key
-
-    def get_raw_signature(self, params: dict) -> str:
-        """Generate a raw signature string from the sorted parameters."""
-        chunks = []
-
-        for key in sorted(params.keys()):
-            if key == "signature":
-                continue
-
-            value = params[key]
-
-            if isinstance(value, str):
-                value = value.encode("utf8")
-            else:
-                value = str(value).encode("utf-8")
-
-            if not value:
-                continue
-
-            value_encoded = base64.b64encode(value)
-            chunks.append(f"{key}={value_encoded.decode()}")
-
-        raw_signature = "&".join(chunks)
-        return raw_signature
-
-    def double_sha1(self, data: str) -> str:
-        """Apply double SHA1 hashing based on the secret key."""
-        sha1_hex = lambda s: hashlib.sha1(s.encode("utf-8")).hexdigest()  # noqa
-        digest = sha1_hex(self.secret_key + sha1_hex(self.secret_key + data))
-        return digest
-
-    def get_signature(self, params: dict) -> str:
-        """Calculate the signature based on the parameters."""
-        raw_signature = self.get_raw_signature(params)
-        return self.double_sha1(raw_signature)
-
-
-def create_unique_order_id(tenant_id: int, max_attempts: int = 10) -> str:
-    """Create a unique order ID for the given tenant."""
-    for _ in range(max_attempts):
-        order_id = f"{tenant_id}{str(uuid.uuid4().int)[:5]}"
-        if not Order.objects.filter(order_id=order_id).exists():
-            logger.debug("Created new order ID: %s", order_id)
-            return order_id
-    logger.error("Не удалось создать заказ для оплаты. Попробуйте еще раз. Tenant ID: %s", tenant_id)
-    raise ValueError("Не удалось создать заказ для оплаты. Попробуйте еще раз.")

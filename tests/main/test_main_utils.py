@@ -15,7 +15,7 @@ from accounts.models import Tenant
 from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory, TenantFactory
 from main.exceptions import InvalidSKUException, PlanScheduleLimitationException
 from main.models import Item
-from main.utils import check_plan_schedule_limitations
+from utils.task_utils import check_plan_schedule_limitations
 from utils.items import (
     uncheck_all_boxes,
     update_or_create_items,

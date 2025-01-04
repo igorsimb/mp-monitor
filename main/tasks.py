@@ -8,8 +8,7 @@ from django_celery_beat.models import PeriodicTask
 from accounts.models import Tenant
 from main.exceptions import QuotaExceededException
 from main.models import Item
-from main.utils import update_user_quota_for_allowed_parse_units
-from utils import marketplace, items
+from utils import billing, marketplace, items
 
 logger = logging.getLogger(__name__)
 user = get_user_model()
@@ -63,7 +62,7 @@ def update_or_create_items_task(self, tenant_id, skus_list):
     if user_to_update.is_demo_user:
         try:
             # update_user_quota_for_scheduled_updates(user_to_update)
-            update_user_quota_for_allowed_parse_units(user_to_update, skus_list)
+            billing.update_user_quota_for_allowed_parse_units(user_to_update, skus_list)
         except QuotaExceededException as e:
             logger.warning(e.message)
             return
