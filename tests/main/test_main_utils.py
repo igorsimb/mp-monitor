@@ -16,21 +16,26 @@ from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalSch
 from main.exceptions import InvalidSKUException, PlanScheduleLimitationException
 from main.models import Item
 from main.utils import (
-    uncheck_all_boxes,
-    scrape_item,
-    show_successful_scrape_message,
-    is_at_least_one_item_selected,
-    scrape_items_from_skus,
-    update_or_create_items,
-    is_sku_format_valid,
-    show_invalid_skus_message,
-    activate_parsing_for_selected_items,
     get_interval_russian_translation,
     check_plan_schedule_limitations,
 )
+from utils.items import (
+    uncheck_all_boxes,
+    update_or_create_items,
+    is_at_least_one_item_selected,
+    activate_parsing_for_selected_items,
+)
+from utils.marketplace import (
+    is_sku_format_valid,
+    scrape_item,
+    scrape_items_from_skus,
+)
+from utils.notifications import (
+    show_successful_scrape_message,
+    show_invalid_skus_message,
+)
 
 logger = logging.getLogger(__name__)
-
 User = get_user_model()
 
 
@@ -176,7 +181,7 @@ class TestScrapeItem:
         )
 
         mocker.patch("httpx.get", return_value=self.mock_response)
-        mocker.patch("main.utils.scrape_live_price", return_value=self.price / 100)
+        mocker.patch("utils.marketplace.scrape_live_price", return_value=self.price / 100)
 
     @pytest.fixture
     def item_with_empty_stock(self, mocker: MockerFixture):
@@ -203,7 +208,7 @@ class TestScrapeItem:
             url=f"https://card.wb.ru/cards/v2/detail?appType=1&curr=rub&nm={self.sku}",
         )
         mocker.patch("httpx.get", return_value=self.mock_response2)
-        mocker.patch("main.utils.scrape_live_price", return_value=self.price / 100)
+        mocker.patch("utils.marketplace.scrape_live_price", return_value=self.price / 100)
 
     def test_retrieve_data_from_mock_api(self):
         logger.info("Calling scrape_item() with a mock SKU (%s)", self.sku)
@@ -446,7 +451,7 @@ class TestScrapeItemsFromSKUs:
     # pylint: disable=unused-argument
     @pytest.fixture
     def mock_scrape_item(self, mocker) -> Mock:
-        return mocker.patch("main.utils.scrape_item", return_value={"sku": "test"})
+        return mocker.patch("utils.marketplace.scrape_item", return_value={"sku": "test"})
 
     def test_with_valid_skus(self, mock_scrape_item: Mock) -> None:
         """

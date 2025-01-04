@@ -132,10 +132,10 @@ class TestScrapeIntervalTask:
 
         # scrape_live_price uses selenium to get the live price of the item from WB
         # So mocking is necessary to avoid going to WB
-        mocker.patch("main.utils.scrape_live_price", return_value=100)
+        mocker.patch("utils.marketplace.scrape_live_price", return_value=100)
         scrape_interval_task(tenant.id, selected_item_ids=[items[0].id])
 
-        mocker.patch("main.utils.scrape_live_price", return_value=150)
+        mocker.patch("utils.marketplace.scrape_live_price", return_value=150)
         scrape_interval_task(tenant.id, selected_item_ids=[items[1].id])
 
         items[0].refresh_from_db()

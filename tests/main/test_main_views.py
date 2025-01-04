@@ -392,13 +392,13 @@ class TestScrapeItemsView:
 
     def test_post_valid_form_redirects(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user
-        mocker.patch("main.utils.scrape_live_price", return_value=100)
+        mocker.patch("utils.marketplace.scrape_live_price", return_value=100)
         response = scrape_items(request, f"{self.sku1}, {self.sku2}")
         assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
 
     def test_post_valid_form_updates_items(self, post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = post_request_with_user
-        mocker.patch("main.utils.scrape_live_price", return_value=100)
+        mocker.patch("utils.marketplace.scrape_live_price", return_value=100)
 
         logger.info("Updating items")
         scrape_items(request, f"{self.sku1}, {self.sku2}")
@@ -411,7 +411,7 @@ class TestScrapeItemsView:
     def test_update_items_view(self, update_post_request_with_user: WSGIRequest, mocker) -> None:  # type: ignore
         request = update_post_request_with_user
         mocker.patch(
-            "main.views.scrape_items_from_skus",
+            "utils.marketplace.scrape_items_from_skus",
             return_value=([{"sku": "12345", "name": "Test Item 1"}, {"sku": "67890", "name": "Test Item 2"}], []),
         )
 
@@ -423,11 +423,11 @@ class TestScrapeItemsView:
         logger.info("Checking if the items were updated in the database as expected")
         assert number_of_items == 2, f"Number of items should be 2, but it is {number_of_items}"
 
-    def test_redirect_if_no_items_selected(self, mocker):
+    def test_redirect_if_no_items_selected(self, mocker) -> None:
         factory = RequestFactory()
         user = UserFactory()
         item_list_url = reverse("item_list")
-        mocker.patch("main.views.is_at_least_one_item_selected", return_value=False)
+        mocker.patch("utils.items.is_at_least_one_item_selected", return_value=False)
         request = factory.post(item_list_url, {"selected_items": ["1", "2"]})
         request.user = user
 
