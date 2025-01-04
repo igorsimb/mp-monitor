@@ -37,9 +37,6 @@ from main.payment_utils import (
 )
 from main.utils import (
     show_successful_scrape_message,
-    calculate_percentage_change,
-    add_table_class,
-    add_price_trend_indicator,
     periodic_task_exists,
     show_invalid_skus_message,
     task_name,
@@ -51,7 +48,7 @@ from main.utils import (
     create_unique_order_id,
 )
 from mp_monitor import settings
-from utils import marketplace, items
+from utils import marketplace, items, price_display
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -147,9 +144,9 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         page_number = self.request.GET.get("page")
         prices_paginated = paginator.get_page(page_number)
 
-        calculate_percentage_change(prices_paginated)
-        add_table_class(prices_paginated)
-        add_price_trend_indicator(prices_paginated)
+        price_display.calculate_percentage_change(prices_paginated)
+        price_display.add_table_class(prices_paginated)
+        price_display.add_price_trend_indicator(prices_paginated)
 
         item_updated_at = self.object.updated_at
         price_created_at = self.object.prices.latest("created_at")
