@@ -15,10 +15,7 @@ from accounts.models import Tenant
 from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory, TenantFactory
 from main.exceptions import InvalidSKUException, PlanScheduleLimitationException
 from main.models import Item
-from main.utils import (
-    get_interval_russian_translation,
-    check_plan_schedule_limitations,
-)
+from main.utils import check_plan_schedule_limitations
 from utils.items import (
     uncheck_all_boxes,
     update_or_create_items,
@@ -34,6 +31,7 @@ from utils.notifications import (
     show_successful_scrape_message,
     show_invalid_skus_message,
 )
+from utils.scheduling import get_interval_russian_translation
 
 logger = logging.getLogger(__name__)
 User = get_user_model()

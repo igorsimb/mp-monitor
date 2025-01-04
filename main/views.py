@@ -36,17 +36,19 @@ from main.payment_utils import (
     user_is_allowed_to_switch_plan,
 )
 from main.utils import (
-    periodic_task_exists,
-    task_name,
-    get_interval_russian_translation,
     get_user_quota,
     update_tenant_quota_for_max_allowed_sku,
     update_user_quota_for_allowed_parse_units,
-    check_plan_schedule_limitations,
     create_unique_order_id,
 )
 from mp_monitor import settings
 from utils import marketplace, items, price_display, notifications
+from utils.scheduling import (
+    task_name,
+    periodic_task_exists,
+    get_interval_russian_translation,
+    check_plan_schedule_limitations,
+)
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
