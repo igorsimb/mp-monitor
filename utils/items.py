@@ -21,7 +21,7 @@ def update_or_create_items(request: HttpRequest, items_data: List[Dict[str, Any]
         request: The HTTP request object with user information.
         items_data: List of item data dictionaries.
     """
-    logger.info("Update request=%s", request)
+    logger.info("Update from user=%s", request.user.id if request.user.is_authenticated else "Anonymous")
     for item_data in items_data:
         item, created = Item.objects.update_or_create(  # pylint: disable=unused-variable
             tenant=request.user.tenant,

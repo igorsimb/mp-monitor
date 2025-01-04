@@ -2,7 +2,7 @@ import hmac
 
 from django.core.management.base import BaseCommand
 
-from main.payment_utils import TinkoffTokenGenerator
+from utils.payment import TinkoffTokenGenerator
 
 
 class Command(BaseCommand):
