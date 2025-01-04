@@ -36,9 +36,7 @@ from main.payment_utils import (
     user_is_allowed_to_switch_plan,
 )
 from main.utils import (
-    show_successful_scrape_message,
     periodic_task_exists,
-    show_invalid_skus_message,
     task_name,
     get_interval_russian_translation,
     get_user_quota,
@@ -48,7 +46,7 @@ from main.utils import (
     create_unique_order_id,
 )
 from mp_monitor import settings
-from utils import marketplace, items, price_display
+from utils import marketplace, items, price_display, notifications
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -237,10 +235,10 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
             logger.info("Scraping items with SKUs: %s", skus)
             items_data, invalid_skus = marketplace.scrape_items_from_skus(skus)
             items.update_or_create_items(request, items_data)
-            show_successful_scrape_message(request, items_data, max_items_on_screen=10)
+            notifications.show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
             if invalid_skus:  # check if there are invalid SKUs
-                show_invalid_skus_message(request, invalid_skus)  # pragma: no cover
+                notifications.show_invalid_skus_message(request, invalid_skus)  # pragma: no cover
 
             return redirect("item_list")
     else:
@@ -280,7 +278,7 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items
             items_data, _ = marketplace.scrape_items_from_skus(skus)
             items.update_or_create_items(request, items_data)
-            show_successful_scrape_message(request, items_data, max_items_on_screen=10)
+            notifications.show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
             return redirect("item_list")
         else:
