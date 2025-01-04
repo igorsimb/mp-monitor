@@ -38,7 +38,7 @@ def check_expired_demo_users():  # pragma: no cover
     from django_celery_beat.models import PeriodicTask
     from django.contrib.auth import get_user_model
     from main.models import Item
-    from utils.scheduling import task_name
+    from utils.task_utils import task_name
     from django.db import transaction
 
     logger = logging.getLogger(__name__)

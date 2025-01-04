@@ -43,7 +43,7 @@ from main.utils import (
 )
 from mp_monitor import settings
 from utils import marketplace, items, price_display, notifications
-from utils.scheduling import (
+from utils.task_utils import (
     task_name,
     periodic_task_exists,
     get_interval_russian_translation,
