@@ -22,41 +22,36 @@ from django_ratelimit.core import is_ratelimited
 from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 
 import config
-import main.plotly_charts as plotly_charts
 from accounts.forms import SwitchPlanForm
 from accounts.models import PaymentPlan
-from mp_monitor import settings
-from utils import marketplace
-from .exceptions import QuotaExceededException, PlanScheduleLimitationException
-from .forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
-from .models import Item, Price, Order
-from .payment_utils import (
+from main import plotly_charts
+from main.exceptions import QuotaExceededException, PlanScheduleLimitationException
+from main.forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
+from main.models import Item, Price, Order
+from main.payment_utils import (
     validate_callback_data,
     update_payment_records,
     TinkoffTokenGenerator,
     get_price_per_parse,
     user_is_allowed_to_switch_plan,
 )
-from .utils import (
-    uncheck_all_boxes,
+from main.utils import (
     show_successful_scrape_message,
-    is_at_least_one_item_selected,
-    update_or_create_items,
     calculate_percentage_change,
     add_table_class,
     add_price_trend_indicator,
     periodic_task_exists,
     show_invalid_skus_message,
-    activate_parsing_for_selected_items,
     task_name,
     get_interval_russian_translation,
     get_user_quota,
     update_tenant_quota_for_max_allowed_sku,
     update_user_quota_for_allowed_parse_units,
-    # MerchantSignatureGenerator,
     check_plan_schedule_limitations,
     create_unique_order_id,
 )
+from mp_monitor import settings
+from utils import marketplace, items
 
 user = get_user_model()
 logger = logging.getLogger(__name__)
@@ -244,7 +239,7 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
 
             logger.info("Scraping items with SKUs: %s", skus)
             items_data, invalid_skus = marketplace.scrape_items_from_skus(skus)
-            update_or_create_items(request, items_data)
+            items.update_or_create_items(request, items_data)
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
             if invalid_skus:  # check if there are invalid SKUs
@@ -274,7 +269,7 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             # Convert the list of stringified numbers to a string of integers for scrape_items_from_skus:
             skus = " ".join(skus)
             logger.info("Beginning to update items info...")
-            if not is_at_least_one_item_selected(request, skus):
+            if not items.is_at_least_one_item_selected(request, skus):
                 return redirect("item_list")
 
             #  needs to be placed after is_at_least_one_item_selected check to avoid updating quota despite the error
@@ -287,7 +282,7 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
 
             # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items
             items_data, _ = marketplace.scrape_items_from_skus(skus)
-            update_or_create_items(request, items_data)
+            items.update_or_create_items(request, items_data)
             show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
             return redirect("item_list")
@@ -322,10 +317,10 @@ def create_scrape_interval_task(
             skus = " ".join(skus)
 
             # if not is_at_least_one_item_selected(request, selected_item_ids):
-            if not is_at_least_one_item_selected(request, skus):
+            if not items.is_at_least_one_item_selected(request, skus):
                 return redirect("item_list")
 
-            uncheck_all_boxes(request)
+            items.uncheck_all_boxes(request)
 
             # Convert the list of stringified numbers to a list of integers to avoid the following error:
             # json.decoder.JSONDecodeError: Expecting value: line 1 column 6 (char 5)
@@ -414,7 +409,7 @@ def create_scrape_interval_task(
                     scrape_interval_task.args,
                 )
 
-            activate_parsing_for_selected_items(request, skus_list)
+            items.activate_parsing_for_selected_items(request, skus_list)
 
             return redirect("item_list")
 
@@ -456,14 +451,14 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
                 return redirect("item_list")
             skus_list = [int(sku) for sku in skus]
 
-            uncheck_all_boxes(request)
+            items.uncheck_all_boxes(request)
 
             logger.info("Updating the checked items list for existing task...")
             existing_task.args = [request.user.tenant.id, skus_list]
             existing_task.save()
             form.save()
 
-            activate_parsing_for_selected_items(request, skus_list)
+            items.activate_parsing_for_selected_items(request, skus_list)
 
             return redirect("item_list")
         else:
@@ -481,7 +476,7 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
 
 @user_passes_test(periodic_task_exists, redirect_field_name=None)
 def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
-    uncheck_all_boxes(request)
+    items.uncheck_all_boxes(request)
 
     periodic_task = PeriodicTask.objects.get(
         name=task_name(request.user),
