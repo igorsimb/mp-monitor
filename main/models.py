@@ -23,7 +23,7 @@ class Item(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=20)
-    seller_price = models.DecimalField(
+    seller_price = models.DecimalField(  # to be removed since we only need price now
         max_digits=10,
         decimal_places=0,
         null=True,
@@ -98,6 +98,15 @@ class Item(models.Model):
         return avg_price
 
     @property
+    def previous_price(self) -> int | None:
+        # In detail template  {{ item.previous_price }}
+        prices = Price.objects.filter(item=self).order_by("-created_at")
+        if len(prices) < 2:
+            return None
+        previous_price = int(prices[1].value) if prices[1].value else None
+        return previous_price
+
+    @property
     def min_price_date(self) -> datetime:
         # In detail template  {{ item.min_price_date }}
         min_price = Price.objects.filter(item=self).aggregate(min_price=Min("value"))["min_price"]
@@ -119,6 +128,7 @@ class Item(models.Model):
     #         except TypeError:
     #             logger.warning("Can't compare price to NoneType")
 
+    @property
     def price_percent_change(self) -> float:
         """
         Calculates the percentage change in price for the item and compares it to the tenant's price_change_threshold.
@@ -143,7 +153,7 @@ class Item(models.Model):
 
             # If the change exceeds the threshold, return it
             if abs(percent_change) >= threshold:
-                return round(percent_change, 2)
+                return round(float(percent_change), 2)
             return 0.0
         except (InvalidOperation, DivisionByZero, TypeError) as e:
             logger.warning("Price percent change returned 0.0 due to: %s", e)
@@ -154,9 +164,9 @@ class Item(models.Model):
         Price.objects.create(item=self, value=self.price)
         # Trigger the custom signal after creating the Price, so that check_price_change works with the updated price
         # Without it, the signal would be triggered before the Price is created, and hence work with the old price
-        from notifier.signals import price_updated  # Local import to avoid circular import
+        # from notifier.signals import price_updated  # Local import to avoid circular import
 
-        price_updated.send(sender=self.__class__, instance=self)
+        # price_updated.send(sender=self.__class__, instance=self)
 
 
 # TODO: move to signals.py

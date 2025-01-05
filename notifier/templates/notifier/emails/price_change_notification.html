@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-    <p>Здравствуйте, {{ user }}!</p>
+    <p>Здравствуйте, {{ user_name }}!</p>
     <p>Были изменены цены на следующие товары:</p>
     <table>
         <tr>
@@ -35,9 +35,9 @@
         {% for item in items %}
         <tr>
             <td>{{ item.name }}</td>
-            <td>{{ item.old_price }}</td>
-            <td>{{ item.new_price }}</td>
-            <td>{{ item.percent_change }}%</td>
+            <td>{{ item.previous_price }}</td>
+            <td>{{ item.price }}</td>
+            <td>{{ item.price_percent_change }}%</td>
         </tr>
         {% endfor %}
     </table>
