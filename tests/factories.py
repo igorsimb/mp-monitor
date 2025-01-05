@@ -1,10 +1,10 @@
 import factory
-from factory.django import DjangoModelFactory
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from factory.django import DjangoModelFactory
 
+from accounts.models import Tenant, TenantQuota, PaymentPlan, Profile
 from config import DEFAULT_QUOTAS, PlanType
 from main.models import Item
-from accounts.models import Tenant, TenantQuota, PaymentPlan, Profile
 from mp_monitor import settings
 
 
@@ -62,6 +62,7 @@ class ItemFactory(DjangoModelFactory):
     tenant = factory.SubFactory(TenantFactory, name=UserFactory.email)
     name = factory.Sequence(lambda n: f"item_{n+1}")
     sku = factory.Sequence(lambda n: f"{n+1}" * 5)
+    price = factory.Sequence(lambda n: (n + 1) * 100)
 
 
 class TenantQuotaFactory(DjangoModelFactory):
