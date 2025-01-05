@@ -105,6 +105,7 @@ def get_items_with_price_changes_over_threshold(tenant: Tenant, items_data: list
 
     # temporary limiting functionality to superusers
     if not tenant.users.filter(is_superuser=True).exists():
+        logger.info("No superusers found. Exiting.")
         return []
 
     items_with_price_change: list[Item] = []
