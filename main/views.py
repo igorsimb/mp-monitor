@@ -29,7 +29,6 @@ from main.exceptions import QuotaExceededException, PlanScheduleLimitationExcept
 from main.forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
 from main.models import Item, Price, Order
 from mp_monitor import settings
-from notifier.tasks import send_price_change_email
 from utils import billing, items, marketplace, notifications, payment, price_display, task_utils
 
 user = get_user_model()
@@ -44,7 +43,7 @@ def index(request):
     return render(request, "main/index.html")
 
 
-class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
+class ItemListView(LoginRequiredMixin, PermissionListMixin, ListView):
     # TODO: add min/max pills if min or max
     model = Item
     context_object_name = "items"
@@ -107,7 +106,7 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         return super().get(request, *args, **kwargs)
 
 
-class ItemDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailView):
+class ItemDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Item
     permission_required = ["view_item"]
     template_name = "main/item_detail.html"
@@ -222,10 +221,7 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
             items_data, invalid_skus = marketplace.scrape_items_from_skus(skus)
             items.update_or_create_items(request, items_data)
 
-            items_with_price_change: list[Item] = items.get_items_with_price_changes_over_threshold(
-                request.user.tenant, items_data
-            )
-            send_price_change_email(request.user.tenant, items_with_price_change)
+            notifications.notify_price_changes(request.user.tenant, items_data)
             notifications.show_successful_scrape_message(request, items_data)
 
             if invalid_skus:
@@ -271,10 +267,7 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             items_data, _ = marketplace.scrape_items_from_skus(skus)
             items.update_or_create_items(request, items_data)
 
-            items_with_price_change: list[Item] = items.get_items_with_price_changes_over_threshold(
-                request.user.tenant, items_data
-            )
-            send_price_change_email(request.user.tenant, items_with_price_change)
+            notifications.notify_price_changes(request.user.tenant, items_data)
             notifications.show_successful_scrape_message(request, items_data)
 
             return redirect("item_list")
@@ -484,9 +477,8 @@ def superuser_or_test_modul(user) -> bool:
     return user.is_superuser or user.email == "test_modul@test.com"
 
 
-class BillingView(
-    UserPassesTestMixin, LoginRequiredMixin, View
-):  # TODO: remove UserPassesTestMixin when fully implemented
+# TODO: remove UserPassesTestMixin when fully implemented
+class BillingView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         return superuser_or_test_modul(self.request.user)
 
