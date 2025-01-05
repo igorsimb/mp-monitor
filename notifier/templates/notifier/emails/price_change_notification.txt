@@ -1,0 +1,10 @@
+Здравствуйте, {{ user }}!
+
+Были изменены цены на следующие товары:
+
+{% for item in items %}
+- {{ item.name }}: {{ item.old_price }} → {{ item.new_price }} ({{ item.percent_change }}%)
+{% endfor %}
+
+С уважением,
+команда MP Monitor

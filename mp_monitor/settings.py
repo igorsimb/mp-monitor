@@ -1,8 +1,8 @@
+import os
 from pathlib import Path
 
 import certifi
 import environ
-import os
 from django.contrib.messages import constants as message_constants
 from django.utils import timezone
 
@@ -283,10 +283,10 @@ AUTHENTICATION_BACKENDS = (
     "guardian.backends.ObjectPermissionBackend",
 )
 
-if LOCAL_DEVELOPMENT:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# if LOCAL_DEVELOPMENT:
+#     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# else:
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 ACCOUNT_SESSION_REMEMBER = True  # True/False/None; None = ask user
 # ACCOUNT_USERNAME_REQUIRED = False
