@@ -5,23 +5,32 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
         }
         th, td {
-            border: 1px solid black;
+            border: 1px solid #ccc;
             padding: 8px;
             text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
     </style>
 </head>
 <body>
-    <p>Уважаемый (-ая) {{ tenant.name }},</p>
+    <p>Здравствуйте, {{ user }}!</p>
     <p>Были изменены цены на следующие товары:</p>
     <table>
         <tr>
             <th>Товар</th>
             <th>Старая Цена</th>
             <th>Новая Цена</th>
-            <th>Процент Изменения</th>
+            <th>Изменение</th>
         </tr>
         {% for item in items %}
         <tr>
