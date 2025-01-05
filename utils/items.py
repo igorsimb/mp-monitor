@@ -89,3 +89,31 @@ def activate_parsing_for_selected_items(request: WSGIRequest, skus_list: list[in
         skus_list: List of SKUs to activate parsing for.
     """
     Item.objects.filter(Q(tenant_id=request.user.tenant.id) & Q(sku__in=skus_list)).update(is_parser_active=True)
+
+
+def get_items_with_price_changes_over_threshold(tenant: Tenant, items_data: list[dict]) -> list[Item]:
+    """
+    Check if any items have price change that is over the threshold set in the tenant settings.
+
+    Args:
+        tenant: The tenant whose items are being checked.
+        items_data: List of dictionaries containing item data.
+
+    Note:
+        Uses tenant.price_change_threshold to determine price changes
+    """
+
+    # temporary limiting functionality to superusers
+    if not tenant.users.filter(is_superuser=True).exists():
+        return []
+
+    items_with_price_change: list[Item] = []
+    items = Item.objects.filter(sku__in=[item["sku"] for item in items_data])  # Queryset[Item]
+
+    logger.info("Checking if any items have price change...")
+    for item in items:
+        if item.previous_price and abs(item.price_percent_change) > tenant.price_change_threshold:
+            items_with_price_change.append(item)
+
+    logger.info("Found %s items with price change", len(items_with_price_change))
+    return items_with_price_change

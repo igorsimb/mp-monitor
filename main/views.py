@@ -29,6 +29,7 @@ from main.exceptions import QuotaExceededException, PlanScheduleLimitationExcept
 from main.forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
 from main.models import Item, Price, Order
 from mp_monitor import settings
+from notifier.tasks import send_price_change_email
 from utils import billing, items, marketplace, notifications, payment, price_display, task_utils
 
 user = get_user_model()
@@ -106,7 +107,7 @@ class ItemListView(PermissionListMixin, LoginRequiredMixin, ListView):
         return super().get(request, *args, **kwargs)
 
 
-class ItemDetailView(PermissionRequiredMixin, DetailView):
+class ItemDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailView):
     model = Item
     permission_required = ["view_item"]
     template_name = "main/item_detail.html"
@@ -165,7 +166,8 @@ class ItemDetailView(PermissionRequiredMixin, DetailView):
         return super().get(request, *args, **kwargs)
 
 
-def load_chart(request, sku):
+@login_required
+def load_chart(request, sku: str) -> HttpResponse:
     """
     Load and return a Plotly chart for a specific item's price history.
 
@@ -178,7 +180,7 @@ def load_chart(request, sku):
         sku (str): The Stock Keeping Unit (SKU) of the item.
 
     Notes:
-        - The function expects the user to be authenticated and have a associated tenant.
+        - The function expects the user to be authenticated and have an associated tenant.
         - Start and end dates for filtering can be provided as GET parameters.
         - The chart is generated using the create_price_history_chart function from plotly_charts module.
         - in template use HTMX to render it on load, e.g.: hx-get="{% url 'load_chart' item.sku %}" hx-trigger="load"
@@ -193,6 +195,7 @@ def load_chart(request, sku):
 
 
 # TODO: consider renaming this function to add_new_items or something similar
+@login_required
 def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponseRedirect:
     """Scrapes items from the given SKUs taken from the form data"""
     if is_ratelimited(request, group="scrape_items", key="user_or_ip", method="POST", rate="10/m", increment=True):
@@ -207,20 +210,25 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
 
             if billing.get_user_quota(request.user) is not None:
                 try:
-                    logger.info("Trying to update demo user quota for max allowed skus...")
+                    logger.info("Trying to update user quota for max allowed skus...")
                     billing.update_tenant_quota_for_max_allowed_sku(request, skus)
                     billing.update_user_quota_for_allowed_parse_units(request.user, skus)
                 except QuotaExceededException as e:
                     logger.warning(e.message)
-                    messages.error(request, e.message)
+                    messages.error(request, "Превышен лимит парсинга товаров для данного тарифа.")
                     return redirect("item_list")
 
             logger.info("Scraping items with SKUs: %s", skus)
             items_data, invalid_skus = marketplace.scrape_items_from_skus(skus)
             items.update_or_create_items(request, items_data)
-            notifications.show_successful_scrape_message(request, items_data, max_items_on_screen=10)
 
-            if invalid_skus:  # check if there are invalid SKUs
+            items_with_price_change: list[Item] = items.get_items_with_price_changes_over_threshold(
+                request.user.tenant, items_data
+            )
+            send_price_change_email(request.user.tenant, items_with_price_change)
+            notifications.show_successful_scrape_message(request, items_data)
+
+            if invalid_skus:
                 notifications.show_invalid_skus_message(request, invalid_skus)  # pragma: no cover
 
             return redirect("item_list")
@@ -231,8 +239,9 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
     return render(request, "main/item_list.html", context)
 
 
+@login_required
 def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
-    """Scrapes selected items"""
+    """Scrapes items selected in the checkboxes"""
 
     if is_ratelimited(request, group="update_items", key="user_or_ip", method="POST", rate="10/m", increment=True):
         messages.error(request, "Слишком много запросов на обновление товаров. Попробуйте позже.")
@@ -261,7 +270,12 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             # scrape_items_from_skus returns a tuple, but only the first part is needed for update_or_create_items
             items_data, _ = marketplace.scrape_items_from_skus(skus)
             items.update_or_create_items(request, items_data)
-            notifications.show_successful_scrape_message(request, items_data, max_items_on_screen=10)
+
+            items_with_price_change: list[Item] = items.get_items_with_price_changes_over_threshold(
+                request.user.tenant, items_data
+            )
+            send_price_change_email(request.user.tenant, items_with_price_change)
+            notifications.show_successful_scrape_message(request, items_data)
 
             return redirect("item_list")
         else:
@@ -276,6 +290,7 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
     return render(request, "main/item_list.html", {"update_items_form": form})
 
 
+@login_required
 def create_scrape_interval_task(
     request: WSGIRequest,
 ) -> HttpResponse | HttpResponseRedirect:
@@ -308,12 +323,6 @@ def create_scrape_interval_task(
 
             interval = scrape_interval_form.cleaned_data["interval_value"]
             period = scrape_interval_form.cleaned_data["period"]
-
-            # Limit the interval to 24 hours for free users
-            # if request.user.tenant.payment_plan.name == PaymentPlan.PlanName.FREE.value:
-            #     if period == "hours" and interval < 24:
-            #         messages.error(request, "Ограничения бесплатного тарифа. Установите интервал не менее 24 часов")
-            #         return redirect("item_list")
 
             try:
                 task_utils.check_plan_schedule_limitations(request.user.tenant, period, interval)
@@ -402,6 +411,7 @@ def create_scrape_interval_task(
     return render(request, "main/item_list.html", context)
 
 
+@login_required
 def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
     """Updates existing scrape interval for user's tenant and activates scraping for selected items.
 
@@ -452,6 +462,7 @@ def update_scrape_interval(request: WSGIRequest) -> HttpResponse:
     return render(request, "main/item_list.html", context)
 
 
+@login_required
 @user_passes_test(task_utils.periodic_task_exists, redirect_field_name=None)
 def destroy_scrape_interval_task(request: WSGIRequest) -> HttpResponseRedirect:
     items.uncheck_all_boxes(request)
@@ -473,7 +484,9 @@ def superuser_or_test_modul(user) -> bool:
     return user.is_superuser or user.email == "test_modul@test.com"
 
 
-class BillingView(UserPassesTestMixin, View):  # TODO: remove UserPassesTestMixin when fully implemented
+class BillingView(
+    UserPassesTestMixin, LoginRequiredMixin, View
+):  # TODO: remove UserPassesTestMixin when fully implemented
     def test_func(self):
         return superuser_or_test_modul(self.request.user)
 
@@ -729,6 +742,7 @@ def switch_plan_modal(request):
     return render(request, "main/partials/switch_plan_modal.html", context)
 
 
+@login_required
 def switch_plan(request: WSGIRequest) -> HttpResponse:
     tenant = request.user.tenant
     minimum_days_covered = 3
