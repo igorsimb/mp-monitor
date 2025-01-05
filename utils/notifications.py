@@ -10,6 +10,10 @@ from django.http import HttpRequest
 from django.utils.safestring import mark_safe
 
 import config
+from accounts.models import Tenant
+from main.models import Item
+from notifier.tasks import send_price_change_email
+from utils import items
 
 logger = logging.getLogger(__name__)
 
@@ -64,3 +68,15 @@ def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
             "Возможен неверный формат артикулов, или товаров с такими артикулами не существует. "
             "Пожалуйста, проверьте их корректность и при возникновении вопросов обратитесь в службу поддержки.",
         )
+
+
+def notify_price_changes(tenant: Tenant, items_data: list[dict]) -> None:
+    """
+    Send price change notifications for items with price change that is over the threshold set in the tenant settings
+
+    Args:
+        tenant (Tenant): The tenant object
+        items_data (list): List of items data with price information
+    """
+    items_with_price_change: list[Item] = items.get_items_with_price_changes_over_threshold(tenant, items_data)
+    send_price_change_email(tenant, items_with_price_change)
