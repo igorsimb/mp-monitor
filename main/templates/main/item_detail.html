@@ -36,7 +36,19 @@
             </ol>
         </nav>
 
-        <h3 class="text-start mt-4 mb-2">{{ item.name }}</h3>
+        <!-- Notification add button -->
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="">{{ item.name }}</h3>
+            <button title="Добавить уведомление по товару"
+                    class="btn btn-outline-primary rounded-circle p-2 notification-add-button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#offcanvasAddNotification"
+                    aria-controls="offcanvasAddNotification"
+            >
+                <span class="material-symbols-sharp">notification_add</span>
+                <span class="visually-hidden">Add notification</span>
+            </button>
+        </div>
 
         <!-- External link to Wildberries -->
         <div class="mb-4">
@@ -48,47 +60,51 @@
             </a>
         </div>
 
+
+        {% include "main/partials/notification_form.html" %}
+
+
         <!-- PRICE CARDS -->
         {% if item.price %}
-        <div class="row justify-content-between mb-4 gx-4">
-            <div class="col-md-3 mb-3">
-                <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
-                    <span class="material-symbols-sharp flavor-icon">currency_ruble</span>
-                    <div class="fw-bold fs-1">{{ item.price }}</div>
-                    <div class="text-body-secondary fs-6">Текущая цена</div>
+            <div class="row justify-content-between mb-4 gx-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
+                        <span class="material-symbols-sharp flavor-icon">currency_ruble</span>
+                        <div class="fw-bold fs-1">{{ item.price }}</div>
+                        <div class="text-body-secondary fs-6">Текущая цена</div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
-                    <span class="material-symbols-sharp flavor-icon">functions</span>
-                    <div class="fw-bold fs-1">{{ item.avg_price }}</div>
-                    <div class="text-body-secondary fs-6">Средняя цена</div>
+                <div class="col-md-3 mb-3">
+                    <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
+                        <span class="material-symbols-sharp flavor-icon">functions</span>
+                        <div class="fw-bold fs-1">{{ item.avg_price }}</div>
+                        <div class="text-body-secondary fs-6">Средняя цена</div>
+                    </div>
                 </div>
-            </div>
 
 
-            <div class="col-md-3 mb-3">
-                <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
-                    <span class="material-symbols-sharp flavor-icon">keyboard_double_arrow_up</span>
-                    <div class="fw-bold fs-1">{{ item.max_price }}</div>
-                    <div class="text-body-secondary fs-6 tooltip-needed" data-bs-toggle="tooltip"
-                         data-bs-placement="bottom"
-                         data-bs-title="{{ item.max_price_date }}">Максимальная цена
+                <div class="col-md-3 mb-3">
+                    <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
+                        <span class="material-symbols-sharp flavor-icon">keyboard_double_arrow_up</span>
+                        <div class="fw-bold fs-1">{{ item.max_price }}</div>
+                        <div class="text-body-secondary fs-6 tooltip-needed" data-bs-toggle="tooltip"
+                             data-bs-placement="bottom"
+                             data-bs-title="{{ item.max_price_date }}">Максимальная цена
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
+                        <span class="material-symbols-sharp flavor-icon">keyboard_double_arrow_down</span>
+                        <div class="fw-bold fs-1">{{ item.min_price }}</div>
+                        <div class="text-body-secondary fs-6 tooltip-needed" data-bs-toggle="tooltip"
+                             data-bs-placement="bottom"
+                             data-bs-title="{{ item.min_price_date }}">Минимальная цена
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card p-3 text-center bg-white border border-secondary fs-5 item-price-card h-100 position-relative overflow-hidden">
-                    <span class="material-symbols-sharp flavor-icon">keyboard_double_arrow_down</span>
-                    <div class="fw-bold fs-1">{{ item.min_price }}</div>
-                    <div class="text-body-secondary fs-6 tooltip-needed" data-bs-toggle="tooltip"
-                         data-bs-placement="bottom"
-                         data-bs-title="{{ item.min_price_date }}">Минимальная цена
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
+        {% endif %}
 
 
         <div class="position-relative mb-4">

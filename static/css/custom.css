@@ -534,3 +534,27 @@ because the nesting selector cannot represent pseudo-elements. */
         margin: 16px auto;
     }
 }
+
+
+/* Notification add button */
+.notification-add-button {
+  transition: all 0.2s ease-in-out;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+    border-width: 2px;
+}
+
+.notification-add-button:hover {
+  transform: translateY(-2px);
+}
+
+.notification-add-button:active {
+  transform: scale(0.95);
+}
+
+.notification-add-button i {
+  font-size: 1.2rem;
+}
