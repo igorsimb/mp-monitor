@@ -2,6 +2,7 @@
 .idea
 .git
 /media/*
+googlesocial_login_creds.json
 
 ### Python template
 # Byte-compiled / optimized / DLL files

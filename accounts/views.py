@@ -187,12 +187,18 @@ def email_verify(request):
     return redirect("profile_settings")
 
 
+# WARNING: Deleting the account will cascade delete the associated tenant and all its data
+# TODO(multitenancy): Currently safe to delete tenants as they are 1:1 with users.
+# When implementing full multitenancy support:
+# 1. Ensure tenant names are unique
+# 2. Handle shared tenants (users belonging to same tenant)
+# 3. Add proper tenant cleanup strategy
 @login_required
 def profile_delete_view(request):
     user = request.user
     if request.method == "POST":
         logout(request)
-        user.delete()
+        user.tenant.delete()
         messages.success(request, "Аккаунт удалён. Очень жаль!")
         return redirect("index")
 
