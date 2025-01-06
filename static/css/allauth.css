@@ -170,7 +170,7 @@ use .allauth class and any other selectors to style the allauth-specific element
   width: 18px;
   height: 18px;
   margin-right: 8px;
-  background-image: url("../img/google-icon.svg");
+  background-image: url("../img/icons/google-icon.svg");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
