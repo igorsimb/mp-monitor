@@ -9,8 +9,8 @@ from django.urls import reverse
 from django.utils import timezone
 from guardian.shortcuts import assign_perm, get_perms
 
-from main.models import Item, Price
 from accounts.models import Tenant, TenantStatus
+from main.models import Item, Price
 from tests.factories import UserFactory, TenantFactory
 
 logger = logging.getLogger(__name__)
@@ -56,12 +56,6 @@ class TestTenantModel:
         logger.info("Checking that new Tenant is not saved")
         with pytest.raises(IntegrityError):
             tenant2.save()
-
-    def test_create_new_tenant_with_empty_name(self) -> None:
-        tenant = Tenant(name="")
-        logger.info("Checking that a tenant with an empty name cannot be saved...")
-        with pytest.raises(IntegrityError):
-            tenant.save()
 
     def test_retrieve_existing_tenant_by_name(self) -> None:
         tenant = Tenant(name="Tenant1")

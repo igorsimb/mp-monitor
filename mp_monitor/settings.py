@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     "anymail",
     "debug_toolbar",
     "django_celery_beat",
@@ -347,3 +348,20 @@ TINKOFF_TERMINAL_KEY_TEST = env("TINKOFF_TERMINAL_KEY_TEST")
 TINKOFF_TERMINAL_PASSWORD_TEST = env("TINKOFF_TERMINAL_PASSWORD_TEST")
 TINKOFF_TERMINAL_KEY = env("TINKOFF_TERMINAL_KEY")
 TINKOFF_TERMINAL_PASSWORD = env("TINKOFF_TERMINAL_PASSWORD")
+
+
+# Google OAuth
+
+# APP is commented out because we provide the client_id and client_secret in the django admin interface
+# without that google threw an error when trying to authenticate
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        # "APP": {
+        #     "client_id": env("GOOGLE_CLIENT_ID"),
+        #     "client_secret": env("GOOGLE_CLIENT_SECRET"),
+        #     "key": "",
+        # },
+    }
+}

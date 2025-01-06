@@ -240,7 +240,7 @@ class User(AbstractUser):
         # django-guardian creates AnonymousUser by default, setting status to CANCELED for now until
         # https://github.com/igorsimb/mp-monitor/issues/73 is resolved
         elif self.username == "AnonymousUser":
-            self.tenant = Tenant.objects.create(status=TenantStatus.CANCELED)
+            self.tenant = Tenant.objects.create(name="django_guardian_tenant", status=TenantStatus.CANCELED)
         super().save(*args, **kwargs)
 
 
