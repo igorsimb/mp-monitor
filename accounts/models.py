@@ -235,12 +235,19 @@ class User(AbstractUser):
         verbose_name_plural = "Пользователи"
 
     def save(self, *args, **kwargs):  # type: ignore
-        if not self.tenant and self.username != "AnonymousUser":
-            self.tenant = Tenant.objects.create(name=self.email)
-        # django-guardian creates AnonymousUser by default, setting status to CANCELED for now until
-        # https://github.com/igorsimb/mp-monitor/issues/73 is resolved
-        elif self.username == "AnonymousUser":
-            self.tenant = Tenant.objects.create(name="django_guardian_tenant", status=TenantStatus.CANCELED)
+        if not self.tenant:
+            # django-guardian creates AnonymousUser by default, setting status to CANCELED for now until
+            # https://github.com/igorsimb/mp-monitor/issues/73 is resolved
+            if self.username == "AnonymousUser":
+                tenant, created = Tenant.objects.get_or_create(
+                    name="django_guardian_tenant", defaults={"status": TenantStatus.CANCELED}
+                )
+                self.tenant = tenant
+                # If tenant already exists, return
+                if not created:
+                    return
+            else:
+                self.tenant = Tenant.objects.create(name=f"{self.email}_{Tenant.objects.count() + 1}")
         super().save(*args, **kwargs)
 
 
