@@ -20,6 +20,7 @@ urlpatterns = [
     path("", include("main.urls")),
     # Third-party apps
     path("__debug__/", include("debug_toolbar.urls")),
+    path("notifier/", include("notifier.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

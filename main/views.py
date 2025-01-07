@@ -29,6 +29,8 @@ from main.exceptions import QuotaExceededException, PlanScheduleLimitationExcept
 from main.forms import ScrapeForm, ScrapeIntervalForm, UpdateItemsForm, PriceHistoryDateForm, PaymentForm
 from main.models import Item, Price, Order
 from mp_monitor import settings
+from notifier.forms import PriceAlertForm
+from notifier.models import PriceAlert
 from utils import billing, items, marketplace, notifications, payment, price_display, task_utils
 
 user = get_user_model()
@@ -150,6 +152,8 @@ class ItemDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         context["demo_user_lifetime_hours"] = int(config.DEMO_USER_HOURS_ALLOWED)
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
+        context["price_alert_form"] = PriceAlertForm(data=self.request.POST, item=self.object)
+        context["price_alerts"] = PriceAlert.objects.filter(items=self.object)
         return context
 
     def get_queryset(self) -> QuerySet[Item]:
