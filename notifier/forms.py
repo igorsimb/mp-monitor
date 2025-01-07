@@ -13,21 +13,21 @@ class PriceAlertForm(forms.ModelForm):
         max_digits=10,
         decimal_places=2,
         widget=forms.NumberInput(
-            attrs={
-                "class": "form-control",
-                "placeholder": _("Целевая цена"),
-            }
+            # attrs={
+            #     "class": "form-control",
+            #     "placeholder": _("Целевая цена"),
+            # }
         ),
     )
 
     message = forms.CharField(
         required=False,
         widget=forms.Textarea(
-            attrs={
-                "class": "form-control",
-                "rows": 3,
-                "placeholder": _("Комментарий к уведомлению..."),
-            }
+            # attrs={
+            #     "class": "form-control",
+            #     "rows": 3,
+            #     "placeholder": _("Комментарий к уведомлению..."),
+            # }
         ),
     )
 

@@ -24,5 +24,4 @@ class PriceAlert(models.Model):
         verbose_name_plural = "Price Alerts"
 
     def __str__(self):
-        items_count = self.items.count()
-        return f"Price Alert for {items_count} item{'s' if items_count != 1 else ''}"
+        return f"Price Alert ({self.pk})"

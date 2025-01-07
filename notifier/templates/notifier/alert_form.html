@@ -1,0 +1,48 @@
+{% load widget_tweaks %}
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAddNotification"
+     aria-labelledby="offcanvasAddNotificationLabel"
+{#     data-bs-backdrop="static"#}
+     style="--bs-offcanvas-width: 450px;">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasAddNotificationLabel">Новое уведомление</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <form method="POST" action="{% url 'create_price_alert' item.id %}">
+        {% csrf_token %}
+      <div class="row">
+        <div class="col-md-6">
+          <label for="targetPrice" class="form-label">Цена</label>
+          {% render_field price_alert_form.target_price class="form-control" id="targetPrice" %}
+        </div>
+        <div class="col-md-6">
+          <label for="percentageChange" class="form-label">Изменение (%)</label>
+          <input type="number" class="form-control" id="percentageChange">
+        </div>
+      </div>
+      <div class="mb-3">
+        <small id="currentPrice" class="text-muted">Текущая цена: 147.57 ₽</small>
+      </div>
+      <div class="mb-3">
+        {% render_field price_alert_form.message class="form-control" id="comment" rows="3" placeholder="Комментарий к уведомлению..." %}
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Add</button>
+    </form>
+
+      <hr>
+{#  {{ price_alerts }}#}
+    {% for alert in price_alerts %}
+        <ul>
+            <li>
+                {{ alert.target_price }} {{ alert.message }}
+                <a href="{% url 'delete_price_alert' alert.id %}" class="btn btn-danger">Удалить</a>
+            </li>
+        </ul>
+    {% empty %}
+        <p>Нет уведомлений</p>
+  {% endfor %}
+
+  </div>
+</div>
+
