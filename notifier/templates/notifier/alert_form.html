@@ -22,12 +22,12 @@
         </div>
       </div>
       <div class="mb-3">
-        <small id="currentPrice" class="text-muted">Текущая цена: 147.57 ₽</small>
+        <small id="currentPrice" class="text-muted">Текущая цена: {{ item.price }} ₽</small>
       </div>
       <div class="mb-3">
         {% render_field price_alert_form.message class="form-control" id="comment" rows="3" placeholder="Комментарий к уведомлению..." %}
       </div>
-      <button type="submit" class="btn btn-primary w-100">Add</button>
+      <button type="submit" class="btn btn-primary w-100">Сохранить</button>
     </form>
 
 

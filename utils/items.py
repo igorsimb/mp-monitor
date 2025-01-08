@@ -10,7 +10,6 @@ from django.http import HttpRequest
 
 from accounts.models import Tenant
 from main.models import Item, Price
-from notifier.models import PriceAlert
 
 logger = logging.getLogger(__name__)
 
@@ -125,16 +124,14 @@ def get_items_with_price_change(tenant: Tenant, items_data: list[dict]) -> list[
     """
     Fetch items with price changes for the given tenant and items data.
     """
-    items_with_price_change: list[Item] = []
-    # Queryset[Item]
+
+    logger.info("Getting items with price changes...")
     items = Item.objects.filter(sku__in=[item["sku"] for item in items_data], tenant=tenant).prefetch_related(
         Prefetch("prices", queryset=Price.objects.order_by("-created_at"))
     )
 
-    logger.info("Checking if any items have price change...")
-    for item in items:
-        if item.previous_price != item.price:
-            items_with_price_change.append(item)
+    items_with_price_change = [item for item in items if item.previous_price != item.price]
+    logger.info("Found %s items with price changes", len(items_with_price_change))
 
     return items_with_price_change
 
@@ -144,30 +141,16 @@ def get_items_with_active_alerts(tenant: Tenant, items_with_price_change: list[I
     Fetch items with active price alerts for the given tenant.
     Returns a list of items that hit the threshold to trigger the alert.
     """
-    items_with_alerts = Item.objects.filter(id__in=[item.id for item in items_with_price_change]).prefetch_related(
-        Prefetch(
-            "price_alerts",
-            queryset=PriceAlert.objects.filter(tenant=tenant, is_active=True),
-            to_attr="active_price_alerts",
-        )
+    logger.info("Getting items with active alerts...")
+
+    logger.debug("Extracting IDs from items_with_price_change...")
+    item_ids_with_price_change: list = [item.id for item in items_with_price_change]
+
+    items_with_alerts = (
+        Item.objects.filter(Q(id__in=item_ids_with_price_change) & Q(price_alerts__is_active=True) & Q(tenant=tenant))
+        .distinct()
+        .prefetch_related("price_alerts")
     )
+    logger.info("Found %s items with active alerts", items_with_alerts.count())
 
-    def _alert_triggered(alert: PriceAlert, item: Item) -> bool:
-        """
-        Filter items that have at least one active alert triggered by price change
-        The item's price change is compared to target_price and checks whether the new price hit the threshold
-        (either UP or DOWN) set by user to trigger the alert
-        """
-        if alert.target_price_direction == PriceAlert.TargetPriceDirection.UP:
-            return item.previous_price < alert.target_price <= item.current_price
-        elif alert.target_price_direction == PriceAlert.TargetPriceDirection.DOWN:
-            return item.previous_price > alert.target_price >= item.current_price
-        return False
-
-    # Filters only items where at least one alert is triggered.
-    return [
-        item for item in items_with_alerts if any(_alert_triggered(alert, item) for alert in item.active_price_alerts)
-    ]
-
-    # items_with_active_alerts: list = [item for item in items_with_alerts if item.active_price_alerts]
-    # return items_with_active_alerts
+    return list(items_with_alerts)

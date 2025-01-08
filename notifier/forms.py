@@ -52,6 +52,11 @@ class PriceAlertForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+        # update target_price_direction
+        if instance.target_price > self.item.price:
+            instance.target_price_direction = PriceAlert.TargetPriceDirection.UP
+        elif instance.target_price < self.item.price:
+            instance.target_price_direction = PriceAlert.TargetPriceDirection.DOWN
         if self.item:
             instance.tenant = self.item.tenant
             if commit:
