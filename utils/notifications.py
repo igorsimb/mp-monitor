@@ -1,5 +1,5 @@
 """
-User feedback system utilities for displaying messages and notifications.
+User feedback system utilities for displaying messages and processing notifications.
 """
 
 import logging
@@ -21,13 +21,6 @@ logger = logging.getLogger(__name__)
 def show_successful_scrape_message(
     request: HttpRequest, items_data: List[Dict[str, Any]], max_items_on_screen=config.MAX_ITEMS_ON_SCREEN
 ) -> None:
-    """Show success message after scraping items.
-
-    Args:
-        request: The HTTP request object.
-        items_data: List of dictionaries containing item data.
-        max_items_on_screen: Maximum number of items to show in the message.
-    """
     if not items_data:
         messages.error(request, "Добавьте хотя бы 1 товар с корректным артикулом")
         return
@@ -48,36 +41,21 @@ def show_successful_scrape_message(
 
 
 def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
-    """Show warning message for invalid SKUs.
-
-    Args:
-        request: The HTTP request object.
-        invalid_skus: List of invalid SKUs.
-    """
     if len(invalid_skus) == 1:
         messages.warning(
             request,
             f"Не удалось добавить следующий артикул: {', '.join(invalid_skus)}<br>"
-            "Возможен неверный формат артикула, или товара с таким артикулом не существует. "
-            "Пожалуйста, проверьте его корректность и при возникновении вопросов обратитесь в службу поддержки.",
+            "Возможен неверный формат артикула.",
         )
     else:
         messages.warning(
             request,
             f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>"
-            "Возможен неверный формат артикулов, или товаров с такими артикулами не существует. "
-            "Пожалуйста, проверьте их корректность и при возникновении вопросов обратитесь в службу поддержки.",
+            "Возможен неверный формат артикулов.",
         )
 
 
 def process_price_change_notifications(tenant: Tenant, items_data: list[dict]) -> None:
-    """
-    Send price change notifications for items with price change that is over the threshold set in the tenant settings
-
-    Args:
-        tenant (Tenant): The tenant object
-        items_data (list): List of items data with price information
-    """
     logger.info("Checking is user needs to be notified of price changes...")
 
     # Step 1

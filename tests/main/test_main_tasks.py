@@ -113,7 +113,7 @@ class TestScrapeIntervalTask:
 
     @pytest.fixture
     def tenant(self, user: User) -> Tenant:
-        return Tenant.objects.get(name=user.email)
+        return Tenant.objects.get(name__startswith=user.email)
 
     @pytest.fixture
     def items(self, tenant: Tenant) -> list:
@@ -164,7 +164,7 @@ class TestScrapeIntervalTask:
         )
         assert items[1].price == 150
 
-    def test_no_items_created_if_no_id(self, tenant: Tenant) -> None:  # type: ignore
+    def test_no_items_created_if_no_id(self, tenant: Tenant) -> None:
         scrape_interval_task(tenant.id, selected_item_ids=[])
 
         logger.debug("Items: %s", Item.objects.all())

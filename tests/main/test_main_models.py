@@ -39,9 +39,13 @@ class TestTenantModel:
         assert set(active_tenants) == {trialing, active, exempt}
 
     def test_tenant_name_is_equal_to_user_email(self) -> None:
-        user = UserFactory()
+        """
+        Check that the tenant name is equal to the user's email + the number of tenants in the database
+        minus django_guardian_tenant
+        """
 
-        assert user.tenant.name == user.email
+        user = UserFactory()
+        assert user.tenant.name == f"{user.email}_{Tenant.objects.count() - 1}", f"{user.tenant.name=}"
 
     def test_create_new_tenant_with_unique_name(self) -> None:
         tenant = Tenant(name="Tenant1")
