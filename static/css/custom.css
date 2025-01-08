@@ -550,3 +550,20 @@ because the nesting selector cannot represent pseudo-elements. */
 .notification-add-button i {
   font-size: 1.2rem;
 }
+
+.notification-card:hover {
+    transform: translateY(-2px);
+    /*box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);*/
+    /*transition: transform 0.2s ease, box-shadow 0.2s ease;*/
+    transition: transform 0.2s ease;
+}
+
+.hover-shadow-success:hover {
+    box-shadow: 0 4px 10px rgba(25, 135, 84, 0.35);
+    transition: all 0.2s ease;
+}
+
+.hover-shadow-secondary:hover {
+    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.35);
+    transition: all 0.2s ease;
+}

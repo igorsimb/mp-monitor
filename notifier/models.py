@@ -25,7 +25,7 @@ class PriceAlert(models.Model):
         help_text="Direction of the target price",
     )
     message = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, verbose_name="Включено")
     last_triggered_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

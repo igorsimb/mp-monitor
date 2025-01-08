@@ -153,7 +153,8 @@ class ItemDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         context["demo_max_allowed_skus"] = int(config.DEMO_USER_MAX_ALLOWED_SKUS)
         context["demo_allowed_parse_units"] = int(config.DEMO_USER_ALLOWED_PARSE_UNITS)
         context["price_alert_form"] = PriceAlertForm(data=self.request.POST, item=self.object)
-        context["price_alerts"] = PriceAlert.objects.filter(items=self.object)
+        context["price_alerts"] = PriceAlert.objects.filter(items=self.object).order_by("-is_active")
+        context["active_price_alerts"] = PriceAlert.objects.filter(items=self.object, is_active=True)
         return context
 
     def get_queryset(self) -> QuerySet[Item]:
