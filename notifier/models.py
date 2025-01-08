@@ -24,4 +24,4 @@ class PriceAlert(models.Model):
         verbose_name_plural = "Price Alerts"
 
     def __str__(self):
-        return f"Price Alert ({self.pk})"
+        return f"Price Alert for {self.tenant} #{self.pk}"

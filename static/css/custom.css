@@ -547,10 +547,6 @@ because the nesting selector cannot represent pseudo-elements. */
     border-width: 2px;
 }
 
-.notification-add-button:hover {
-  transform: translateY(-2px);
-}
-
 .notification-add-button:active {
   transform: scale(0.95);
 }

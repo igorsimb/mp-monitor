@@ -30,18 +30,18 @@
       <button type="submit" class="btn btn-primary w-100">Add</button>
     </form>
 
-      <hr>
-{#  {{ price_alerts }}#}
-    {% for alert in price_alerts %}
-        <ul>
-            <li>
-                {{ alert.target_price }} {{ alert.message }}
-                <a href="{% url 'delete_price_alert' alert.id %}" class="btn btn-danger">Удалить</a>
-            </li>
-        </ul>
-    {% empty %}
-        <p>Нет уведомлений</p>
-  {% endfor %}
+
+    {% if price_alerts %}
+        <hr>
+        {% for alert in price_alerts %}
+            <ul>
+                <li>
+                    {{ alert.target_price }} {{ alert.message }}
+                    <a href="{% url 'delete_price_alert' alert.id %}" class="btn btn-danger">Удалить</a>
+                </li>
+            </ul>
+        {% endfor %}
+  {% endif %}
 
   </div>
 </div>
