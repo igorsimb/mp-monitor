@@ -48,9 +48,9 @@
                 <span class="material-symbols-sharp">notification_add</span>
                 <span class="visually-hidden">Добавить уведомление</span>
 
-                {% if price_alerts %}
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-danger" title="Всего уведомлений">
-                    {{ price_alerts.count }}
+                {% if active_price_alerts %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-danger" title="Всего активных уведомлений">
+                    {{ active_price_alerts.count }}
                 <span class="visually-hidden">Уведомления</span>
                 </span>
                 {% endif %}

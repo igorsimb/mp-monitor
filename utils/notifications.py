@@ -12,6 +12,7 @@ from django.utils.safestring import mark_safe
 import config
 from accounts.models import Tenant
 from main.models import Item
+from notifier.models import PriceAlert
 from notifier.tasks import send_price_change_email
 from utils import items
 
@@ -55,6 +56,16 @@ def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
         )
 
 
+def deactivate_price_alerts(tenant: Tenant, items_with_active_alerts: list[Item]) -> None:
+    """
+    Once price alerts are sent, deactivate them to prevent sending them again.
+    """
+    item_ids: list = [item.id for item in items_with_active_alerts]
+    alert = PriceAlert.objects.get(tenant=tenant, items__id__in=item_ids)
+    alert.is_active = False
+    alert.save()
+
+
 def process_price_change_notifications(tenant: Tenant, items_data: list[dict]) -> None:
     logger.info("Checking is user needs to be notified of price changes...")
 
@@ -66,3 +77,6 @@ def process_price_change_notifications(tenant: Tenant, items_data: list[dict]) -
 
     # Step 3
     send_price_change_email(tenant, items_with_active_alerts)
+
+    # Step 4
+    deactivate_price_alerts(tenant, items_with_active_alerts)

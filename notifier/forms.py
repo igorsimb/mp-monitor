@@ -33,7 +33,7 @@ class PriceAlertForm(forms.ModelForm):
 
     class Meta:
         model = PriceAlert
-        fields = ["target_price", "message"]
+        fields = ["target_price", "message", "is_active"]
 
     def __init__(self, item=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
