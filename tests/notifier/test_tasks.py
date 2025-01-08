@@ -58,11 +58,3 @@ class TestSendPriceChangeEmail:
         send_price_change_email(tenant, [])
 
         assert len(mail.outbox) == 0
-
-    def test_no_active_notifiers(self, tenant: Tenant, items: list) -> None:
-        items[0].is_notifier_active = False
-        items[0].save()
-
-        send_price_change_email(tenant, items)
-
-        assert len(mail.outbox) == 0

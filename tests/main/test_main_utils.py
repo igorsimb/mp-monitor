@@ -15,7 +15,6 @@ from accounts.models import Tenant
 from factories import ItemFactory, UserFactory, PeriodicTaskFactory, IntervalScheduleFactory, TenantFactory
 from main.exceptions import InvalidSKUException, PlanScheduleLimitationException
 from main.models import Item
-from utils.task_utils import check_plan_schedule_limitations
 from utils.items import (
     uncheck_all_boxes,
     update_or_create_items,
@@ -31,6 +30,7 @@ from utils.notifications import (
     show_successful_scrape_message,
     show_invalid_skus_message,
 )
+from utils.task_utils import check_plan_schedule_limitations
 from utils.task_utils import get_interval_russian_translation
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class TestUncheckAllBoxes:
 
     @pytest.fixture
     def tenant(self, user):
-        tenant = Tenant.objects.get(name=user.email)
+        tenant = Tenant.objects.get(name__startswith=user.email)
         return tenant
 
     def test_update_all_items(self, request, user, tenant):
@@ -85,9 +85,9 @@ class TestUncheckAllBoxes:
         logger.debug("User '%s' created", user1)
         user2 = User.objects.create(username="user2", email="user2_email@test.com")
         logger.debug("User '%s' created", user2)
-        tenant1 = Tenant.objects.get(name=user1.email)
+        tenant1 = Tenant.objects.get(name__startswith=user1.email)
         logger.debug("Tenant '%s' created", tenant1)
-        tenant2 = Tenant.objects.get(name=user2.email)
+        tenant2 = Tenant.objects.get(name__startswith=user2.email)
         logger.debug("Tenant '%s' created", tenant2)
 
         logger.info("Creating items for both tenants")
@@ -395,9 +395,7 @@ class TestShowInvalidSkusMessage(TestMessages):
         invalid_sku = ["11111"]
         show_invalid_skus_message(mock_warning_message_request, invalid_sku)
         expected_message = mark_safe(
-            f"Не удалось добавить следующий артикул: {', '.join(invalid_sku)}<br>"
-            "Возможен неверный формат артикула, или товара с таким артикулом не существует. "
-            "Пожалуйста, проверьте его корректность и при возникновении вопросов обратитесь в службу поддержки.",
+            f"Не удалось добавить следующий артикул: {', '.join(invalid_sku)}<br>" "Возможен неверный формат артикула.",
         )
         messages.warning.assert_called_once_with(mock_warning_message_request, expected_message)
 
@@ -406,8 +404,7 @@ class TestShowInvalidSkusMessage(TestMessages):
         show_invalid_skus_message(mock_warning_message_request, invalid_skus)
         expected_message = mark_safe(
             f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>"
-            "Возможен неверный формат артикулов, или товаров с такими артикулами не существует. "
-            "Пожалуйста, проверьте их корректность и при возникновении вопросов обратитесь в службу поддержки.",
+            "Возможен неверный формат артикулов.",
         )
         messages.warning.assert_called_once_with(mock_warning_message_request, expected_message)
 
@@ -492,7 +489,7 @@ class TestUpdateOrCreateItems:
 
     @pytest.fixture
     def tenant(self, user) -> Tenant:
-        tenant = Tenant.objects.get(name=user.email)
+        tenant = Tenant.objects.get(name__startswith=user.email)
         return tenant
 
     def test_existing_item_updated_and_not_created(self, request, user, tenant):

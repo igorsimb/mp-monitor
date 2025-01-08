@@ -6,8 +6,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.dispatch import Signal
 
-from accounts.models import Tenant, Profile
 from accounts.models import PaymentPlan
+from accounts.models import Tenant, Profile
 from accounts.signals import add_user_to_group
 from config import DEFAULT_QUOTAS, PlanType
 from tests.factories import UserFactory, TenantQuotaFactory, TenantFactory
@@ -38,7 +38,7 @@ class TestUserModel:
     def test_tenant_is_created_automatically_from_email(self):
         user = User.objects.create(email="testuser2@test.com", username="testuser2", password="testpassword")
         logger.info("user.tenant.name = %s", user.tenant.name)
-        assert user.tenant.name == "testuser2@test.com", f"{user.tenant.name=}"
+        assert user.tenant.name == f"testuser2@test.com_{Tenant.objects.count()}", f"{user.tenant.name=}"
 
     def test_user_creation_with_existing_tenant(self):
         existing_tenant = Tenant.objects.create(name="existing_tenant")
