@@ -12,6 +12,7 @@ from django.utils.safestring import mark_safe
 import config
 from accounts.models import Tenant
 from main.models import Item
+from notifier.tasks import send_price_change_email
 from utils import items
 
 logger = logging.getLogger(__name__)
@@ -77,19 +78,13 @@ def notify_price_changes(tenant: Tenant, items_data: list[dict]) -> None:
         tenant (Tenant): The tenant object
         items_data (list): List of items data with price information
     """
-    # items_with_active_alerts: list[Item] = items.get_items_with_active_alerts(tenant, items_data)
-    # items_with_price_change: list[Item] = items.get_items_with_price_changes_over_threshold(tenant, items_data)
-    # items_with_price_change: list[Item] = items.get_items_with_price_change(tenant, items_data)
-    # print(f"{items_with_price_change=}")
-    # send_price_change_email(tenant, items_with_price_change)
+    logger.info("Checking is user needs to be notified of price changes...")
 
-    # Step 1: Get items with price changes
+    # Step 1
     items_with_price_change: list[Item] = items.get_items_with_price_change(tenant, items_data)
-    print(f"Igor6: ({len(items_with_price_change)}) {items_with_price_change=}")
 
-    # Step 2: Get items with active alerts
+    # Step 2
     items_with_active_alerts: list[Item] = items.get_items_with_active_alerts(tenant, items_with_price_change)
-    print(f"Igor6: ({len(items_with_active_alerts)}) {items_with_active_alerts=}")
 
-    # Step 3: Send emails
-    # send_price_change_email(tenant, items_with_active_alerts)
+    # Step 3
+    send_price_change_email(tenant, items_with_active_alerts)
