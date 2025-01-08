@@ -6,6 +6,10 @@ from main.models import Item
 
 
 class PriceAlert(models.Model):
+    class TargetPriceDirection(models.TextChoices):
+        UP = ">=", "Above or Equal"
+        DOWN = "<=", "Below or Equal"
+
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     items = models.ManyToManyField(Item, related_name="price_alerts")
     target_price = models.DecimalField(
@@ -13,6 +17,12 @@ class PriceAlert(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(0)],
         help_text="Target price to trigger notification",
+    )
+    target_price_direction = models.CharField(
+        max_length=2,
+        choices=TargetPriceDirection.choices,
+        default=TargetPriceDirection.UP,
+        help_text="Direction of the target price",
     )
     message = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
