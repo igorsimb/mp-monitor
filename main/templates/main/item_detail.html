@@ -37,7 +37,7 @@
         </nav>
 
         <!-- Notification add button -->
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center position-relative">
             <h3 class="">{{ item.name }}</h3>
             <button title="Добавить уведомление по товару"
                     class="btn btn-outline-primary rounded-circle p-2 notification-add-button"
@@ -46,7 +46,14 @@
                     aria-controls="offcanvasAddNotification"
             >
                 <span class="material-symbols-sharp">notification_add</span>
-                <span class="visually-hidden">Add notification</span>
+                <span class="visually-hidden">Добавить уведомление</span>
+
+                {% if price_alerts %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-secondary" title="Всего уведомлений">
+                    {{ price_alerts.count }}
+                <span class="visually-hidden">Уведомления</span>
+                </span>
+                {% endif %}
             </button>
         </div>
 
