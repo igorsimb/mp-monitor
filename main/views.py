@@ -225,7 +225,7 @@ def scrape_items(request: WSGIRequest, skus: str) -> HttpResponse | HttpResponse
             items_data, invalid_skus = marketplace.scrape_items_from_skus(skus)
             items.update_or_create_items(request, items_data)
 
-            notifications.notify_price_changes(request.user.tenant, items_data)
+            notifications.process_price_change_notifications(request.user.tenant, items_data)
             notifications.show_successful_scrape_message(request, items_data)
 
             if invalid_skus:
@@ -271,7 +271,7 @@ def update_items(request: WSGIRequest) -> HttpResponse | HttpResponseRedirect:
             items_data, _ = marketplace.scrape_items_from_skus(skus)
             items.update_or_create_items(request, items_data)
 
-            notifications.notify_price_changes(request.user.tenant, items_data)
+            notifications.process_price_change_notifications(request.user.tenant, items_data)
             notifications.show_successful_scrape_message(request, items_data)
 
             return redirect("item_list")

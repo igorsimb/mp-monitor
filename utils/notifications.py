@@ -70,7 +70,7 @@ def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
         )
 
 
-def notify_price_changes(tenant: Tenant, items_data: list[dict]) -> None:
+def process_price_change_notifications(tenant: Tenant, items_data: list[dict]) -> None:
     """
     Send price change notifications for items with price change that is over the threshold set in the tenant settings
 
