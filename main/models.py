@@ -33,9 +33,10 @@ class Item(models.Model):
     price = models.DecimalField(
         max_digits=10,
         decimal_places=0,
+        blank=True,
         null=True,
         help_text="Цена товара в магазине с учетом СПП",
-        validators=[MinValueValidator(float("0.00"))],
+        # validators=[MinValueValidator(float("0.00"))],
     )
     spp = models.IntegerField(null=True, blank=True)
     image = models.URLField(null=True, blank=True)
@@ -101,10 +102,9 @@ class Item(models.Model):
     def previous_price(self) -> int | None:
         # In detail template  {{ item.previous_price }}
         prices = Price.objects.filter(item=self).order_by("-created_at")
-        if len(prices) < 2:
+        if prices.count() < 2:
             return None
-        previous_price = int(prices[1].value) if prices[1].value else None
-        return previous_price
+        return prices[1].value
 
     @property
     def min_price_date(self) -> datetime:
