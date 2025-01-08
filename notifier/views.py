@@ -25,7 +25,8 @@ def create_price_alert(request, item_id):
 
     # If GET request or form invalid, return form
     form = PriceAlertForm(item=item)
-    return render(request, "notifier/alert_form.html", {"form": form, "item": item})
+    messages.error(request, _("Уведомление не создано"))
+    return redirect("item_detail", slug=item.sku)
 
 
 @login_required

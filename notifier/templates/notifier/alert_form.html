@@ -11,6 +11,7 @@
     <div class="offcanvas-body">
         <form method="POST" action="{% url 'create_price_alert' item.id %}">
             {% csrf_token %}
+
             <div class="row">
                 <div class="col-md-6">
                     <label for="targetPrice" class="form-label">Цена</label>
@@ -18,20 +19,21 @@
                 </div>
                 <div class="col-md-6">
                     <label for="percentageChange" class="form-label">Изменение (%)</label>
-                    <input type="number" class="form-control" id="percentageChange">
+                    <input type="text" class="form-control" id="percentageChange">
                 </div>
             </div>
+
             <div class="mb-3">
                 <small id="currentPrice" class="text-muted">Текущая цена: {{ item.price }} ₽</small>
             </div>
             <div class="mb-3">
-                {% render_field price_alert_form.message class="form-control" id="comment" rows="3" placeholder="Комментарий к уведомлению..." %}
+                {% render_field price_alert_form.message class="form-control bg-light" id="comment" rows="3" placeholder="Комментарий к уведомлению..." %}
             </div>
             <div class="mb-3">
                 <label for="is_active" class="form-label" title="Только включенные уведомления будут отправляться">Включено</label>
                 {% render_field price_alert_form.is_active class="form-check-input" id="is_active" checked=price_alert_form.is_active %}
             </div>
-            <button type="submit" class="btn btn-primary w-100">Сохранить</button>
+            <button type="submit" class="btn btn-primary w-100" id="saveAlertButton">Сохранить</button>
         </form>
 
         <!-- All price alerts -->
@@ -73,3 +75,56 @@
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const targetPriceInput = document.getElementById('targetPrice');
+        const percentageChangeInput = document.getElementById('percentageChange');
+        const saveAlertButton = document.getElementById('saveAlertButton');
+        const currentItemPrice = {{ item.price }};
+
+        function updatePercentageChange() {
+            const targetPrice = parseFloat(targetPriceInput.value);
+            if (!isNaN(targetPrice) && currentItemPrice > 0) {
+                const percentage = ((targetPrice - currentItemPrice) / currentItemPrice) * 100;
+                const plusOrMinus = percentage > 0 ? '+' : '';
+                updateClasses(percentage);
+                percentageChangeInput.value = plusOrMinus + percentage.toFixed(2) + '%';
+            } else {
+                percentageChangeInput.value = '';
+            }
+        }
+
+        function updateTargetPrice() {
+            const percentage = parseFloat(percentageChangeInput.value);
+            if (!isNaN(percentage)) {
+                const targetPrice = currentItemPrice * (1 + percentage / 100);
+                updateClasses(percentage);
+                targetPriceInput.value = targetPrice.toFixed(2);
+            } else {
+                targetPriceInput.value = '';
+            }
+        }
+
+        function updateClasses(percentage) {
+            if (percentage < 0) {
+            saveAlertButton.disabled = false;
+            targetPriceInput.classList.remove('text-danger');
+            percentageChangeInput.classList.remove('text-success');
+            percentageChangeInput.classList.add('text-danger');
+        } else if (percentage === 0) {
+            targetPriceInput.classList.add('text-danger');
+            percentageChangeInput.classList.add('text-danger');
+            saveAlertButton.disabled = true;
+        }
+        else {
+            saveAlertButton.disabled = false;
+            targetPriceInput.classList.remove('text-danger');
+            percentageChangeInput.classList.remove('text-danger');
+            percentageChangeInput.classList.add('text-success');
+        }
+        }
+
+        targetPriceInput.addEventListener('input', updatePercentageChange);
+        percentageChangeInput.addEventListener('input', updateTargetPrice);
+    });
+</script>
