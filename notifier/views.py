@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_http_methods
 
 from main.models import Item
 from notifier.forms import PriceAlertForm
@@ -17,14 +19,11 @@ def create_price_alert(request, item_id):
         form = PriceAlertForm(data=request.POST, item=item)
         if form.is_valid():
             form.save()
-            messages.success(request, _("Уведомление создано"))
+            # messages.success(request, _("Уведомление создано"))
 
             return render(
                 request, "notifier/partials/alert_list.html", {"price_alerts": PriceAlert.objects.filter(items=item)}
             )
-            # if request.htmx:
-            #     return HttpResponse(status=204)  # Close modal
-            # return redirect("item_detail", slug=item.sku)
 
     # If GET request or form invalid, return form
     form = PriceAlertForm(item=item)
@@ -41,21 +40,16 @@ def edit_price_alert(request, alert_id: int):
 
 
 @login_required
-def delete_price_alert(request, alert_id):
-    """Delete a price alert."""
+@require_http_methods(["DELETE"])
+def delete_price_alert(request, alert_id: int) -> HttpResponse:
     alert = get_object_or_404(PriceAlert, id=alert_id, tenant=request.user.tenant)
+    items = alert.items.all()
 
-    # Get the first item's SKU before deleting the alert
-    first_item_sku = alert.items.first().sku if alert.items.exists() else None
+    # to be used in the context of the template
+    remaining_alerts = list(PriceAlert.objects.filter(items__in=items).exclude(id=alert.id).distinct())
 
-    # Delete the alert
     alert.delete()
-    messages.success(request, _("Уведомление удалено"))
-
-    # Redirect appropriately
-    if first_item_sku:
-        return redirect("item_detail", slug=first_item_sku)
-    return redirect("item_list")  # Define a fallback in case no items are related
+    return render(request, "notifier/partials/alert_list.html", {"price_alerts": remaining_alerts})
 
 
 @login_required
