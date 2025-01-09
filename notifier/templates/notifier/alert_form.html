@@ -9,7 +9,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <form method="POST" action="{% url 'create_price_alert' item.id %}">
+        <form method="POST" action="{% url 'create_price_alert' item.id %}" hx-on="htmx:afterRequest: this.reset();">
             {% csrf_token %}
 
             <div class="row">
@@ -33,44 +33,17 @@
                 <label for="is_active" class="form-label" title="Только включенные уведомления будут отправляться">Включено</label>
                 {% render_field price_alert_form.is_active class="form-check-input" id="is_active" checked=price_alert_form.is_active %}
             </div>
-            <button type="submit" class="btn btn-primary w-100" id="saveAlertButton">Сохранить</button>
+            <button type="submit" class="btn btn-primary w-100" id="saveAlertButton"
+                    hx-post="{% url 'create_price_alert' item.id %}"
+                    hx-target="#alert-list-block">
+                Сохранить
+            </button>
         </form>
 
         <!-- All price alerts -->
-        {% if price_alerts %}
-            <hr class="my-4">
-            <div class="row g-3">
-                {% for alert in price_alerts %}
-                    <div class="col-12 col-md-6 col-lg-4" style="cursor: default" title="{{ alert.message }}">
-                        <div class="card notification-card {% if alert.is_active %}border-success hover-shadow-success
-                            {% else %}border-secondary hover-shadow-secondary{% endif %}">
-                            <div class="card-body d-flex align-items-center px-1 py-1">
-
-                                {% if alert.is_active %}
-                                    <span class="material-symbols-sharp me-1 text-success" title="Уведомление включено"
-                                          style="font-variation-settings: 'FILL' 1">
-                                        notifications_active
-                                    </span>
-                                {% else %}
-                                    <span class="material-symbols-sharp me-1 text-secondary"
-                                          title="Уведомление выключено">
-                                        notifications
-                                    </span>
-                                {% endif %}
-
-                                <div class="flex-grow-1">
-                                    <span class="mb-0">{{ alert.target_price|floatformat:0 }}</span>
-                                </div>
-                                <a href="{% url 'delete_price_alert' alert.id %}" class="btn-close"
-                                   title="Удалить" style="font-size: 0.7rem">
-                                    <span class="visually-hidden">Удалить</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
+        <div id="alert-list-block">
+            {% include "notifier/partials/alert_list.html" %}
+        </div>
 
     </div>
 </div>
@@ -107,21 +80,20 @@
 
         function updateClasses(percentage) {
             if (percentage < 0) {
-            saveAlertButton.disabled = false;
-            targetPriceInput.classList.remove('text-danger');
-            percentageChangeInput.classList.remove('text-success');
-            percentageChangeInput.classList.add('text-danger');
-        } else if (percentage === 0) {
-            targetPriceInput.classList.add('text-danger');
-            percentageChangeInput.classList.add('text-danger');
-            saveAlertButton.disabled = true;
-        }
-        else {
-            saveAlertButton.disabled = false;
-            targetPriceInput.classList.remove('text-danger');
-            percentageChangeInput.classList.remove('text-danger');
-            percentageChangeInput.classList.add('text-success');
-        }
+                saveAlertButton.disabled = false;
+                targetPriceInput.classList.remove('text-danger');
+                percentageChangeInput.classList.remove('text-success');
+                percentageChangeInput.classList.add('text-danger');
+            } else if (percentage === 0) {
+                targetPriceInput.classList.add('text-danger');
+                percentageChangeInput.classList.add('text-danger');
+                saveAlertButton.disabled = true;
+            } else {
+                saveAlertButton.disabled = false;
+                targetPriceInput.classList.remove('text-danger');
+                percentageChangeInput.classList.remove('text-danger');
+                percentageChangeInput.classList.add('text-success');
+            }
         }
 
         targetPriceInput.addEventListener('input', updatePercentageChange);
