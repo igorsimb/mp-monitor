@@ -49,7 +49,9 @@ def delete_price_alert(request, alert_id: int) -> HttpResponse:
     remaining_alerts = list(PriceAlert.objects.filter(items__in=items).exclude(id=alert.id).distinct())
 
     alert.delete()
-    return render(request, "notifier/partials/alert_list.html", {"price_alerts": remaining_alerts})
+    response = render(request, "notifier/partials/alert_list.html", {"price_alerts": remaining_alerts})
+    response["Hx-trigger"] = "alert-deleted"
+    return response
 
 
 @login_required
