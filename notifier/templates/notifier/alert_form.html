@@ -1,5 +1,14 @@
 {% load widget_tweaks %}
 
+<style>
+    #loading-spinner {
+    display: none;
+}
+.htmx-request #loading-spinner {
+    display: inline-block;
+}
+</style>
+
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAddNotification"
      aria-labelledby="offcanvasAddNotificationLabel"
         {#     data-bs-backdrop="static"#}
@@ -9,13 +18,13 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <form method="POST" action="{% url 'create_price_alert' item.id %}" hx-on="htmx:afterRequest: this.reset();">
+        <form hx-post="{% url 'create_price_alert' item.id %}" hx-on="htmx:afterRequest: this.reset();">
             {% csrf_token %}
 
             <div class="row">
                 <div class="col-md-6">
                     <label for="targetPrice" class="form-label">Цена</label>
-                    {% render_field price_alert_form.target_price class="form-control" id="targetPrice" %}
+                    {% render_field price_alert_form.target_price class="form-control" min="0" id="targetPrice" %}
                 </div>
                 <div class="col-md-6">
                     <label for="percentageChange" class="form-label">Изменение (%)</label>
@@ -33,10 +42,13 @@
                 <label for="is_active" class="form-label" title="Только включенные уведомления будут отправляться">Включено</label>
                 {% render_field price_alert_form.is_active class="form-check-input" id="is_active" checked=price_alert_form.is_active %}
             </div>
-            <button type="submit" class="btn btn-primary w-100" id="saveAlertButton"
+            <button type="submit" class="btn btn-primary w-100" id="saveAlertButton" disabled
                     hx-post="{% url 'create_price_alert' item.id %}"
-                    hx-target="#alert-list-block">
-                Сохранить
+                    hx-target="#alert-list-block"
+                     hx-indicator="#loading-spinner"
+                    hx-on="htmx:beforeRequest: this.innerHTML = '<span class=\'spinner-border spinner-border-sm me-2\' aria-hidden=\'true\'></span><span role=\'status\'>Сохранить</span>'; this.disabled = true;
+                           htmx:afterRequest: this.innerHTML = 'Сохранить'; this.disabled = true;">
+             Сохранить
             </button>
         </form>
 
@@ -57,13 +69,14 @@
 
         function updatePercentageChange() {
             const targetPrice = parseFloat(targetPriceInput.value);
-            if (!isNaN(targetPrice) && currentItemPrice > 0) {
+            if (!isNaN(targetPrice) && currentItemPrice > 0 && targetPrice > 0) {
                 const percentage = ((targetPrice - currentItemPrice) / currentItemPrice) * 100;
                 const plusOrMinus = percentage > 0 ? '+' : '';
                 updateClasses(percentage);
                 percentageChangeInput.value = plusOrMinus + percentage.toFixed(2) + '%';
             } else {
                 percentageChangeInput.value = '';
+                saveAlertButton.disabled = true;
             }
         }
 
@@ -75,16 +88,18 @@
                 targetPriceInput.value = targetPrice.toFixed(2);
             } else {
                 targetPriceInput.value = '';
+                saveAlertButton.disabled = true;
             }
         }
 
         function updateClasses(percentage) {
+            const targetPrice = parseFloat(targetPriceInput.value);
             if (percentage < 0) {
                 saveAlertButton.disabled = false;
                 targetPriceInput.classList.remove('text-danger');
                 percentageChangeInput.classList.remove('text-success');
                 percentageChangeInput.classList.add('text-danger');
-            } else if (percentage === 0) {
+            } else if (percentage === 0 || percentage === '' || targetPrice < 0) {
                 targetPriceInput.classList.add('text-danger');
                 percentageChangeInput.classList.add('text-danger');
                 saveAlertButton.disabled = true;
