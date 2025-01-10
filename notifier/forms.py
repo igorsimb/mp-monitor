@@ -45,6 +45,9 @@ class PriceAlertForm(forms.ModelForm):
         if target_price <= 0:
             raise forms.ValidationError(_("Целевая цена должна быть больше 0"))
 
+        if target_price == "":
+            raise forms.ValidationError(_("Целевая цена не может быть пустой"))
+
         if self.item and target_price == self.item.price:
             raise forms.ValidationError(_("Целевая цена не может быть равна текущей цене"))
 
