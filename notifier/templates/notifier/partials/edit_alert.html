@@ -1,0 +1,44 @@
+{#<div class="offcanvas-header">#}
+{#    <h5 class="offcanvas-title" id="offcanvasAddNotificationLabel">Редактировать уведомление</h5>#}
+{#    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>#}
+{#</div>#}
+{#<div class="offcanvas-body">#}
+        <form id="alert-form" class="i-am-edit-form"
+                hx-post="{% url 'edit_price_alert' alert.id %}"
+                hx-target="#alert-list-block"
+                hx-on="htmx:afterRequest: this.reset();">
+{#    <form  hx-post="{% url 'edit_price_alert' alert.id %}">#}
+        {% csrf_token %}
+
+        {% include "notifier/partials/alert_form_fields.html" %}
+
+                <button class="btn btn-primary w-100" id="saveAlertButton">
+                    Сохранить
+                </button>
+{#        <button class="btn btn-primary w-100" id="saveAlertButton"#}
+{#                hx-post="{% url 'edit_price_alert' alert.id %}"#}
+{#                hx-target="#alert-list-block">#}
+{#            Сохранить#}
+{#        </button>#}
+
+        {#        <button type="submit" class="btn btn-primary w-100" id="saveAlertButton" disabled#}
+        {#                hx-post="{% url 'create_price_alert' item.id %}"#}
+        {#                hx-target="#alert-list-block"#}
+        {#                hx-indicator="#loading-spinner"#}
+        {#                hx-on="htmx:beforeRequest: this.innerHTML = '<span class=\'spinner-border spinner-border-sm me-2\' aria-hidden=\'true\'></span><span role=\'status\'>Сохранить</span>'; this.disabled = true;#}
+        {#                               htmx:afterRequest: this.innerHTML = 'Сохранить'; this.disabled = true;">#}
+        {#            Сохранить#}
+        {#        </button>#}
+    </form>
+
+    <div class="error-details">
+        {% for field in price_alert_form %}
+            {% for error in field.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <script>
+        initializeFieldUpdate();
+    </script>

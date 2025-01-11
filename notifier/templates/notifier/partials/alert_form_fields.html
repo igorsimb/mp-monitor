@@ -1,0 +1,23 @@
+{% load widget_tweaks %}
+
+<div class="row">
+    <div class="col-md-6">
+        <label for="targetPrice" class="form-label">Цена</label>
+        {% render_field price_alert_form.target_price name="target_price" class="form-control" min="0" id="targetPrice" %}
+    </div>
+    <div class="col-md-6">
+        <label for="percentageChange" class="form-label">Изменение (%)</label>
+        <input type="text" class="form-control" id="percentageChange">
+    </div>
+</div>
+
+<div class="mb-3">
+    <small id="currentPrice" class="text-muted">Текущая цена: {{ item.price }} ₽</small>
+</div>
+<div class="mb-3">
+    {% render_field price_alert_form.message class="form-control bg-light" name="message" id="comment" rows="3" placeholder="Комментарий к уведомлению..." %}
+</div>
+<div class="mb-3">
+    <label for="is_active" class="form-label" title="Только включенные уведомления будут отправляться">Включено</label>
+    {% render_field price_alert_form.is_active class="form-check-input" name="is_active" id="is_active" checked=price_alert_form.is_active %}
+</div>

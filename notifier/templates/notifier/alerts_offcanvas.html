@@ -8,64 +8,40 @@
     display: inline-block;
 }
 </style>
-
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAddNotification"
      aria-labelledby="offcanvasAddNotificationLabel"
         {#     data-bs-backdrop="static"#}
      style="--bs-offcanvas-width: 450px;">
+
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasAddNotificationLabel">Новое уведомление</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <h5 class="offcanvas-title" id="offcanvasAddNotificationLabel">Уведомления о ценах</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+</div>
+<div class="offcanvas-body">
+
+    <span id="alert-form-container">
+        {% include "notifier/partials/create_alert.html" %}
+    </span>
+
+    <!-- All price alerts -->
+    <div id="alert-list-block">
+        {% include "notifier/partials/alert_list.html" %}
     </div>
-    <div class="offcanvas-body">
-        <form hx-post="{% url 'create_price_alert' item.id %}" hx-on="htmx:afterRequest: this.reset();">
-            {% csrf_token %}
-
-            <div class="row">
-                <div class="col-md-6">
-                    <label for="targetPrice" class="form-label">Цена</label>
-                    {% render_field price_alert_form.target_price class="form-control" min="0" id="targetPrice" %}
-                </div>
-                <div class="col-md-6">
-                    <label for="percentageChange" class="form-label">Изменение (%)</label>
-                    <input type="text" class="form-control" id="percentageChange">
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <small id="currentPrice" class="text-muted">Текущая цена: {{ item.price }} ₽</small>
-            </div>
-            <div class="mb-3">
-                {% render_field price_alert_form.message class="form-control bg-light" id="comment" rows="3" placeholder="Комментарий к уведомлению..." %}
-            </div>
-            <div class="mb-3">
-                <label for="is_active" class="form-label" title="Только включенные уведомления будут отправляться">Включено</label>
-                {% render_field price_alert_form.is_active class="form-check-input" id="is_active" checked=price_alert_form.is_active %}
-            </div>
-            <button type="submit" class="btn btn-primary w-100" id="saveAlertButton" disabled
-                    hx-post="{% url 'create_price_alert' item.id %}"
-                    hx-target="#alert-list-block"
-                     hx-indicator="#loading-spinner"
-                    hx-on="htmx:beforeRequest: this.innerHTML = '<span class=\'spinner-border spinner-border-sm me-2\' aria-hidden=\'true\'></span><span role=\'status\'>Сохранить</span>'; this.disabled = true;
-                           htmx:afterRequest: this.innerHTML = 'Сохранить'; this.disabled = true;">
-             Сохранить
-            </button>
-        </form>
-
-        <!-- All price alerts -->
-        <div id="alert-list-block">
-            {% include "notifier/partials/alert_list.html" %}
-        </div>
 
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    function initializeFieldUpdate() {
         const targetPriceInput = document.getElementById('targetPrice');
         const percentageChangeInput = document.getElementById('percentageChange');
         const saveAlertButton = document.getElementById('saveAlertButton');
         const currentItemPrice = {{ item.price }};
+
+        if (!targetPriceInput || !percentageChangeInput || !saveAlertButton) {
+            console.warn("One or more elements not found during initialization.");
+            return;
+        }
 
         function updatePercentageChange() {
             const targetPrice = parseFloat(targetPriceInput.value);
@@ -99,7 +75,7 @@
                 targetPriceInput.classList.remove('text-danger');
                 percentageChangeInput.classList.remove('text-success');
                 percentageChangeInput.classList.add('text-danger');
-            } else if (percentage === 0 || percentage === '' || targetPrice < 0) {
+            } else if (percentage === 0 || targetPrice <= 0 || isNaN(percentage)) {
                 targetPriceInput.classList.add('text-danger');
                 percentageChangeInput.classList.add('text-danger');
                 saveAlertButton.disabled = true;
@@ -113,5 +89,19 @@
 
         targetPriceInput.addEventListener('input', updatePercentageChange);
         percentageChangeInput.addEventListener('input', updateTargetPrice);
+    }
+
+    // Reinitialize logic after HTMX content swaps (for editing an existing alert)
+    document.addEventListener('htmx:afterSwap', function (event) {
+        const swappedElement = event.target;
+        if (swappedElement.id === 'alert-form-container') {
+            initializeFieldUpdate();
+        }
     });
+
+    // Initial setup on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeFieldUpdate();
+    });
+
 </script>

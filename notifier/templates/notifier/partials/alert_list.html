@@ -47,6 +47,12 @@
                            title="Удалить" style="font-size: 0.7rem; cursor: pointer;">
                             <span class="visually-hidden">Удалить</span>
                         </a>
+
+                        <a hx-get="{% url 'edit_price_alert' alert.id %}"
+                           hx-target="#alert-form-container"
+                            class="btn btn-outline-primary btn-sm" title="Редактировать">
+                            Edit
+                        </a>
                     </div>
                 </div>
             </div>
