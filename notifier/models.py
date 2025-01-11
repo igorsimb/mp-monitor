@@ -32,6 +32,7 @@ class PriceAlert(models.Model):
     class Meta:
         verbose_name = "Price Alert"
         verbose_name_plural = "Price Alerts"
+        ordering = ["-is_active"]
 
     def __str__(self):
         return f"Price Alert for {self.tenant} #{self.pk}"

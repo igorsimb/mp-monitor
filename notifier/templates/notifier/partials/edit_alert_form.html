@@ -1,0 +1,39 @@
+edit<br>
+Method: {{ request.method }}<br>
+<form class="i-am-edit-form">
+    {% csrf_token %}
+
+
+    {% include "notifier/partials/alert_form_fields.html" %}
+
+
+    {% if alert.id == selected_alert_id %}
+    <div class="d-flex justify-content-between align-items-center">
+    <button class="btn btn-primary flex-grow-1 me-2" id="saveAlertButton"
+            hx-post="{% url 'edit_price_alert' alert.id %}"
+            hx-target="#offcanvas-body"
+            hx-on::before-request="this.innerHTML = '<span class=\'spinner-border spinner-border-sm me-2\' aria-hidden=\'true\'></span><span role=\'status\'>Сохранить</span>'; this.disabled = true;">
+        Сохранить
+    </button>
+
+        <!-- NOT WORKING -->
+{#    <button class="btn btn-outline-secondary" id="cancelAlertButton"#}
+{#            hx-get="{% url 'create_price_alert' item.id %}"#}
+{#            hx-target="#offcanvas-body">#}
+{#        Отмена#}
+{#    </button>#}
+    </div>
+
+        {% else %}
+        <button class="btn btn-primary w-100" id="saveAlertButton" disabled
+            hx-post="{% url 'edit_price_alert' alert.id %}"
+            hx-target="#offcanvas-body"
+            hx-on::before-request="this.innerHTML = '<span class=\'spinner-border spinner-border-sm me-2\' aria-hidden=\'true\'></span><span role=\'status\'>Добавить</span>'; this.disabled = true;">
+        Добавить
+    </button>
+    {% endif %}
+</form>
+
+<script>
+    initializeFieldUpdate();
+</script>

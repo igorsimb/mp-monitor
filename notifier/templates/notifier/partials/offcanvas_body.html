@@ -1,0 +1,13 @@
+<span id="alert-form-container">
+        {% if request.htmx and request.method == "GET" %} {# edit form is only loaded on hx-GET requests #}
+            {% include "notifier/partials/edit_alert_form.html" %}
+        {% else %}
+            {% include "notifier/partials/create_alert_form.html" %}
+        {% endif %}
+
+    </span>
+
+<!-- All price alerts -->
+<div id="alert-list-block">
+    {% include "notifier/partials/alert_list.html" %}
+</div>
