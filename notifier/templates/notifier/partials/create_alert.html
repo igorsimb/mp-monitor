@@ -1,0 +1,16 @@
+<form id="alert-form" class="i-am-create-form"
+      hx-on="htmx:afterRequest: this.reset();"
+      hx-swap-oob="true">
+    {% csrf_token %}
+
+    {% include "notifier/partials/alert_form_fields.html" %}
+
+    <button type="submit" class="btn btn-primary w-100" id="saveAlertButton" disabled
+            hx-post="{% url 'create_price_alert' item.id %}"
+            hx-target="#alert-list-block"
+            hx-indicator="#loading-spinner"
+            hx-on="htmx:beforeRequest: this.innerHTML = '<span class=\'spinner-border spinner-border-sm me-2\' aria-hidden=\'true\'></span><span role=\'status\'>Добавить</span>'; this.disabled = true;
+                               htmx:afterRequest: this.innerHTML = 'Добавить'; this.disabled = true;">
+        Добавить
+    </button>
+</form>
