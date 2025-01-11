@@ -2,11 +2,12 @@
 
 <style>
     #loading-spinner {
-    display: none;
-}
-.htmx-request #loading-spinner {
-    display: inline-block;
-}
+        display: none;
+    }
+
+    .htmx-request #loading-spinner {
+        display: inline-block;
+    }
 </style>
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAddNotification"
      aria-labelledby="offcanvasAddNotificationLabel"
@@ -14,19 +15,13 @@
      style="--bs-offcanvas-width: 450px;">
 
     <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasAddNotificationLabel">Уведомления о ценах</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-</div>
-<div class="offcanvas-body">
-
-    <span id="alert-form-container">
-        {% include "notifier/partials/create_alert.html" %}
-    </span>
-
-    <!-- All price alerts -->
-    <div id="alert-list-block">
-        {% include "notifier/partials/alert_list.html" %}
+        <h5 class="offcanvas-title" id="offcanvasAddNotificationLabel">Уведомления о ценах</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
+    <div class="offcanvas-body" id="offcanvas-body">
+
+        {% include "notifier/partials/offcanvas_body.html" %}
+
 
     </div>
 </div>
@@ -94,7 +89,22 @@
     // Reinitialize logic after HTMX content swaps (for editing an existing alert)
     document.addEventListener('htmx:afterSwap', function (event) {
         const swappedElement = event.target;
-        if (swappedElement.id === 'alert-form-container') {
+        if (swappedElement.id === 'offcanvas-body') {
+
+            /* when HTMX is used to swap the edit from to the create form, the targetPrice input is not reset,
+               so we need to do it manually because we want the field to be empty when creating a new alert.
+               After than we can initialize the field update logic.
+            */
+            try {
+                const createForm = document.getElementById('create-alert-form');
+                if (createForm) {
+                    const createTargetPriceInput = document.getElementById('targetPrice');
+                    createTargetPriceInput.value = '';
+                }
+            } catch (e) {
+                console.log("Error resetting target price value: " + e);
+            }
+
             initializeFieldUpdate();
         }
     });

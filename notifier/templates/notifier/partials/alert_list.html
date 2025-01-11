@@ -1,10 +1,11 @@
 {% if price_alerts %}
+    {% url 'edit_price_alert' alert.id as edit_price_alert_url %}
 
     <style>
         .scale-and-fade-out {
             transform: scale(0);
             opacity: 0;
-            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
         }
     </style>
 
@@ -13,28 +14,39 @@
         {% for alert in price_alerts %}
             <div class="col-12 col-md-6 col-lg-4" id="alert-{{ alert.id }}" style="cursor: default"
                  title="{{ alert.message }}">
-                <div class="card notification-card {% if alert.is_active %}border-success hover-shadow-success
-                            {% else %}border-secondary hover-shadow-secondary{% endif %}">
+                <div class="card notification-card
+                            {% if alert.is_active %}border-success hover-shadow-success
+                            {% else %}border-secondary hover-shadow-secondary{% endif %}
+                            {% if alert.id == selected_alert_id and alert.id is not None %}
+                                {% if alert.is_active %}
+                                    text-bg-success
+                                    {% else %}
+                                    text-bg-secondary
+                                {% endif %}
+                            {% endif %}"
+                     hx-get="{% url 'edit_price_alert' alert.id %}"
+                     hx-target="#offcanvas-body">
                     <div class="card-body d-flex align-items-center px-1 py-1">
 
                         {% if alert.is_active %}
-                            <span class="material-symbols-sharp me-1 text-success" title="Уведомление включено"
+                            <span class="material-symbols-sharp me-1{% if alert.id == selected_alert_id %} text-bg-success{% else %} text-success{% endif %}" title="Уведомление включено"
                                   style="font-variation-settings: 'FILL' 1">
                                         notifications_active
                                     </span>
                         {% else %}
-                            <span class="material-symbols-sharp me-1 text-secondary"
+                            <span class="material-symbols-sharp me-1 {% if alert.id == selected_alert_id %} text-bg-secondary{% else %} text-secondary{% endif %}"
                                   title="Уведомление выключено">
                                         notifications
                                     </span>
                         {% endif %}
 
                         <div class="flex-grow-1">
-                            <span class="mb-0">{{ alert.target_price|floatformat:0 }}</span>
+                            <span class="mb-0">{{ alert.target_price|floatformat:"-2" }}</span>
                         </div>
 
                         <!-- Deleting alert with optimistic update -->
-                        <a hx-delete="{% url 'delete_price_alert' alert.id %}"
+
+                        <a hx-delete="{% url 'delete_price_alert' alert.id %}" data-bs-theme="dark"
                            hx-target="#alert-list-block"
                            hx-swap="innerHTML"
                            hx-on:alert-deleted="this.closest('#alert-{{ alert.id }}').remove()"
@@ -46,12 +58,6 @@
                            class="btn-close"
                            title="Удалить" style="font-size: 0.7rem; cursor: pointer;">
                             <span class="visually-hidden">Удалить</span>
-                        </a>
-
-                        <a hx-get="{% url 'edit_price_alert' alert.id %}"
-                           hx-target="#alert-form-container"
-                            class="btn btn-outline-primary btn-sm" title="Редактировать">
-                            Edit
                         </a>
                     </div>
                 </div>

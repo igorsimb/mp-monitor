@@ -3,7 +3,7 @@
 <div class="row">
     <div class="col-md-6">
         <label for="targetPrice" class="form-label">Цена</label>
-        {% render_field price_alert_form.target_price name="target_price" class="form-control" min="0" id="targetPrice" %}
+        {% render_field price_alert_form.target_price name="target_price" class="form-control" min="0" id="targetPrice" autofocus="true" onfocus="this.select();" %}
     </div>
     <div class="col-md-6">
         <label for="percentageChange" class="form-label">Изменение (%)</label>
@@ -19,5 +19,12 @@
 </div>
 <div class="mb-3">
     <label for="is_active" class="form-label" title="Только включенные уведомления будут отправляться">Включено</label>
-    {% render_field price_alert_form.is_active class="form-check-input" name="is_active" id="is_active" checked=price_alert_form.is_active %}
+
+    <!-- Setting checked to true for: initial state, if Cancel is clicked after editing -->
+    {% if item.sku in request.path or price_alert_form.is_active.value is None %}
+        {% render_field price_alert_form.is_active class="form-check-input" name="is_active" id="is_active" checked="true" %}
+    {% else %}
+        {% render_field price_alert_form.is_active class="form-check-input" name="is_active" id="is_active" %}
+    {% endif %}
+
 </div>
