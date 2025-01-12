@@ -6,13 +6,14 @@ from accounts.models import Tenant, TenantQuota, PaymentPlan, Profile
 from config import DEFAULT_QUOTAS, PlanType
 from main.models import Item
 from mp_monitor import settings
+from notifier.models import PriceAlert
 
 
 class TenantFactory(DjangoModelFactory):
     class Meta:
         model = Tenant
 
-    name = factory.Sequence(lambda n: f"test_tenant_{n+1}@testing.com")
+    name = factory.Sequence(lambda n: f"test_tenant_{n + 1}@testing.com")
 
 
 class UserFactory(DjangoModelFactory):
@@ -60,8 +61,8 @@ class ItemFactory(DjangoModelFactory):
         model = Item
 
     tenant = factory.SubFactory(TenantFactory, name=UserFactory.email)
-    name = factory.Sequence(lambda n: f"item_{n+1}")
-    sku = factory.Sequence(lambda n: f"{n+1}" * 5)
+    name = factory.Sequence(lambda n: f"item_{n + 1}")
+    sku = factory.Sequence(lambda n: f"{n + 1}" * 5)
     price = factory.Sequence(lambda n: (n + 1) * 100)
 
 
@@ -69,7 +70,7 @@ class TenantQuotaFactory(DjangoModelFactory):
     class Meta:
         model = TenantQuota
 
-    name = factory.Sequence(lambda n: f"test_quota_{n+1}")
+    name = factory.Sequence(lambda n: f"test_quota_{n + 1}")
     total_hours_allowed = DEFAULT_QUOTAS[PlanType.FREE.value]["total_hours_allowed"]
     skus_limit = DEFAULT_QUOTAS[PlanType.FREE.value]["skus_limit"]
     parse_units_limit = DEFAULT_QUOTAS[PlanType.FREE.value]["parse_units_limit"]
@@ -81,3 +82,15 @@ class PaymentPlanFactory(DjangoModelFactory):
 
     name = PaymentPlan.PlanName.BUSINESS.value
     price = 6000
+
+
+class PriceAlertFactory(DjangoModelFactory):
+    class Meta:
+        model = PriceAlert
+
+    tenant = factory.SubFactory(TenantFactory)
+    items = factory.RelatedFactory(ItemFactory, "price_alerts")
+    target_price = factory.Faker("random_int", min=0, max=100)
+    target_price_direction = PriceAlert.TargetPriceDirection.UP
+    message = factory.Faker("sentence")
+    is_active = True

@@ -46,6 +46,9 @@ class PriceAlertForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+        if not self.item or self.item.price is None:
+            raise ValueError("Item and its price must be provided")
+
         # update target_price_direction
         if instance.target_price > self.item.price:
             instance.target_price_direction = PriceAlert.TargetPriceDirection.UP

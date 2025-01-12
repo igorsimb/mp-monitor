@@ -61,15 +61,24 @@ def deactivate_price_alerts(tenant: Tenant, items_with_active_alerts: list[Item]
     """
     Once price alerts are sent, deactivate them to prevent sending them again.
     """
-    item_ids: list = [item.id for item in items_with_active_alerts]
-    alert = PriceAlert.objects.get(tenant=tenant, items__id__in=item_ids)
-    alert.is_active = False
-    alert.save()
+    for item in items_with_active_alerts:
+        current_price = item.price
+
+        # Get alerts for this item and tenant
+        alerts = PriceAlert.objects.filter(tenant=tenant, items=item)
+
+        # Filter alerts based on the trigger condition
+        triggered_alerts = alerts.filter(
+            Q(target_price_direction=PriceAlert.TargetPriceDirection.UP, target_price__lte=current_price)
+            | Q(target_price_direction=PriceAlert.TargetPriceDirection.DOWN, target_price__gte=current_price)
+        ).filter(is_active=True)
+
+        triggered_alerts.update(is_active=False)
 
 
 def delete_price_alerts(tenant: Tenant, items_with_active_alerts: list[Item]) -> None:
     """
-    Once price alerts are sent, deactivate them to prevent sending them again.
+    Once price alerts are sent, delete them to remove triggered alerts.
     """
     for item in items_with_active_alerts:
         current_price = item.price

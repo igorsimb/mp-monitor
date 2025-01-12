@@ -1,5 +1,3 @@
-create<br>
-Method: {{ request.method }}<br>
 <form id="create-alert-form"
       hx-on="htmx:afterRequest: this.reset();">
     {% csrf_token %}
