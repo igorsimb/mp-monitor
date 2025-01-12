@@ -6,6 +6,7 @@ import logging
 from typing import Any, Dict, List
 
 from django.contrib import messages
+from django.db.models import Q
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
 
@@ -66,6 +67,25 @@ def deactivate_price_alerts(tenant: Tenant, items_with_active_alerts: list[Item]
     alert.save()
 
 
+def delete_price_alerts(tenant: Tenant, items_with_active_alerts: list[Item]) -> None:
+    """
+    Once price alerts are sent, deactivate them to prevent sending them again.
+    """
+    for item in items_with_active_alerts:
+        current_price = item.price
+
+        # Get alerts for this item and tenant
+        alerts = PriceAlert.objects.filter(tenant=tenant, items=item)
+
+        # Filter alerts based on the trigger condition
+        triggered_alerts = alerts.filter(
+            Q(target_price_direction=PriceAlert.TargetPriceDirection.UP, target_price__lte=current_price)
+            | Q(target_price_direction=PriceAlert.TargetPriceDirection.DOWN, target_price__gte=current_price)
+        ).filter(is_active=True)
+
+        triggered_alerts.delete()
+
+
 def process_price_change_notifications(tenant: Tenant, items_data: list[dict]) -> None:
     logger.info("Checking is user needs to be notified of price changes...")
 
@@ -79,4 +99,5 @@ def process_price_change_notifications(tenant: Tenant, items_data: list[dict]) -
     send_price_change_email(tenant, items_with_active_alerts)
 
     # Step 4
-    deactivate_price_alerts(tenant, items_with_active_alerts)
+    delete_price_alerts(tenant, items_with_active_alerts)
+    # deactivate_price_alerts(tenant, items_with_active_alerts)

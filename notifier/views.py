@@ -59,6 +59,7 @@ def edit_price_alert(request, alert_id: int):
                 "price_alerts": price_alerts,
             }
             response = render(request, "notifier/partials/offcanvas_body.html", context)
+            retarget(response, "#offcanvas-body")
             return response
 
         else:
