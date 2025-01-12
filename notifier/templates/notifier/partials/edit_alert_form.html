@@ -1,5 +1,3 @@
-edit<br>
-Method: {{ request.method }}<br>
 <form class="i-am-edit-form">
     {% csrf_token %}
 
@@ -16,12 +14,9 @@ Method: {{ request.method }}<br>
         Сохранить
     </button>
 
-        <!-- NOT WORKING -->
-{#    <button class="btn btn-outline-secondary" id="cancelAlertButton"#}
-{#            hx-get="{% url 'create_price_alert' item.id %}"#}
-{#            hx-target="#offcanvas-body">#}
-{#        Отмена#}
-{#    </button>#}
+    <a href="{% url 'item_detail' item.sku %}" id="cancelAlertButton" class="btn btn-outline-secondary">
+        Отмена
+    </a>
     </div>
 
         {% else %}
