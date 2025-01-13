@@ -4,6 +4,7 @@
 
     <h1 class="mb-4">Настройки аккаунта</h1>
 
+    {% if not user.is_demo_user %}
     <div class="text-start mb-3 ms-2">
         {% if user.has_usable_password %}
             <a href="{% url 'account_change_password' %}" class="link-primary text-decoration-none">
@@ -15,6 +16,7 @@
             </a>
         {% endif %}
     </div>
+    {% endif %}
 
     <table class="table table-borderless text-start">
         <tbody>
@@ -25,6 +27,7 @@
             <td id="email-address" class="pt-3 pb-1 px-4">
                 {% if user.email %}{{ user.email }}{% else %}Email отсутствует{% endif %}
             </td>
+            {% if not user.is_demo_user %}
             <td class="pt-3 pb-1 px-4">
                 <a id="email-edit" class="link-primary text-decoration-none" style="cursor: pointer"
                    hx-get="{% url 'email_change' %}"
@@ -33,6 +36,7 @@
                     Изменить
                 </a>
             </td>
+        {% endif %}
         </tr>
         <tr class="border-bottom">
             <th scope="row" class="pb-3 fw-medium text-dark">
@@ -43,11 +47,13 @@
                     <span class="text-warning">Не подтвержден</span>
                 {% endif %}
             </td>
+            {% if not user.is_demo_user %}
             <td class="px-4 pb-3">
                 <a href="{% url 'email_verify' %}" class="text-primary text-decoration-none">
                     {% if not user.emailaddress_set.first.verified %}Подтвердить{% endif %}
                 </a>
             </td>
+            {% endif %}
         </tr>
 
         <tr class="border-bottom">
