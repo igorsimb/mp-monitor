@@ -300,7 +300,7 @@ def calculate_days_covered(current_balance: Decimal, cost_per_month: Decimal) ->
     return int(days_left)
 
 
-def create_unique_order_id() -> str:
+def create_unique_order_id(tenant_id: int) -> str:
     """Create a unique order ID.
 
     Returns:
@@ -309,11 +309,11 @@ def create_unique_order_id() -> str:
     Raises:
         ValidationError: If unable to generate a unique ID after multiple attempts.
     """
-    max_attempts = 10
+    max_attempts = 20
     attempt = 0
 
     while attempt < max_attempts:
-        order_id = str(uuid4())
+        order_id = f"{tenant_id}{str(uuid4())[:8]}"
         if not Order.objects.filter(order_id=order_id).exists():
             return order_id
         attempt += 1
