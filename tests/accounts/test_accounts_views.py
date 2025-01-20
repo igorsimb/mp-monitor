@@ -165,9 +165,9 @@ class TestCheckExpiredDemoUsers:
 
         client.post(reverse("check_expired_demo_users"))
         logger.info("Checking periodic task was deleted after demo user was deactivated...")
-        assert (
-            PeriodicTask.objects.count() == 0
-        ), f"Demo user should have 0 periodic tasks, but has {PeriodicTask.objects.count()}"
+        assert PeriodicTask.objects.count() == 0, (
+            f"Demo user should have 0 periodic tasks, but has {PeriodicTask.objects.count()}"
+        )
 
     def test_no_modification_made_to_active_demo_user(self, client: Client, create_active_demo_user: User) -> None:
         superuser = UserFactory(username="superuser")
@@ -186,9 +186,9 @@ class TestCheckExpiredDemoUsers:
         assert demo_user.is_active
         assert demo_user.is_demo_active
         logger.info("Checking periodic task was not deleted for active demo user...")
-        assert (
-            PeriodicTask.objects.count() == 1
-        ), f"Demo user should have 0 periodic tasks, but has {PeriodicTask.objects.count()}"
+        assert PeriodicTask.objects.count() == 1, (
+            f"Demo user should have 0 periodic tasks, but has {PeriodicTask.objects.count()}"
+        )
 
 
 class TestProfileViews:

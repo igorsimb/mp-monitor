@@ -174,9 +174,9 @@ class TestAddPermsToGroupSignal:
             "Checking if the 'view_item' permission is assigned to the group '%s'",
             item_group.name,
         )
-        assert "view_item" in get_perms(
-            item_group, item
-        ), f"Expected 'view_item' permission to be assigned to the group '{item_group.name}' but it wasn't"
+        assert "view_item" in get_perms(item_group, item), (
+            f"Expected 'view_item' permission to be assigned to the group '{item_group.name}' but it wasn't"
+        )
 
     def test_manual_add_perm_does_not_create_duplicate_perm(self, item_group: Group, tenant: Tenant) -> None:
         item = Item.objects.create(
@@ -194,9 +194,9 @@ class TestAddPermsToGroupSignal:
         assign_perm("main.view_item", item_group, item)
 
         logger.info("Checking that the signal does not add a duplicate permission to group")
-        assert (
-            len(get_perms(item_group, item)) == 1
-        ), f"Group '{item_group}' should have only 1 permission, but it has {len(get_perms(item_group, item))}"
+        assert len(get_perms(item_group, item)) == 1, (
+            f"Group '{item_group}' should have only 1 permission, but it has {len(get_perms(item_group, item))}"
+        )
 
 
 class TestPriceModel:

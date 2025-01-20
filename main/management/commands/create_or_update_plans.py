@@ -46,7 +46,7 @@ class Command(BaseCommand):
                 plan.save()
                 self.stdout.write(
                     self.style.WARNING(
-                        f"Updated plan: {plan.get_name_display()} " f"(price changed from {old_price} to {plan.price})"
+                        f"Updated plan: {plan.get_name_display()} (price changed from {old_price} to {plan.price})"
                     )
                 )
 
