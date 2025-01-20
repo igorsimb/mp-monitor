@@ -130,9 +130,9 @@ class TestUncheckAllBoxes:
 
         inactive_items = Item.objects.filter(tenant=tenant, is_parser_active=False)
         for item in inactive_items:
-            assert (
-                not item.is_parser_active
-            ), f"Item {item.name} is_parser_active should be False but it is {item.is_parser_active}"
+            assert not item.is_parser_active, (
+                f"Item {item.name} is_parser_active should be False but it is {item.is_parser_active}"
+            )
 
 
 class TestScrapeItem:
@@ -351,7 +351,7 @@ class TestShowSuccessfulScrapeMessage(TestMessages):
         show_successful_scrape_message(mock_success_message_request, items_data)
         expected_message = mark_safe(
             "Обновлена информация по товарам: <ul>"
-            + "".join([f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data])
+            + "".join([f"<li>{item['sku']}: {item['name']}</li>" for item in items_data])
             + "</ul>"
         )
 
@@ -364,7 +364,7 @@ class TestShowSuccessfulScrapeMessage(TestMessages):
         show_successful_scrape_message(mock_success_message_request, items_data)
         expected_message = mark_safe(
             "Обновлена информация по товарам: <ul>"
-            + "".join([f'<li>{item["sku"]}: {item["name"]}</li>' for item in items_data])
+            + "".join([f"<li>{item['sku']}: {item['name']}</li>" for item in items_data])
             + "</ul>"
         )
         assert len(items_data) < config.MAX_ITEMS_ON_SCREEN
@@ -395,7 +395,7 @@ class TestShowInvalidSkusMessage(TestMessages):
         invalid_sku = ["11111"]
         show_invalid_skus_message(mock_warning_message_request, invalid_sku)
         expected_message = mark_safe(
-            f"Не удалось добавить следующий артикул: {', '.join(invalid_sku)}<br>" "Возможен неверный формат артикула.",
+            f"Не удалось добавить следующий артикул: {', '.join(invalid_sku)}<br>Возможен неверный формат артикула.",
         )
         messages.warning.assert_called_once_with(mock_warning_message_request, expected_message)
 
@@ -403,8 +403,7 @@ class TestShowInvalidSkusMessage(TestMessages):
         invalid_skus = ["11111", "22222", "33333"]
         show_invalid_skus_message(mock_warning_message_request, invalid_skus)
         expected_message = mark_safe(
-            f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>"
-            "Возможен неверный формат артикулов.",
+            f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>Возможен неверный формат артикулов.",
         )
         messages.warning.assert_called_once_with(mock_warning_message_request, expected_message)
 

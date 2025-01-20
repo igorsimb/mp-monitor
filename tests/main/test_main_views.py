@@ -531,9 +531,9 @@ class TestScrapeItemsView:
         user_quota.refresh_from_db()
         new_user_quota = user_quota.manual_updates
         logger.info("Checking if the max allowed skus were not changed after the error...")
-        assert (
-            new_user_quota != old_user_quota
-        ) == is_quota_updated, f"Expected {old_user_quota}, but got {new_user_quota}."
+        assert (new_user_quota != old_user_quota) == is_quota_updated, (
+            f"Expected {old_user_quota}, but got {new_user_quota}."
+        )
 
     def test_message_called_if_allowed_parse_units_quota_exceeded(
         self, post_request_with_user: WSGIRequest, mocker
@@ -684,9 +684,9 @@ class TestCreateScrapeIntervalTaskView:
     def test_task_created(self, client: Client, logged_in_user: User, valid_form_data: dict, mocker):
         mocker.patch("django.contrib.messages.error")
         client.post(reverse("create_scrape_interval"), data=valid_form_data)
-        assert (
-            PeriodicTask.objects.all().count() == 1
-        ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+        assert PeriodicTask.objects.all().count() == 1, (
+            f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+        )
 
     def test_redirect_if_valid_form_data(self, client: Client, logged_in_user: User, valid_form_data: dict) -> None:
         logger.info("Sending a POST request to the view with valid form data")
@@ -702,9 +702,9 @@ class TestCreateScrapeIntervalTaskView:
         client.post(reverse("create_scrape_interval"), data=valid_form_data)
 
         logger.info("Checking if the 'scrape_interval_task' key exists in the session")
-        assert (
-            "scrape_interval_task" in client.session
-        ), f"Failed to find 'scrape_interval_task' key in {client.session.keys()}"
+        assert "scrape_interval_task" in client.session, (
+            f"Failed to find 'scrape_interval_task' key in {client.session.keys()}"
+        )
 
     @pytest.mark.skip
     def test_correct_interval_task_info_stored_in_session(
@@ -721,9 +721,9 @@ class TestCreateScrapeIntervalTaskView:
 
         assert task_info is not None
         logger.info("Checking for correct task name and interval value")
-        assert (
-            "scrape_interval_task_" in task_info
-        ), f"Expected task name to start with 'scrape_interval_task_', but got {task_info}"
+        assert "scrape_interval_task_" in task_info, (
+            f"Expected task name to start with 'scrape_interval_task_', but got {task_info}"
+        )
         assert task_interval in task_info
 
     def test_invalid_form_data_does_not_create_task(self, client: Client, logged_in_user: User) -> None:
@@ -732,9 +732,9 @@ class TestCreateScrapeIntervalTaskView:
         client.post(reverse("create_scrape_interval"), data=invalid_form_data)
 
         logger.debug("Periodic tasks: %s", PeriodicTask.objects.all())
-        assert (
-            PeriodicTask.objects.all().count() == 0
-        ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+        assert PeriodicTask.objects.all().count() == 0, (
+            f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+        )
 
     @pytest.mark.skip(reason="Skip until adjusted to the new interval behavior")
     def test_no_items_selected_does_not_create_task(self, client, logged_in_user, mocker):
@@ -744,9 +744,9 @@ class TestCreateScrapeIntervalTaskView:
             "selected_items": [],
         }
         client.post(reverse("create_scrape_interval"), data=no_items_selected)
-        assert (
-            PeriodicTask.objects.all().count() == 0
-        ), f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+        assert PeriodicTask.objects.all().count() == 0, (
+            f"Expected no periodic tasks to be created, but got {PeriodicTask.objects.all().count()}"
+        )
 
     def test_interval_created(self):
         interval = IntervalScheduleFactory()
@@ -799,9 +799,9 @@ class TestUpdateScrapeInterval:
         request.user = user
 
         response = update_scrape_interval(request)
-        assert (
-            message.call_count == 1
-        ), f"Expected 1 message to be displayed, but {message.call_count} were displayed instead"
+        assert message.call_count == 1, (
+            f"Expected 1 message to be displayed, but {message.call_count} were displayed instead"
+        )
         assert response.status_code == 302
 
     def test_update_scrape_interval_no_task_found(self):
@@ -849,9 +849,9 @@ class TestDestroyScrapeIntervalTaskView:
         response = destroy_scrape_interval_task(request)
 
         assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}."
-        assert (
-            response.url == redirect_destination_url
-        ), f"Expected redirect to {redirect_destination_url}, but got {response.url}"
+        assert response.url == redirect_destination_url, (
+            f"Expected redirect to {redirect_destination_url}, but got {response.url}"
+        )
 
     @pytest.mark.skip
     def test_interval_task_not_in_session(

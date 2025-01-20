@@ -36,7 +36,7 @@ def show_successful_scrape_message(
         formatted_items = [f"<li>{item['sku']}: {item['name']}</li>" for item in items_data]
         messages.success(
             request,
-            mark_safe(f'Обновлена информация по товарам: <ul>{"".join(formatted_items)}</ul>'),
+            mark_safe(f"Обновлена информация по товарам: <ul>{''.join(formatted_items)}</ul>"),
         )
     elif len(items_data) > max_items_on_screen:
         messages.success(request, f"Обновлена информация по {len(items_data)} товарам")
@@ -46,14 +46,12 @@ def show_invalid_skus_message(request: HttpRequest, invalid_skus: list) -> None:
     if len(invalid_skus) == 1:
         messages.warning(
             request,
-            f"Не удалось добавить следующий артикул: {', '.join(invalid_skus)}<br>"
-            "Возможен неверный формат артикула.",
+            f"Не удалось добавить следующий артикул: {', '.join(invalid_skus)}<br>Возможен неверный формат артикула.",
         )
     else:
         messages.warning(
             request,
-            f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>"
-            "Возможен неверный формат артикулов.",
+            f"Не удалось добавить следующие артикулы: {', '.join(invalid_skus)}<br>Возможен неверный формат артикулов.",
         )
 
 

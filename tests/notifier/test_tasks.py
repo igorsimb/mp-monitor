@@ -44,9 +44,9 @@ class TestSendPriceChangeEmail:
         send_price_change_email(tenant, items)
 
         email = mail.outbox[0]
-        assert any(
-            item.name in email.body for item in items if item.is_notifier_active
-        ), "Email body should contain names of items with notifier enabled."
+        assert any(item.name in email.body for item in items if item.is_notifier_active), (
+            "Email body should contain names of items with notifier enabled."
+        )
 
     def test_email_alternative_is_attached(self, tenant: Tenant, items: list) -> None:
         send_price_change_email(tenant, items)
