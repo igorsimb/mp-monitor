@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_htmx",
     "guardian",
+    "rest_framework",
     "simple_history",
     "widget_tweaks",
     # Local
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
     "main.apps.MainConfig",
     "notifier.apps.NotifierConfig",
     "sentry",
+    "api",
     "django_cleanup.apps.CleanupConfig",  # needs to be at the bottom, according to docs
 ]
 
@@ -349,7 +351,6 @@ TINKOFF_TERMINAL_PASSWORD_TEST = env("TINKOFF_TERMINAL_PASSWORD_TEST")
 TINKOFF_TERMINAL_KEY = env("TINKOFF_TERMINAL_KEY")
 TINKOFF_TERMINAL_PASSWORD = env("TINKOFF_TERMINAL_PASSWORD")
 
-
 # Google OAuth
 
 # APP is commented out because we provide the client_id and client_secret in the django admin interface
@@ -364,4 +365,11 @@ SOCIALACCOUNT_PROVIDERS = {
         #     "key": "",
         # },
     }
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+        "rest_framework.authentication.SessionAuthentication",
+    ],
 }
