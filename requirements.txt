@@ -45,6 +45,7 @@ django-filter==24.3
 django-guardian==2.4.0
 django-htmx==1.21.0
 django-ratelimit==4.1.0
+django-redis==5.4.0
 django-simple-history==3.7.0
 django-stubs==5.1.1
 django-stubs-ext==5.1.1
@@ -63,6 +64,7 @@ gevent==24.11.1
 greenlet==3.1.1
 h11==0.14.0
 h2==4.1.0
+hiredis==3.1.0
 hpack==4.0.0
 httpcore==1.0.7
 httpx==0.28.1

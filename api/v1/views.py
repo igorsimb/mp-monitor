@@ -22,6 +22,12 @@ class ItemViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = ItemFilter
     filter_backends = [DjangoFilterBackend]
 
+    # uncomment method decorators when redis is running
+    # @method_decorator(cache_page(60 * 15, key_prefix="item_list"))
+    # @method_decorator(vary_on_headers("Authorization"))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
     def get_queryset(self):
         """
         Admins can see all items, but non-admins can only see their own items

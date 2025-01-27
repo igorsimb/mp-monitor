@@ -28,3 +28,7 @@
 ### Create profiles for existing users
 
 `python manage.py create_profiles`
+
+
+### Run redis in docker
+`docker run --name django-redis -d -p 6379:6379 --rm redis`
