@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from accounts.models import Tenant, PaymentPlan, TenantQuota
+from accounts.models import Tenant, PaymentPlan, TenantQuota, User
 from main.models import Item, Order
 
 
@@ -13,13 +13,13 @@ class ItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ["id", "tenant", "order_id", "amount", "description", "order_intent", "created_at", "status"]
+        fields = ["tenant", "order_id", "amount", "description", "order_intent", "created_at", "status"]
 
 
 class TenantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
-        fields = ["id", "name", "payment_plan", "balance", "quota"]
+        fields = ["name", "payment_plan", "balance", "quota"]
 
 
 class TenantQuotaSerializer(serializers.ModelSerializer):
@@ -43,3 +43,9 @@ class PaymentPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentPlan
         fields = ["name", "price", "quotas"]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["tenant", "created_at", "is_demo_user"]
