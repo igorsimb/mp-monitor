@@ -3,7 +3,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import Tenant, PaymentPlan, TenantQuota, User
-from api.v1.filters import ItemFilter
+from api.v1.filters import ItemFilter, OrderFilter
 from api.v1.serializers import (
     ItemSerializer,
     OrderSerializer,
@@ -41,6 +41,18 @@ class ItemViewSet(viewsets.ReadOnlyModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_class = OrderFilter
+    filter_backends = [DjangoFilterBackend]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(tenant=self.request.user.tenant)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.user.tenant)
 
 
 class TenantViewSet(viewsets.ModelViewSet):

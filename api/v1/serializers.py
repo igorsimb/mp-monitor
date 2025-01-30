@@ -1,3 +1,5 @@
+import uuid
+
 from rest_framework import serializers
 
 from accounts.models import Tenant, PaymentPlan, TenantQuota, User
@@ -11,9 +13,12 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    order_id = serializers.UUIDField(read_only=True, default=uuid.uuid4)
+
     class Meta:
         model = Order
         fields = ["tenant", "order_id", "amount", "description", "order_intent", "created_at", "status"]
+        extra_kwargs = {"tenant": {"read_only": True}}
 
 
 class TenantSerializer(serializers.ModelSerializer):
