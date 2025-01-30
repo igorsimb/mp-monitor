@@ -54,3 +54,18 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["tenant", "created_at", "is_demo_user"]
+
+
+class TenantPlanSerializer(serializers.ModelSerializer):
+    """
+    Get all tenants with corresponding payment plan
+    """
+
+    payment_plan = serializers.SerializerMethodField()
+
+    def get_payment_plan(self, obj) -> str:
+        return obj.payment_plan.get_name_display()
+
+    class Meta:
+        model = Tenant
+        fields = ["name", "payment_plan"]

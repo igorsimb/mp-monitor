@@ -1,6 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, generics
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from accounts.models import Tenant, PaymentPlan, TenantQuota, User
 from api.v1.filters import ItemFilter, OrderFilter
@@ -11,6 +11,7 @@ from api.v1.serializers import (
     PaymentPlanSerializer,
     TenantQuotaSerializer,
     UserSerializer,
+    TenantPlanSerializer,
 )
 from main.models import Item, Order
 
@@ -58,18 +59,32 @@ class OrderViewSet(viewsets.ModelViewSet):
 class TenantViewSet(viewsets.ModelViewSet):
     queryset = Tenant.objects.all()
     serializer_class = TenantSerializer
+    permission_classes = [IsAdminUser]
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
 
 
-class TenantQuotaViewSet(viewsets.ModelViewSet):
+class TenantQuotaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TenantQuota.objects.all()
     serializer_class = TenantQuotaSerializer
+    permission_classes = [IsAuthenticated]
 
 
-class PaymentPlanViewSet(viewsets.ModelViewSet):
+class PaymentPlanViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PaymentPlan.objects.all()
     serializer_class = PaymentPlanSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class TenantPlanAPIView(generics.ListAPIView):
+    """
+    List of all Tenants with their Payment Plans
+    """
+
+    queryset = Tenant.objects.select_related("payment_plan")
+    serializer_class = TenantPlanSerializer
+    permission_classes = [IsAdminUser]
