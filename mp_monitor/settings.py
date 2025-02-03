@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import certifi
@@ -46,11 +47,14 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "anymail",
     "debug_toolbar",
+    "drf_spectacular",
     "django_celery_beat",
     "django_celery_results",
     "django_extensions",
+    "django_filters",
     "django_htmx",
     "guardian",
+    "rest_framework",
     "simple_history",
     "widget_tweaks",
     # Local
@@ -58,6 +62,7 @@ INSTALLED_APPS = [
     "main.apps.MainConfig",
     "notifier.apps.NotifierConfig",
     "sentry",
+    "api",
     "django_cleanup.apps.CleanupConfig",  # needs to be at the bottom, according to docs
 ]
 
@@ -349,7 +354,6 @@ TINKOFF_TERMINAL_PASSWORD_TEST = env("TINKOFF_TERMINAL_PASSWORD_TEST")
 TINKOFF_TERMINAL_KEY = env("TINKOFF_TERMINAL_KEY")
 TINKOFF_TERMINAL_PASSWORD = env("TINKOFF_TERMINAL_PASSWORD")
 
-
 # Google OAuth
 
 # APP is commented out because we provide the client_id and client_secret in the django admin interface
@@ -364,4 +368,39 @@ SOCIALACCOUNT_PROVIDERS = {
         #     "key": "",
         # },
     }
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 10,
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=5),  # for prod set: minutes=15
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+}
+
+# uncomment this when docker with redis is running
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/1",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         },
+#     }
+# }
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "MP Monitor API",
+    "DESCRIPTION": "API for MP Monitor.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }

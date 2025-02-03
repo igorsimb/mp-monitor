@@ -18,9 +18,10 @@ urlpatterns = [
     # path("demo-error/", demo_error_view, name="demo_error_page"),
     # Local apps
     path("", include("main.urls")),
+    path("notifier/", include("notifier.urls")),
+    path("api/v1/", include("api.v1.urls")),
     # Third-party apps
     path("__debug__/", include("debug_toolbar.urls")),
-    path("notifier/", include("notifier.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
