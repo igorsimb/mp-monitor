@@ -104,7 +104,7 @@ class Tenant(models.Model):
         TenantStatus.EXEMPT,
     )
     name = models.CharField(max_length=255, unique=True)
-    status = models.IntegerField(choices=TenantStatus.choices, default=TenantStatus.ACTIVE)
+    status = models.IntegerField(choices=TenantStatus, default=TenantStatus.ACTIVE)
     # Ensure a tenant cannot be associated with a non-existent payment plan.
     payment_plan = models.ForeignKey(
         PaymentPlan, on_delete=models.SET_NULL, default=PaymentPlan.get_default_payment_plan, null=True
